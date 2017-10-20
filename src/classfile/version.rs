@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::io::Read;
 
-use classfile::conv::make_u16;
+use classfile::util::read_u16;
 
 #[derive(Debug)]
 pub struct Version {
@@ -17,15 +17,12 @@ pub fn read(file: &mut File) -> Version {
         panic!("No valid Java class file.");
     }
 
-    let mut minor_bin = [0u8; 2];
-    file.read(&mut minor_bin).unwrap();
-
-    let mut major_bin = [0u8; 2];
-    file.read(&mut major_bin).unwrap();
+    let minor = read_u16(file);
+    let major = read_u16(file);
 
     Version {
-        major: make_u16(major_bin),
-        minor: make_u16(minor_bin)
+        major,
+        minor,
     }
 }
 

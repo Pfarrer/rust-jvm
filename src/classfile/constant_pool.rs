@@ -1,14 +1,11 @@
 use std::fs::File;
 use std::io::Read;
 
-use classfile::conv::make_u16;
-use classfile::conv::make_i32;
-use classfile::conv::make_f32;
+use classfile::util::read_u16;
+use classfile::util::conv::make_i32;
+use classfile::util::conv::make_f32;
 
-#[derive(Debug)]
-pub struct ConstantPool {
-    pub items: Vec<Item>
-}
+pub type ConstantPool = Vec<Item>;
 
 #[derive(Debug)]
 pub enum Item {
@@ -56,10 +53,7 @@ pub enum Item {
 }
 
 pub fn read(file: &mut File) -> ConstantPool {
-    let mut constant_pool_count_bin = [0u8; 2];
-    file.read(&mut constant_pool_count_bin).unwrap();
-
-    let constant_pool_count = make_u16(constant_pool_count_bin);
+    let constant_pool_count = read_u16(file);
     println!("Constant Pool Count: {}", constant_pool_count);
 
     let mut items = Vec::with_capacity(constant_pool_count as usize);
@@ -83,59 +77,38 @@ pub fn read(file: &mut File) -> ConstantPool {
         })
     }
 
-    ConstantPool {
-        items
-    }
+    items
 }
 
 fn read_class(file: &mut File) -> Item {
-    let mut name_index_bin = [0u8; 2];
-    file.read(&mut name_index_bin).unwrap();
-    let name_index: u16 = make_u16(name_index_bin);
+    let name_index = read_u16(file);
 
     Item::Class(name_index)
 }
 
 fn read_fieldref(file: &mut File) -> Item {
-    let mut class_index_bin = [0u8; 2];
-    file.read(&mut class_index_bin).unwrap();
-    let class_index: u16 = make_u16(class_index_bin);
-
-    let mut name_and_type_index_bin = [0u8; 2];
-    file.read(&mut name_and_type_index_bin).unwrap();
-    let name_and_type_index: u16 = make_u16(name_and_type_index_bin);
+    let class_index = read_u16(file);
+    let name_and_type_index = read_u16(file);
 
     Item::Fieldref(class_index, name_and_type_index)
 }
 
 fn read_methodref(file: &mut File) -> Item {
-    let mut class_index_bin = [0u8; 2];
-    file.read(&mut class_index_bin).unwrap();
-    let class_index: u16 = make_u16(class_index_bin);
-
-    let mut name_and_type_index_bin = [0u8; 2];
-    file.read(&mut name_and_type_index_bin).unwrap();
-    let name_and_type_index: u16 = make_u16(name_and_type_index_bin);
+    let class_index = read_u16(file);
+    let name_and_type_index = read_u16(file);
 
     Item::Methodref(class_index, name_and_type_index)
 }
 
 fn read_interface_methodref(file: &mut File) -> Item {
-    let mut class_index_bin = [0u8; 2];
-    file.read(&mut class_index_bin).unwrap();
-    let class_index: u16 = make_u16(class_index_bin);
-
-    let mut name_and_type_index_bin = [0u8; 2];
-    file.read(&mut name_and_type_index_bin).unwrap();
-    let name_and_type_index: u16 = make_u16(name_and_type_index_bin);
+    let class_index = read_u16(file);
+    let name_and_type_index = read_u16(file);
 
     Item::InterfaceMethodref(class_index, name_and_type_index)
 }
 
 fn read_string(file: &mut File) -> Item {
-    let mut string_index_bin = [0u8; 2];
-    file.read(&mut string_index_bin).unwrap();
-    let string_index: u16 = make_u16(string_index_bin);
+    let string_index = read_u16(file);
 
     Item::String(string_index)
 }
@@ -144,8 +117,6 @@ fn read_integer(file: &mut File) -> Item {
     let mut bin = [0u8; 4];
     file.read(&mut bin).unwrap();
     let val: i32 = make_i32(bin);
-
-    fasdjki(val);
 
     Item::Integer(val)
 }
@@ -163,9 +134,7 @@ fn read_float(file: &mut File) -> Item {
 }
 
 fn read_utf8(file: &mut File) -> Item {
-    let mut length_bin = [0u8; 2];
-    file.read(&mut length_bin).unwrap();
-    let length = make_u16(length_bin);
+    let length = read_u16(file);
 
     let mut byte = [0u8; 1];
     let mut bytes = Vec::new();
@@ -179,13 +148,8 @@ fn read_utf8(file: &mut File) -> Item {
 }
 
 fn read_name_and_type(file: &mut File) -> Item {
-    let mut name_index_bin = [0u8; 2];
-    file.read(&mut name_index_bin).unwrap();
-    let name_index: u16 = make_u16(name_index_bin);
-
-    let mut descriptor_index_bin = [0u8; 2];
-    file.read(&mut descriptor_index_bin).unwrap();
-    let descriptor_index: u16 = make_u16(descriptor_index_bin);
+    let name_index = read_u16(file);
+    let descriptor_index = read_u16(file);
 
     Item::NameAndType(name_index, descriptor_index)
 }
