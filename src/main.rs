@@ -1,3 +1,5 @@
+mod class_info;
+
 use std::env;
 use std::fs::File;
 use std::io::Read;
@@ -15,6 +17,9 @@ fn load_file(filename: String) {
     let mut file = File::open(filename).unwrap();
     read_major_minor_version(&mut file);
     read_constant_pool(&mut file);
+
+    let info = class_info::read(&mut file);
+    println!("Class Info: {:?}", info);
 }
 
 fn read_constant_pool(file: &mut File) {
@@ -24,7 +29,7 @@ fn read_constant_pool(file: &mut File) {
     let constant_pool_count = make_u16(constant_pool_count_bin);
     println!("Constant Pool Count: {}", constant_pool_count);
 
-    for x in 0..constant_pool_count {
+    for x in 1..constant_pool_count {
         let mut tag_bin = [0u8; 1];
         file.read(&mut tag_bin).unwrap();
         let tag: u8 = tag_bin[0];
