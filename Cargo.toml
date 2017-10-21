@@ -1,6 +1,10 @@
 [package]
-name = "rust"
+name = "rust-jvm"
 version = "0.1.0"
 authors = ["Brian Pfretzschner <brian.pfretzschner@gmail.com>"]
 
 [dependencies]
+
+
+[profile.dev]
+debug = true

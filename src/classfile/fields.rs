@@ -2,7 +2,7 @@ use std::fs::File;
 
 use classfile::util::read_u16;
 use classfile::attributes;
-use classfile::constant_pool;
+use classfile::constants;
 
 pub type Fields = Vec<Field>;
 
@@ -14,7 +14,7 @@ pub struct Field {
     attributes: attributes::Attributes,
 }
 
-pub fn read(file: &mut File, constants: &constant_pool::Constants) -> Fields {
+pub fn read(file: &mut File, constants: &constants::Constants) -> Fields {
     let fields_count = read_u16(file);
     let mut fields = Vec::with_capacity(fields_count as usize);
 
@@ -25,7 +25,7 @@ pub fn read(file: &mut File, constants: &constant_pool::Constants) -> Fields {
     fields
 }
 
-fn read_field(file: &mut File, constants: &constant_pool::Constants) -> Field {
+fn read_field(file: &mut File, constants: &constants::Constants) -> Field {
     let access_flags = read_u16(file);
     let name_index = read_u16(file);
     let descriptor_index = read_u16(file);

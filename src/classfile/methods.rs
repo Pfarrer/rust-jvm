@@ -2,7 +2,7 @@ use std::fs::File;
 
 use classfile::util::read_u16;
 use classfile::attributes;
-use classfile::constant_pool;
+use classfile::constants;
 
 pub type Methods = Vec<Method>;
 
@@ -14,7 +14,7 @@ pub struct Method {
     attributes: attributes::Attributes,
 }
 
-pub fn read(file: &mut File, constants: &constant_pool::Constants) -> Methods {
+pub fn read(file: &mut File, constants: &constants::Constants) -> Methods {
     let fields_count = read_u16(file);
     let mut methods = Vec::with_capacity(fields_count as usize);
 
@@ -25,7 +25,7 @@ pub fn read(file: &mut File, constants: &constant_pool::Constants) -> Methods {
     methods
 }
 
-fn read_method(file: &mut File, constants: &constant_pool::Constants) -> Method {
+fn read_method(file: &mut File, constants: &constants::Constants) -> Method {
     let access_flags = read_u16(file);
     let name_index = read_u16(file);
     let descriptor_index = read_u16(file);

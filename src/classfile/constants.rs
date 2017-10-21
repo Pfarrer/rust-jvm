@@ -2,6 +2,7 @@ use std::fs::File;
 use std::io::Read;
 
 use classfile::util::read_u16;
+use classfile::util::read_bytes;
 use classfile::util::conv::make_i32;
 use classfile::util::conv::make_f32;
 
@@ -9,6 +10,8 @@ pub type Constants = Vec<Constant>;
 
 #[derive(Debug)]
 pub enum Constant {
+    // This will be the first element of the constants pool for each class file. This enables
+    // easier handling of index parameters since Java class indexes are not 0 based.
     None(),
 
     // name_index
@@ -55,16 +58,15 @@ pub enum Constant {
 }
 
 pub fn read(file: &mut File) -> Constants {
-    let constant_pool_count = read_u16(file);
-    let mut items = Vec::with_capacity(constant_pool_count as usize + 1);
+    let constants_count = read_u16(file);
+    let mut items = Vec::with_capacity(constants_count as usize + 1);
     items.push(Constant::None());
 
     let mut tag_bin = [0u8; 1];
-    for _ in 1..constant_pool_count {
+    for _ in 1..constants_count {
         file.read(&mut tag_bin).unwrap();
-        let tag: u8 = tag_bin[0];
 
-        items.push(match tag {
+        items.push(match tag_bin[0] {
             1 => read_utf8(file),
             3 => read_integer(file),
             4 => read_float(file),
@@ -74,7 +76,7 @@ pub fn read(file: &mut File) -> Constants {
             10 => read_methodref(file),
             11 => read_interface_methodref(file),
             12 => read_name_and_type(file),
-            _ => panic!("Unexpected Constant Pool Tag: {}", tag)
+            _ => panic!("Unexpected Constant Pool Tag: {}", tag_bin[0])
         })
     }
 
@@ -132,15 +134,9 @@ fn read_float(file: &mut File) -> Constant {
 
 fn read_utf8(file: &mut File) -> Constant {
     let length = read_u16(file);
-
-    let mut byte = [0u8; 1];
-    let mut bytes = Vec::new();
-    for _ in 0..length {
-        file.read(&mut byte).unwrap();
-        bytes.push(byte[0]);
-    }
-
+    let bytes = read_bytes(file, length as usize);
     let val = String::from_utf8(bytes).expect("Found invalid UTF-8");
+
     Constant::Utf8(val)
 }
 
