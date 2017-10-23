@@ -5,6 +5,5 @@ authors = ["Brian Pfretzschner <brian.pfretzschner@gmail.com>"]
 
 [dependencies]
 
-
 [profile.dev]
 debug = true

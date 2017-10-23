@@ -1,25 +1,24 @@
 pub mod conv;
 
-use std::fs::File;
 use std::io::Read;
 
-pub fn read_u16(file: &mut File) -> u16 {
+pub fn read_u16(reader: &mut Read) -> u16 {
     let mut bin = [0u8; 2];
-    file.read(&mut bin).unwrap();
+    reader.read_exact(&mut bin).unwrap();
 
-    conv::make_u16(bin)
+    conv::to_u16(bin)
 }
 
-pub fn read_u32(file: &mut File) -> u32 {
+pub fn read_u32(reader: &mut Read) -> u32 {
     let mut bin = [0u8; 4];
-    file.read(&mut bin).unwrap();
+    reader.read_exact(&mut bin).unwrap();
 
-    conv::make_u32(bin)
+    conv::to_u32(bin)
 }
 
-pub fn read_bytes(file: &mut File, length: usize) -> Vec<u8> {
+pub fn read_raw(reader: &mut Read, length: usize) -> Vec<u8> {
     let mut bytes = Vec::with_capacity(length as usize);
-    let n = file.take(length as u64).read_to_end(&mut bytes).expect("Unexpected end of file");
+    let n = reader.take(length as u64).read_to_end(&mut bytes).expect("Unexpected end of file");
     assert_eq!(length, n);
 
     bytes

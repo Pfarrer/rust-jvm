@@ -1,7 +1,6 @@
-use std::fs::File;
 use std::io::Read;
 
-use classfile::util::read_u16;
+use classfile::util;
 
 #[derive(Debug)]
 pub struct Version {
@@ -9,16 +8,20 @@ pub struct Version {
     pub minor: u16
 }
 
-pub fn read(file: &mut File) -> Version {
+pub fn read(reader: &mut Read) -> Version {
     let mut magic = [0u8; 4];
-    file.read(&mut magic).unwrap();
+    reader.read_exact(&mut magic).unwrap();
 
     if !validate_magic(magic) {
         panic!("No valid Java class file.");
     }
 
-    let minor = read_u16(file);
-    let major = read_u16(file);
+    let minor = util::read_u16(reader);
+    let major = util::read_u16(reader);
+
+    if major > 52 {
+        panic!("Unsupported Classfile version: {}.{}", major, minor);
+    }
 
     Version {
         major,
