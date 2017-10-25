@@ -18,10 +18,7 @@ pub fn read(reader: &mut Read, constants: &constants::Constants) -> Fields {
     let fields_count = util::read_u16(reader);
     let mut fields = Vec::with_capacity(fields_count as usize);
 
-    println!("fields_count = {}", fields_count);
-
-    for x in 1..fields_count {
-        println!("field = {}", x);
+    for _ in 0..fields_count {
         fields.push(read_field(reader, constants));
     }
 

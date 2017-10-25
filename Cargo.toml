@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["Brian Pfretzschner <brian.pfretzschner@gmail.com>"]
 
 [dependencies]
+glob = "0.2"
 
 [profile.dev]
 debug = true

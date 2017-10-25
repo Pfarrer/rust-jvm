@@ -19,8 +19,8 @@ pub fn read(reader: &mut Read) -> Version {
     let minor = util::read_u16(reader);
     let major = util::read_u16(reader);
 
-    if major > 52 {
-        panic!("Unsupported Classfile version: {}.{}", major, minor);
+    if major > 49 {
+        panic!("Unsupported Classfile version: {}.{} > 49.0.", major, minor);
     }
 
     Version {
