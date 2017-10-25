@@ -10,23 +10,24 @@ pub struct Classloader {
 impl Classloader {
 
     pub fn new(path: String) -> Classloader {
-        let mut cache = HashMap::with_capacity(availClassFilePaths.len());
-        findAllClassFilePaths(path).for_each(|classfile_path| {
-            cache.insert(classfile_path, Option::None)
-        });
+        let mut cache = HashMap::new();
+        for classfile_path in Classloader::find_all_classfile_paths(path).iter() {
+            cache.insert(*classfile_path, Option::None);
+        }
 
         Classloader {
             cache
         }
     }
 
-    fn findAllClassFilePaths(path: String) -> Iter<String> {
+    fn find_all_classfile_paths(path: String) -> Vec<String> {
         let mut paths = Vec::new();
 
-        for entry in glob(path + "**/*.class").expect("Failed to read files in classpath " + path) {
+        let fullpath = [path, "**/*.class".to_string()].join("");
+        for entry in glob(&fullpath).expect("Failed to read files in classpath") {
             match entry {
-                Ok(path) => paths.push(path),
-                Error(err) => panic!("Failed to read file: "+err),
+                Ok(path) => paths.push(path.into_os_string().into_string().unwrap()),
+                Err(err) => panic!("Failed to read file"),
             }
         }
 
