@@ -4,7 +4,7 @@ use classfile::util;
 
 pub type Constants = Vec<Constant>;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum Constant {
     // This will be the first element of the constants pool for each class reader. This enables
     // easier handling of index parameters since Java class indexes are not 0 based.

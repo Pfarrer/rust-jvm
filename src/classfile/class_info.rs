@@ -2,7 +2,7 @@ use std::io::Read;
 
 use classfile::util;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct ClassInfo {
     pub access_flags: u16,
     pub this_class: u16,

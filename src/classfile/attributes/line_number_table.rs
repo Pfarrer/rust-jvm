@@ -4,7 +4,7 @@ use classfile::util;
 
 pub type LineNumberTable = Vec<Entry>;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Entry {
     start_pc: u16,
     line_number: u16,

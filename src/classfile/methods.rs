@@ -6,7 +6,7 @@ use classfile::constants;
 
 pub type Methods = Vec<Method>;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Method {
     access_flags: u16,
     name_index: u16,

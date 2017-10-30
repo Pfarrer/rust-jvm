@@ -4,7 +4,7 @@ use classfile::util;
 use classfile::constants;
 use classfile::attributes;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct CodeAttribute {
     max_stack: u16,
     max_locals: u16,
@@ -13,7 +13,7 @@ pub struct CodeAttribute {
     attributes: attributes::Attributes,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct ExceptionTable {
     start_pc: u16,
     end_pc: u16,

@@ -9,7 +9,7 @@ use classfile::constants;
 
 pub type Attributes = Vec<Attribute>;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum Attribute {
     Code(code::CodeAttribute),
     LineNumberTable(line_number_table::LineNumberTable),

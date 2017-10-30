@@ -6,7 +6,7 @@ use classfile::constants;
 
 pub type Fields = Vec<Field>;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Field {
     access_flags: u16,
     name_index: u16,

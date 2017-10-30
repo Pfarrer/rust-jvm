@@ -2,7 +2,7 @@ use std::io::Read;
 
 use classfile::util;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Version {
     pub major: u16,
     pub minor: u16

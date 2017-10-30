@@ -9,7 +9,7 @@ mod attributes;
 use std::fs::File;
 use std::io::BufReader;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Classfile {
     pub version: version::Version,
     pub constants: constants::Constants,
@@ -19,7 +19,7 @@ pub struct Classfile {
     pub attributes: attributes::Attributes,
 }
 
-pub fn load_file(filename: String) -> Classfile {
+pub fn load_file(filename: &String) -> Classfile {
     let file = File::open(filename).unwrap();
     let mut reader = BufReader::new(file);
 
