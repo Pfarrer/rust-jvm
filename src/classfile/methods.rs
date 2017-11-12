@@ -8,10 +8,10 @@ pub type Methods = Vec<Method>;
 
 #[derive(Clone, Debug)]
 pub struct Method {
-    access_flags: u16,
-    name_index: u16,
-    descriptor_index: u16,
-    attributes: attributes::Attributes,
+    pub access_flags: u16,
+    pub name_index: usize,
+    pub descriptor_index: usize,
+    pub attributes: attributes::Attributes,
 }
 
 pub fn read(reader: &mut Read, constants: &constants::Constants) -> Methods {
@@ -27,8 +27,8 @@ pub fn read(reader: &mut Read, constants: &constants::Constants) -> Methods {
 
 fn read_method(reader: &mut Read, constants: &constants::Constants) -> Method {
     let access_flags = util::read_u16(reader);
-    let name_index = util::read_u16(reader);
-    let descriptor_index = util::read_u16(reader);
+    let name_index = util::read_u16(reader) as usize;
+    let descriptor_index = util::read_u16(reader) as usize;
     let attributes = attributes::read(reader, constants);
 
     Method {

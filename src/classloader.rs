@@ -7,26 +7,23 @@ use classfile::load_file;
 
 #[derive(Debug)]
 pub struct Classloader {
-    cache: HashMap<String, Option<Classfile>>,
+    cache: HashMap<String, Classfile>,
     filepath_cache: HashMap<String, String>,
 }
 
 impl Classloader {
 
     pub fn new(paths: Vec<String>) -> Classloader {
-        let mut cache = HashMap::new();
+        let cache = HashMap::new();
         let mut filepath_cache = HashMap::new();
 
         for path_string in paths {
             let path = PathBuf::from(path_string).canonicalize().unwrap();
             for fullpath_buf in find_all_classfile_paths(&path).iter() {
                 let classpath = convert_fullpath_to_classpath(&path, fullpath_buf);
-                cache.insert(classpath.clone(), Option::None);
                 filepath_cache.insert(classpath, String::from(fullpath_buf.to_str().unwrap()));
             }
         }
-
-        println!("Classloader created, {} classes found...", cache.len());
 
         Classloader {
             cache,
@@ -35,24 +32,20 @@ impl Classloader {
     }
 
     pub fn get_classfile(&mut self, classpath: &String) -> Classfile {
-        match self.cache.get(classpath) {
-            Some(classfile_opt) => {
-                // Check if class was already loaded
-                match *classfile_opt {
-                    Some(ref classfile) => classfile.clone(),
-                    None => {
-                        // Try to load that file
-                        let filepath = self.filepath_cache.get(classpath).unwrap();
-                        let classfile = load_file(filepath);
-                        //self.cache.insert(classpath.clone(), Some(classfile.clone()));
+        if self.cache.contains_key(classpath) {
+            // Classfile already loaded
+            self.cache.get(classpath).unwrap().clone()
+        }
+        else {
+            // Try to load that file
+            let filepath = self.filepath_cache.get(classpath)
+                .unwrap_or_else(|| panic!("Class not found: {}", classpath));
+            let classfile = load_file(filepath);
+            self.cache.insert(classpath.clone(), classfile.clone());
 
-                        println!("Classfile loaded: {}", classpath);
+            info!("Class {} loaded", classpath);
 
-                        classfile
-                    }
-                }
-            },
-            None => panic!("Required class not found: {}", classpath)
+            classfile
         }
     }
 

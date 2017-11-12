@@ -1,0 +1,1 @@
+cargo build && RUST_LOG=TRACE RUST_BACKTRACE=1 ./target/debug/rust-jvm $@
