@@ -6,19 +6,19 @@ use classfile::attributes;
 
 #[derive(Clone, Debug)]
 pub struct CodeAttribute {
-    max_stack: u16,
-    max_locals: u16,
-    code: Vec<u8>,
-    exception_table: Vec<ExceptionTable>,
-    attributes: attributes::Attributes,
+    pub max_stack: u16,
+    pub max_locals: u16,
+    pub code: Vec<u8>,
+    pub exception_table: Vec<ExceptionTable>,
+    pub attributes: attributes::Attributes,
 }
 
 #[derive(Clone, Debug)]
 pub struct ExceptionTable {
-    start_pc: u16,
-    end_pc: u16,
-    handler_pc: u16,
-    catch_type: u16,
+    pub start_pc: u16,
+    pub end_pc: u16,
+    pub handler_pc: u16,
+    pub catch_type: u16,
 }
 
 pub fn read(reader: &mut Read, constants: &constants::Constants) -> CodeAttribute {

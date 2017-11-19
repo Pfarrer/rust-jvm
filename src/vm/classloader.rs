@@ -4,6 +4,8 @@ use glob::glob;
 
 use classfile::Classfile;
 use classfile::load_file;
+use vm::Vm;
+use vm::utils;
 
 #[derive(Debug)]
 pub struct Classloader {
@@ -25,28 +27,31 @@ impl Classloader {
             }
         }
 
+        trace!("Classloader created, {} classes found", filepath_cache.len());
+
         Classloader {
             cache,
             filepath_cache,
         }
     }
 
-    pub fn get_classfile(&mut self, classpath: &String) -> Classfile {
-        if self.cache.contains_key(classpath) {
-            // Classfile already loaded
-            self.cache.get(classpath).unwrap().clone()
-        }
-        else {
-            // Try to load that file
-            let filepath = self.filepath_cache.get(classpath)
-                .unwrap_or_else(|| panic!("Class not found: {}", classpath));
-            let classfile = load_file(filepath);
-            self.cache.insert(classpath.clone(), classfile.clone());
+    pub fn get_class(&mut self, vm: &mut Vm, class_path: &String) -> Classfile {
+        let filepath = self.filepath_cache.get(class_path)
+            .unwrap_or_else(|| panic!("Class not found: {}", class_path));
 
-            info!("Class {} loaded", classpath);
+        self.cache.entry(class_path.clone()).or_insert_with(|| {
+            // Try to load that file: Parse classfile
+            let classfile = load_file(filepath);
+
+            trace!("Class {} loaded", class_path);
+
+            // Initialize class if necessary
+            if let Some(method) = utils::find_method(&classfile, &"<clinit>".to_string(), &"()V".to_string()) {
+                panic!("Class {} contains <clinit> -> executing now: {:#?}", class_path, method);
+            }
 
             classfile
-        }
+        }).clone()
     }
 
 }

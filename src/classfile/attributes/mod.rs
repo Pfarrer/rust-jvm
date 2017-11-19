@@ -1,6 +1,8 @@
 mod code;
 mod line_number_table;
 mod source_file;
+mod exceptions;
+mod signature;
 
 use std::io::Read;
 
@@ -8,12 +10,18 @@ use classfile::util;
 use classfile::constants;
 
 pub type Attributes = Vec<Attribute>;
+pub type CodeAttribute = code::CodeAttribute;
 
 #[derive(Clone, Debug)]
 pub enum Attribute {
     Code(code::CodeAttribute),
     LineNumberTable(line_number_table::LineNumberTable),
     SourceFile(u16),
+    Exceptions(exceptions::Exceptions),
+    Signature(signature::Signature),
+    Deprecated,
+
+    NotImplemented,
 }
 
 pub fn read(reader: &mut Read, constants: &constants::Constants) -> Attributes {
@@ -35,6 +43,25 @@ pub fn read_attribute(reader: &mut Read, constants: &constants::Constants) -> At
             "Code" => Attribute::Code(code::read(reader, constants)),
             "LineNumberTable" => Attribute::LineNumberTable(line_number_table::read(reader)),
             "SourceFile" => Attribute::SourceFile(source_file::read(reader)),
+            "Exceptions" => Attribute::Exceptions(exceptions::read(reader)),
+            "Signature" => Attribute::Signature(signature::read(reader)),
+
+            "RuntimeVisibleAnnotations" => {
+                let attribute_length = util::read_u32(reader);
+                util::read_raw(reader, attribute_length as usize);
+                Attribute::NotImplemented
+            },
+
+            "InnerClasses" => {
+                let attribute_length = util::read_u32(reader);
+                util::read_raw(reader, attribute_length as usize);
+                Attribute::NotImplemented
+            },
+
+            "Deprecated" => {
+                /*let attribute_length = */util::read_u32(reader);
+                Attribute::Deprecated
+            },
 
             name => panic!("Attribute not implemented: {}", name),
         },

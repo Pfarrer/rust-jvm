@@ -4,7 +4,7 @@ pub mod constants;
 mod class_info;
 mod fields;
 mod methods;
-mod attributes;
+pub mod attributes;
 
 use std::fs::File;
 use std::io::BufReader;
