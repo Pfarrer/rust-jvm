@@ -9,9 +9,6 @@ mod vm;
 
 use std::env;
 
-const MAIN_METHOD_NAME: &str = "main";
-const MAIN_METHOD_SIGNATURE: &str = "([Ljava/lang/String;)V";
-
 fn main() {
     pretty_env_logger::init().unwrap();
 
@@ -23,8 +20,5 @@ fn main() {
     let main_class = env::args().nth(1).unwrap();
     let search_paths: Vec<String> = env::args().skip(2).collect();
 
-    vm::Vm::new(search_paths)
-        .invoke_static(&main_class,
-                       &MAIN_METHOD_NAME.to_string(),
-                       &MAIN_METHOD_SIGNATURE.to_string());
+    vm::Vm::new(search_paths).invoke_main(&main_class);
 }

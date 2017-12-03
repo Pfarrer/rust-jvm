@@ -26,7 +26,8 @@ pub struct Classfile {
 //    final = 0x0010, // Declared final; no subclasses allowed.
 //    super = 0x0020, // Treat superclass methods specially when invoked by the invokespecial instruction.
 //    interface = 0x0200, // Is an interface, not a class.
-//    ACC_ABSTRACT = 0x0400, // Declared abstract; must not be instantiated.
+pub const ACC_NATIVE: u16 = 0x0100; // Declared native; implemented in a language other than Java.
+pub const ACC_ABSTRACT: u16 = 0x0400; // Declared abstract; must not be instantiated.
 //    ACC_SYNTHETIC = 0x1000, // Declared synthetic; not present in the source code.
 //    ACC_ANNOTATION = 0x2000, //	Declared as an annotation type.
 //    ACC_ENUM = 0x4000, // Declared as an enum type.

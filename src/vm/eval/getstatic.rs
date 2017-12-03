@@ -10,7 +10,9 @@ pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16, frame: &mut
 
     match class.constants.get(index as usize).unwrap() {
         &Constant::Fieldref(ref class_name, ref field_name, ref type_name) => {
-            let class = frame.classloader.get_class(vm, class_name);
+            trace!("getstatic: {}.{}{}", class_name, field_name, type_name);
+
+            let class = vm.load_and_clinit_class(class_name);
 
 
 //            let method = utils::find_method(&class, &method_name, &method_signature)

@@ -4,8 +4,6 @@ use glob::glob;
 
 use classfile::Classfile;
 use classfile::load_file;
-use vm::Vm;
-use vm::utils;
 
 #[derive(Debug)]
 pub struct Classloader {
@@ -35,7 +33,7 @@ impl Classloader {
         }
     }
 
-    pub fn get_class(&mut self, vm: &mut Vm, class_path: &String) -> Classfile {
+    pub fn get_class(&mut self, class_path: &String) -> Classfile {
         let filepath = self.filepath_cache.get(class_path)
             .unwrap_or_else(|| panic!("Class not found: {}", class_path));
 
@@ -44,11 +42,6 @@ impl Classloader {
             let classfile = load_file(filepath);
 
             trace!("Class {} loaded", class_path);
-
-            // Initialize class if necessary
-            if let Some(method) = utils::find_method(&classfile, &"<clinit>".to_string(), &"()V".to_string()) {
-                panic!("Class {} contains <clinit> -> executing now: {:#?}", class_path, method);
-            }
 
             classfile
         }).clone()
