@@ -1,17 +1,16 @@
+use vm::types::Primitive;
+
 #[derive(Debug)]
 pub struct Frame {
 
-    parent: Option<Box<Frame>>,
-    locals: Vec<u32>,
-    stack: Vec<u32>,
+    locals: Vec<Primitive>,
+    stack: Vec<Primitive>,
 
 }
 
 impl Frame {
-
-    pub fn new(parent: Option<Box<Frame>>) -> Frame {
+    pub fn new() -> Frame {
         Frame {
-            parent,
             locals: Vec::new(),
             stack: Vec::new(),
         }
@@ -24,38 +23,25 @@ impl Frame {
 //        }
 //    }
 
-    pub fn stack_push_int(&mut self, val: i32) {
-        self.stack.push(val as u32);
+    pub fn stack_push(&mut self, val: Primitive) {
+        self.stack.push(val)
     }
 
-    pub fn stack_push_long(&mut self, val: i64) {
-        let (high, low) = i64_to_high_low(val);
-        self.stack.push(high);
-        self.stack.push(low);
+    pub fn stack_pop(&mut self) -> Primitive {
+        self.stack.pop().unwrap()
     }
 
     pub fn stack_pop_int(&mut self) -> i32 {
-        self.stack.pop().unwrap() as i32
+        match self.stack_pop() {
+            Primitive::Int(v) => v,
+            p => panic!("Expected to pop Int from stack but found: {:?}", p),
+        }
     }
 
     pub fn stack_pop_long(&mut self) -> i64 {
-        let low = self.stack.pop().unwrap();
-        let high = self.stack.pop().unwrap();
-
-        high_low_to_i64(high, low)
+        match self.stack_pop() {
+            Primitive::Long(v) => v,
+            p => panic!("Expected to pop Long from stack but found: {:?}", p),
+        }
     }
-
-}
-
-fn i64_to_high_low(val: i64) -> (u32, u32) {
-    let high = (val >> 32) as u32;
-    let low = val as u32;
-
-    (high, low)
-}
-
-fn high_low_to_i64(high: u32, low: u32) -> (i64) {
-    let intermediate: u64 = (high as u64) << 32;
-
-    (intermediate + low as u64) as i64
 }

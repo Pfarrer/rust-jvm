@@ -1,6 +1,7 @@
 use std::cmp::Ordering;
 
 use vm::Frame;
+use vm::types::Primitive;
 
 pub fn eval(pc: u16, frame: &mut Frame) -> Option<u16> {
     let value2 = frame.stack_pop_long();
@@ -13,7 +14,7 @@ pub fn eval(pc: u16, frame: &mut Frame) -> Option<u16> {
     };
 
     trace!("lcmp: Comparing {} and {} -> pushing {} to stack", value1, value2, result);
-    frame.stack_push_int(result);
+    frame.stack_push(Primitive::Int(result));
 
     Some(pc+1)
 }

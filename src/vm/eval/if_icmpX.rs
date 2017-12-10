@@ -1,8 +1,6 @@
-use classfile::Classfile;
-use vm::Vm;
 use vm::Frame;
 
-pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16, frame: &mut Frame) -> Option<u16> {
+pub fn eval(code: &Vec<u8>, pc: u16, frame: &mut Frame) -> Option<u16> {
     let value2 = frame.stack_pop_int();
     let value1 = frame.stack_pop_int();
 
