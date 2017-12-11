@@ -32,10 +32,10 @@ pub enum Constant {
     Float(f32),
 
     // Value
-//    Long(i64),
+    Long(i64),
 
     // Value
-//    Double(f64),
+    Double(f64),
 
     // name_index, descriptor_index
     NameAndType(u16, u16),
@@ -59,13 +59,15 @@ pub fn read(reader: &mut Read) -> Constants {
     constants.push(Constant::None());
 
     let mut tag_bin = [0u8; 1];
-    for _ in 0..constant_pool_count-1 {
+    while constants.len() < constant_pool_count as usize {
         reader.read(&mut tag_bin).unwrap();
 
         constants.push(match tag_bin[0] {
             1 => read_utf8(reader),
             3 => read_integer(reader),
             4 => read_float(reader),
+            5 => read_long(reader),
+            6 => read_double(reader),
             7 => read_class(reader),
             8 => read_string(reader),
             9 => read_fieldref(reader),
@@ -73,7 +75,12 @@ pub fn read(reader: &mut Read) -> Constants {
             11 => read_interface_methodref(reader),
             12 => read_name_and_type(reader),
             _ => panic!("Unexpected Constant Pool Tag: {}", tag_bin[0])
-        })
+        });
+
+        // In case of long and double, the next element of the constant pool must be empty
+        if tag_bin[0] == 5 || tag_bin[0] == 6 {
+            constants.push(Constant::None());
+        }
     }
 
     constants
@@ -120,12 +127,28 @@ fn read_integer(reader: &mut Read) -> Constant {
     Constant::Integer(val)
 }
 
+fn read_long(reader: &mut Read) -> Constant {
+    let mut bin = [0u8; 8];
+    reader.read(&mut bin).unwrap();
+    let val: i64 = util::conv::to_i64(bin);
+
+    Constant::Long(val)
+}
+
 fn read_float(reader: &mut Read) -> Constant {
     let mut bin = [0u8; 4];
     reader.read(&mut bin).unwrap();
     let val: f32 = util::conv::to_f32(bin);
 
     Constant::Float(val)
+}
+
+fn read_double(reader: &mut Read) -> Constant {
+    let mut bin = [0u8; 8];
+    reader.read(&mut bin).unwrap();
+    let val: f64 = util::conv::to_f64(bin);
+
+    Constant::Double(val)
 }
 
 fn read_utf8(reader: &mut Read) -> Constant {

@@ -1,7 +1,7 @@
 extern crate time;
 
 use vm::frame::Frame;
-use vm::types::Primitive;
+use vm::primitive::Primitive;
 
 pub fn invoke(parent_frame: &mut Frame, class_path: &String, method_name: &String, method_signature: &String) {
     match method_name.as_ref() {

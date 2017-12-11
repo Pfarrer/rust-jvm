@@ -1,4 +1,7 @@
+use std::iter::Peekable;
+use std::str::Chars;
 
+#[derive(Debug)]
 pub enum TypeSignature {
 
     Void,
@@ -11,35 +14,56 @@ pub enum TypeSignature {
     Float,
     Double,
     Class(String),
-    Array(Type),
+    Array(Box<TypeSignature>),
 
 }
 
+#[derive(Debug)]
 pub struct MethodSignature {
 
-    parameters: Vec<TypeSignature>,
-    return_type: Signature,
+    pub parameters: Vec<TypeSignature>,
+    pub return_type: TypeSignature,
 
 }
 
-pub fn parse_type(spec: &String) -> TypeSignature {
-    /*
-    Z	boolean
-    B	byte
-    C	char
-    S	short
-    I	int
-    J	long
-    F	float
-    D	double
-    L fully-qualified-class ;	fully-qualified-class
-    [ type	type[]
-    ( arg-types ) ret-type	method type
-    */
-
-    panic!("Not implemented...");
+pub fn parse_field(spec: &String) -> TypeSignature {
+    parse_type(&mut spec.chars().peekable())
 }
 
+/// ( arg-types ) ret-type	method type
 pub fn parse_method(spec: &String) -> MethodSignature {
-    panic!("Not implemented...");
+    let mut iterator = spec.chars().peekable();
+    assert_eq!('(', iterator.next().unwrap());
+
+    let mut parameters = Vec::new();
+    while *iterator.peek().unwrap() != ')' {
+        let parameter_type = parse_type(&mut iterator);
+        parameters.push(parameter_type);
+    }
+    assert_eq!(')', iterator.next().unwrap());
+
+    let return_type = parse_type(&mut iterator);
+    assert_eq!(None, iterator.next());
+
+    MethodSignature {
+        parameters,
+        return_type,
+    }
+}
+
+fn parse_type(iterator: &mut Peekable<Chars>) -> TypeSignature {
+    match iterator.next().unwrap() {
+        'V' => TypeSignature::Void,
+        'Z' => TypeSignature::Boolean,
+        'B' => TypeSignature::Byte,
+        'C' => TypeSignature::Char,
+        'S' => TypeSignature::Short,
+        'I' => TypeSignature::Int,
+        'J' => TypeSignature::Long,
+        'F' => TypeSignature::Float,
+        'D' => TypeSignature::Double,
+//        'L' => TypeSignature::Class(),
+//        '[' => TypeSignature::Array(),
+        c => panic!("Unexpected char of type signature: {}", c),
+    }
 }

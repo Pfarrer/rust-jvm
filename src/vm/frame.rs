@@ -1,4 +1,5 @@
-use vm::types::Primitive;
+use vm::primitive::Primitive;
+use vm::instance::Instance;
 
 #[derive(Debug)]
 pub struct Frame {
@@ -23,6 +24,9 @@ impl Frame {
 //        }
 //    }
 
+    pub fn locals_push(&mut self, val: Primitive) {
+        self.locals.push(val)
+    }
     pub fn stack_push(&mut self, val: Primitive) {
         self.stack.push(val)
     }
@@ -42,6 +46,13 @@ impl Frame {
         match self.stack_pop() {
             Primitive::Long(v) => v,
             p => panic!("Expected to pop Long from stack but found: {:?}", p),
+        }
+    }
+
+    pub fn locals_get_reference(&mut self, index: usize) -> &Box<Instance> {
+        match self.locals.get(index).unwrap() {
+            &Primitive::Reference(ref boxed) => boxed,
+            p => panic!("Expected to get Reference from locals but found: {:?}", p),
         }
     }
 }

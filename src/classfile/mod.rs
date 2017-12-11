@@ -32,7 +32,6 @@ pub const ACC_ABSTRACT: u16 = 0x0400; // Declared abstract; must not be instanti
 //    ACC_ANNOTATION = 0x2000, //	Declared as an annotation type.
 //    ACC_ENUM = 0x4000, // Declared as an enum type.
 
-pub type Constant = constants::Constant;
 pub type Method = methods::Method;
 
 pub fn load_file(filename: &String) -> Classfile {

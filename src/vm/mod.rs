@@ -1,6 +1,8 @@
 mod classloader;
 mod utils;
-mod types;
+mod signature;
+mod primitive;
+mod instance;
 mod frame;
 mod eval;
 mod native;
@@ -12,7 +14,7 @@ use classfile::Classfile;
 use classfile::Method;
 use vm::classloader::Classloader;
 use vm::frame::Frame;
-use vm::types::Primitive;
+use vm::primitive::Primitive;
 
 const MAIN_METHOD_NAME: &str = "main";
 const MAIN_METHOD_SIGNATURE: &str = "([Ljava/lang/String;)V";
@@ -58,7 +60,7 @@ impl Vm {
         }
     }
 
-    fn execute_method(&mut self, class: &Classfile, method: &Method, frame: &mut Frame, parent_frame: &mut Frame) {
+    pub fn execute_method(&mut self, class: &Classfile, method: &Method, frame: &mut Frame, parent_frame: &mut Frame) {
         let code_attr = utils::find_code(method).unwrap();
         trace!("{:#?}", code_attr);
 

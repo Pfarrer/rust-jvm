@@ -26,16 +26,16 @@ pub enum Constant {
     String(String),
 
     // Value
-//    Integer(i32),
+    Integer(i32),
 
     // Value
-//    Float(f32),
+    Float(f32),
 
     // Value
-//    Long(i64),
+    Long(i64),
 
     // Value
-//    Double(f64),
+    Double(f64),
 
     // name, descriptor
     NameAndType(String, String),
@@ -85,6 +85,10 @@ fn process_raw_constants(raw_constants: raw::Constants) -> Constants {
 
                 Constant::String(value)
             },
+            &raw::Constant::Integer(value) => Constant::Integer(value),
+            &raw::Constant::Float(value) => Constant::Float(value),
+            &raw::Constant::Long(value) => Constant::Long(value),
+            &raw::Constant::Double(value) => Constant::Double(value),
             &raw::Constant::NameAndType(_, _) => {
                 let (name, type_val) = unwrap_name_and_type(&raw_constants, i as u16);
 

@@ -2,14 +2,20 @@ use classfile::Classfile;
 use classfile::constants::Constant;
 use vm::Vm;
 use vm::Frame;
+use vm::primitive::Primitive;
+use vm::instance::Instance;
 use vm::utils;
 
 pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16, frame: &mut Frame) -> Option<u16> {
     let index = utils::read_u16_code(code, pc);
     match class.constants.get(index as usize).unwrap() {
-        &Constant::Methodref(ref class_name, ref method_name, ref method_signature) => {
-            trace!("invokestatic: {}.{}{}", class_name, method_name, method_signature);
-            vm.invoke_static(class_name, method_name, method_signature, frame)
+        &Constant::Class(ref class_path) => {
+            let class = vm.load_and_clinit_class(class_path);
+            let instance = Instance::new(class);
+            let boxed = Box::new(instance);
+
+            trace!("new: {} -> pushing reference to stack", class_path);
+            frame.stack_push(Primitive::Reference(boxed));
         },
         it => panic!("Unexpected constant ref: {:?}", it),
     };

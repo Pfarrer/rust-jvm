@@ -30,3 +30,10 @@ pub fn find_code<'a>(method: &'a Method) -> Option<&'a attributes::CodeAttribute
 
     None
 }
+
+pub fn read_u16_code(code: &Vec<u8>, pc: u16) -> u16 {
+    let indexbyte1: u16 = (*code.get((pc+1) as usize).unwrap() as u16) << 8;
+    let indexbyte2 = (*code.get((pc+2) as usize).unwrap()) as u16;
+
+    indexbyte1 + indexbyte2
+}
