@@ -3,6 +3,7 @@ mod line_number_table;
 mod source_file;
 mod exceptions;
 mod signature;
+mod constant_value;
 
 use std::io::Read;
 
@@ -19,6 +20,7 @@ pub enum Attribute {
     SourceFile(u16),
     Exceptions(exceptions::Exceptions),
     Signature(signature::Signature),
+    ConstantValue(u16),
     Deprecated,
 
     NotImplemented,
@@ -45,6 +47,7 @@ pub fn read_attribute(reader: &mut Read, constants: &constants::Constants) -> At
             "SourceFile" => Attribute::SourceFile(source_file::read(reader)),
             "Exceptions" => Attribute::Exceptions(exceptions::read(reader)),
             "Signature" => Attribute::Signature(signature::read(reader)),
+            "ConstantValue" => Attribute::ConstantValue(constant_value::read(reader)),
 
             "RuntimeVisibleAnnotations" => {
                 let attribute_length = util::read_u32(reader);

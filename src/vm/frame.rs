@@ -24,8 +24,12 @@ impl Frame {
 //        }
 //    }
 
-    pub fn locals_push(&mut self, val: Primitive) {
-        self.locals.push(val)
+    pub fn locals_write(&mut self, index: usize, val: Primitive) {
+        while self.locals.len() <= index {
+            self.locals.push(Primitive::Null);
+        }
+
+        self.locals[index] = val
     }
     pub fn stack_push(&mut self, val: Primitive) {
         self.stack.push(val)
@@ -46,6 +50,13 @@ impl Frame {
         match self.stack_pop() {
             Primitive::Long(v) => v,
             p => panic!("Expected to pop Long from stack but found: {:?}", p),
+        }
+    }
+
+    pub fn locals_get_long(&mut self, index: usize) -> i64 {
+        match self.locals.get(index).unwrap() {
+            &Primitive::Long(ref value) => value.clone(),
+            p => panic!("Expected to get Long from locals but found: {:?}", p),
         }
     }
 

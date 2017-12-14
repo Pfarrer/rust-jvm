@@ -3,9 +3,11 @@ use vm::instance::Instance;
 #[derive(Debug, Clone)]
 pub enum Primitive {
 
+    Int(i32),
+
     Long(i64),
 
-    Int(i32),
+    Double(f64),
 
     Reference(Box<Instance>),
     Null,

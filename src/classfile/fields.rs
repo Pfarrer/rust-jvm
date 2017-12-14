@@ -8,10 +8,10 @@ pub type Fields = Vec<Field>;
 
 #[derive(Clone, Debug)]
 pub struct Field {
-    access_flags: u16,
-    name_index: u16,
+    pub access_flags: u16,
+    pub name_index: u16,
     descriptor_index: u16,
-    attributes: attributes::Attributes,
+    pub attributes: attributes::Attributes,
 }
 
 pub fn read(reader: &mut Read, constants: &constants::Constants) -> Fields {

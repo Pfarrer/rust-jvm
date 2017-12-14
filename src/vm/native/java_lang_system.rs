@@ -5,17 +5,20 @@ use vm::primitive::Primitive;
 
 pub fn invoke(parent_frame: &mut Frame, class_path: &String, method_name: &String, method_signature: &String) {
     match method_name.as_ref() {
-        "registerNatives" => register_natives(),
-        "currentTimeMillis" => current_time_millis(parent_frame), // ()J
+        "registerNatives" => register_natives(class_path, method_name, method_signature),
+        "currentTimeMillis" => current_time_millis(parent_frame, class_path, method_name, method_signature), // ()J
         _ => panic!("Native implementation of method {}.{}{} missing.", class_path, method_name, method_signature),
     }
 }
 
-fn register_natives() {
+fn register_natives(class_path: &String, method_name: &String, method_signature: &String) {
     // Nothing to do
+    trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
 }
 
-fn current_time_millis(parent_frame: &mut Frame) {
+fn current_time_millis(parent_frame: &mut Frame, class_path: &String, method_name: &String, method_signature: &String) {
+    trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
+
     let time_spec = time::get_time();
 
     // 1459440009.113178

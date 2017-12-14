@@ -14,6 +14,11 @@ mod return_;
 mod ldc_x;
 mod dup;
 mod aload_x;
+mod ldc2_w;
+mod lstore_x;
+mod lload_x;
+mod goto;
+mod ladd;
 
 use classfile::Classfile;
 use vm::Vm;
@@ -24,13 +29,20 @@ pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16, frame: &mut
         1 => aconst_null::eval(pc, frame),
         9 => lconst::eval(0, pc, frame),
         10 => lconst::eval(1, pc, frame),
-        18 => ldc_x::eval(vm, class, code, pc, frame),
-        19 => ldc_x::eval(vm, class, code, pc, frame),
+        18 => ldc_x::eval(class, code, pc, frame),
+        19 => ldc_x::eval(class, code, pc, frame),
+        20 => ldc2_w::eval(class, code, pc, frame),
+        22 => lload_x::eval(code, pc, frame),
+        30...33 => lload_x::eval(code, pc, frame),
         42...45 => aload_x::eval(code, pc, frame),
+        55 => lstore_x::eval(code, pc, frame),
+        63...66 => lstore_x::eval(code, pc, frame),
         89 => dup::eval(pc, frame),
+        97 => ladd::eval(pc, frame),
         148 => lcmp::eval(pc, frame),
         153...158 => if_x::eval(code, pc, frame),
         159...164 => if_icmp_x::eval(code, pc, frame),
+        167 => goto::eval(code, pc),
         176 => areturn::eval(frame, parent_frame),
         177 => return_::eval(),
         178 => getstatic::eval(vm, class, code, pc, frame),

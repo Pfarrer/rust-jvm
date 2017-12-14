@@ -22,7 +22,7 @@ pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16, frame: &mut
             }
 
             // Push the instance reference to local no. 0
-            inner_frame.locals_push(frame.stack_pop());
+            inner_frame.locals_write(0, frame.stack_pop());
 
 //            // Parse signature and move arguments from caller frame to callee frame
 //            for _ in 0..sig.parameters.len() {

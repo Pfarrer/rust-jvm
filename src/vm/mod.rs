@@ -12,6 +12,8 @@ use std::collections::HashMap;
 use classfile;
 use classfile::Classfile;
 use classfile::Method;
+use classfile::attributes::Attribute;
+use classfile::constants::Constant;
 use vm::classloader::Classloader;
 use vm::frame::Frame;
 use vm::primitive::Primitive;
@@ -79,6 +81,35 @@ impl Vm {
 
         if !self.class_statics.contains_key(class_path) {
             self.class_statics.insert(class_path.clone(), HashMap::new());
+
+            // Search for static fields with a ConstantValue attribute and initialize accordingly
+            for field in classfile.fields.iter() {
+                if field.access_flags & classfile::ACC_STATIC > 0 {
+                    // Static field found -> check if there also is a ConstantValue attribute
+                    for attr in field.attributes.iter() {
+                        if let &Attribute::ConstantValue(ref index) = attr {
+                            let value = match classfile.constants.get(*index as usize).unwrap() {
+                                &Constant::Long(value) => Primitive::Long(value),
+//                                    float	CONSTANT_Float
+//                                    double	CONSTANT_Double
+//                                    int, short, char, byte, boolean	CONSTANT_Integer
+//                                String	CONSTANT_String
+                                c => panic!("Unexpected constant found: {:?}", c),
+                            };
+
+                            // Set value
+                            match classfile.constants.get(field.name_index as usize).unwrap() {
+                                &Constant::Utf8(ref field_name) => {
+                                    self.class_statics.get_mut(class_path).unwrap()
+                                        .insert(field_name.clone(), value);
+                                },
+                                _ => panic!("Failed to get name of field from constant pool."),
+                            }
+
+                        }
+                    }
+                }
+            }
 
             // Initialize class if necessary
             if let Some(method) = utils::find_method(&classfile, &"<clinit>".to_string(), &"()V".to_string()) {
