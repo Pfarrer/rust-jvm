@@ -1,6 +1,5 @@
 use classfile::Classfile;
 use classfile::constants::Constant;
-use vm::Vm;
 use vm::Frame;
 use vm::primitive::Primitive;
 use vm::utils;

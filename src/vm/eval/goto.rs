@@ -1,7 +1,3 @@
-use classfile::Classfile;
-use classfile::constants::Constant;
-use vm::Vm;
-use vm::Frame;
 use vm::utils;
 
 pub fn eval(code: &Vec<u8>, pc: u16) -> Option<u16> {

@@ -14,7 +14,7 @@ pub fn eval(code: &Vec<u8>, pc: u16, frame: &mut Frame) -> Option<u16> {
     };
 
     let value = frame.locals_get_long(index as usize);
-    trace!("lload_{}: Reading Long {} from to locals and push it to the stack", index, value);
+    trace!("lload_{}: Reading Long {} from locals and push it to the stack", index, value);
 
     frame.stack_push(Primitive::Long(value));
 

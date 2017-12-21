@@ -3,13 +3,23 @@ use vm::instance::Instance;
 #[derive(Debug, Clone)]
 pub enum Primitive {
 
+    Boolean(bool),
+
+    Byte(u8),
+
+    Short(i16),
+    Char(u16),
+
     Int(i32),
+    Float(f32),
 
     Long(i64),
-
     Double(f64),
 
-    Reference(Box<Instance>),
+    Arrayref(u8, Box<Vec<Primitive>>),
+    Objectref(Box<Instance>),
+    ReturnAddress(u16),
+
     Null,
 
 }

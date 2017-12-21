@@ -39,6 +39,13 @@ impl Frame {
         self.stack.pop().unwrap()
     }
 
+//    pub fn stack_pop_byte(&mut self) -> u8 {
+//        match self.stack_pop() {
+//            Primitive::Byte(v) => v,
+//            p => panic!("Expected to pop Byte from stack but found: {:?}", p),
+//        }
+//    }
+
     pub fn stack_pop_int(&mut self) -> i32 {
         match self.stack_pop() {
             Primitive::Int(v) => v,
@@ -53,17 +60,41 @@ impl Frame {
         }
     }
 
+    pub fn stack_pop_arrayref(&mut self) -> (u8, Box<Vec<Primitive>>) {
+        match self.stack_pop() {
+            Primitive::Arrayref(atype, b) => (atype, b),
+            p => panic!("Expected to pop Arrayref from stack but found: {:?}", p),
+        }
+    }
+
+    pub fn stack_pop_reference(&mut self) -> Primitive {
+        let value = self.stack_pop();
+        match value {
+            Primitive::Arrayref(_, _) => (),
+            Primitive::Objectref(_) => (),
+            Primitive::ReturnAddress(_) => (),
+            Primitive::Null => (),
+            _ => panic!("Popped unexpected value from stack, found: {:?}", value),
+        };
+
+        value
+    }
+
+    pub fn locals_get(&mut self, index: usize) -> &Primitive {
+        self.locals.get(index).unwrap()
+    }
+
+    pub fn locals_get_int(&mut self, index: usize) -> i32 {
+        match self.locals.get(index).unwrap() {
+            &Primitive::Int(ref value) => value.clone(),
+            p => panic!("Expected to get Int from locals but found: {:?}", p),
+        }
+    }
+
     pub fn locals_get_long(&mut self, index: usize) -> i64 {
         match self.locals.get(index).unwrap() {
             &Primitive::Long(ref value) => value.clone(),
             p => panic!("Expected to get Long from locals but found: {:?}", p),
-        }
-    }
-
-    pub fn locals_get_reference(&mut self, index: usize) -> &Box<Instance> {
-        match self.locals.get(index).unwrap() {
-            &Primitive::Reference(ref boxed) => boxed,
-            p => panic!("Expected to get Reference from locals but found: {:?}", p),
         }
     }
 }

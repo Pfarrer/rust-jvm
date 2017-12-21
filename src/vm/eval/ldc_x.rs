@@ -15,7 +15,11 @@ pub fn eval(class: &Classfile, code: &Vec<u8>, pc: u16, frame: &mut Frame) -> Op
 
     match class.constants.get(index as usize).unwrap() {
         &Constant::String(ref value) => {
-            trace!("ldc: pushing String {} to stack", value);
+            trace!("ldc: pushing String \"{}\" to stack", value);
+
+            // Treat value as char array
+
+
             panic!("Not implemented");
 //            frame.stack_push(value.clone());
         },

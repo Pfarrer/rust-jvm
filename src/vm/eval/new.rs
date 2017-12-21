@@ -15,7 +15,7 @@ pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16, frame: &mut
             let boxed = Box::new(instance);
 
             trace!("new: {} -> pushing reference to stack", class_path);
-            frame.stack_push(Primitive::Reference(boxed));
+            frame.stack_push(Primitive::Objectref(boxed));
         },
         it => panic!("Unexpected constant ref: {:?}", it),
     };
