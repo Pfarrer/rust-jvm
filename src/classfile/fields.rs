@@ -10,7 +10,7 @@ pub type Fields = Vec<Field>;
 pub struct Field {
     pub access_flags: u16,
     pub name_index: u16,
-    descriptor_index: u16,
+    pub descriptor_index: u16,
     pub attributes: attributes::Attributes,
 }
 

@@ -11,8 +11,6 @@ pub struct Array {
 
 impl Array {
     pub fn new(count: usize, atype: u8) -> Array {
-
-
         Array {
             count,
             atype,

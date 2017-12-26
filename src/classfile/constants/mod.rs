@@ -19,6 +19,9 @@ pub enum Constant {
     // class_name, method_name, method_signature
     Methodref(String, String, String),
 
+    // class_name, method_name, method_signature
+    InterfaceMethodref(String, String, String),
+
     // class_index, name_and_type_index
 //    InterfaceMethodref(u16, u16),
 
@@ -79,6 +82,12 @@ fn process_raw_constants(raw_constants: raw::Constants) -> Constants {
                 let (method_name, type_name) = unwrap_name_and_type(&raw_constants, name_and_type_index);
 
                 Constant::Methodref(class_name, method_name, type_name)
+            },
+            &raw::Constant::InterfaceMethodref(class_index, name_and_type_index) => {
+                let class_name = unwrap_class(&raw_constants, class_index);
+                let (method_name, type_name) = unwrap_name_and_type(&raw_constants, name_and_type_index);
+
+                Constant::InterfaceMethodref(class_name, method_name, type_name)
             },
             &raw::Constant::String(value_index) => {
                 let value = unwrap_string(&raw_constants, value_index);

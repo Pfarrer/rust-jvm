@@ -3,6 +3,13 @@ use classfile::constants::Constant;
 use classfile::attributes;
 use classfile::Method;
 
+pub fn get_utf8_value(classfile: &Classfile, index: usize) -> String {
+    match classfile.constants.get(index).unwrap() {
+        &Constant::Utf8(ref val) => val.clone(),
+        it => panic!("Expected Utf8 but found: {:?}", it),
+    }
+}
+
 pub fn find_method<'a>(classfile: &'a Classfile, name: &String, signature: &String) -> Option<&'a Method> {
     classfile.methods.iter().find(| &method | {
         let correct_name = match classfile.constants.get(method.name_index).unwrap() {

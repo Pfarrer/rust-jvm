@@ -6,6 +6,7 @@ mod instance;
 mod frame;
 mod eval;
 mod native;
+mod string_pool;
 
 use std::collections::HashMap;
 
@@ -17,6 +18,7 @@ use classfile::constants::Constant;
 use vm::classloader::Classloader;
 use vm::frame::Frame;
 use vm::primitive::Primitive;
+use vm::string_pool::StringPool;
 
 const MAIN_METHOD_NAME: &str = "main";
 const MAIN_METHOD_SIGNATURE: &str = "([Ljava/lang/String;)V";
@@ -24,16 +26,19 @@ const MAIN_METHOD_SIGNATURE: &str = "([Ljava/lang/String;)V";
 pub struct Vm {
     classloader: Classloader,
     pub class_statics: HashMap<String, HashMap<String, Primitive>>,
+    pub string_pool: StringPool,
 }
 
 impl Vm {
     pub fn new(class_paths: Vec<String>) -> Vm {
         let classloader = Classloader::new(class_paths);
         let class_statics = HashMap::new();
+        let string_pool = StringPool::new();
 
         Vm {
             classloader,
             class_statics,
+            string_pool,
         }
     }
 

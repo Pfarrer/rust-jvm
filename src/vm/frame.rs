@@ -1,5 +1,4 @@
 use vm::primitive::Primitive;
-use vm::instance::Instance;
 
 #[derive(Debug)]
 pub struct Frame {

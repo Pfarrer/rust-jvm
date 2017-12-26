@@ -18,7 +18,7 @@ pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16, frame: &mut
 
             let sig = signature::parse_method(method_signature);
             if sig.parameters.len() > 0 {
-                panic!("Case not implemented");
+                panic!("Case not implemented, {:#?}", sig);
             }
 
             // Push the instance reference to local no. 0

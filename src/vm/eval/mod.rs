@@ -29,6 +29,7 @@ mod iload_x;
 mod arraylength;
 mod iinc;
 mod isub;
+mod anewarray;
 
 use classfile::Classfile;
 use vm::Vm;
@@ -42,8 +43,8 @@ pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16, frame: &mut
         9 => lconst::eval(0, pc, frame),
         10 => lconst::eval(1, pc, frame),
         16 => bipush::eval(code, pc, frame),
-        18 => ldc_x::eval(class, code, pc, frame),
-        19 => ldc_x::eval(class, code, pc, frame),
+        18 => ldc_x::eval(vm, class, code, pc, frame),
+        19 => ldc_x::eval(vm, class, code, pc, frame),
         20 => ldc2_w::eval(class, code, pc, frame),
         21 => iload_x::eval(code, pc, frame),
         22 => lload_x::eval(code, pc, frame),
@@ -73,6 +74,7 @@ pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16, frame: &mut
         184 => invokestatic::eval(vm, class, code, pc, frame),
         187 => new::eval(vm, class, code, pc, frame),
         188 => newarray::eval(code, pc, frame),
+        189 => anewarray::eval(class, code, pc, frame),
         190 => arraylength::eval(pc, frame),
         instr => panic!("Instruction not implemented: {}", instr),
     }

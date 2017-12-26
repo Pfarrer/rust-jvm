@@ -62,8 +62,14 @@ fn parse_type(iterator: &mut Peekable<Chars>) -> TypeSignature {
         'J' => TypeSignature::Long,
         'F' => TypeSignature::Float,
         'D' => TypeSignature::Double,
-//        'L' => TypeSignature::Class(),
+        'L' => TypeSignature::Class(read_class_path(iterator)),
 //        '[' => TypeSignature::Array(),
         c => panic!("Unexpected char of type signature: {}", c),
     }
+}
+
+fn read_class_path(iterator: &mut Peekable<Chars>) -> String {
+    iterator
+        .take_while(|c| *c != ';')
+        .collect::<String>()
 }
