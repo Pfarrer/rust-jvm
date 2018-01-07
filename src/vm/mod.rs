@@ -2,6 +2,7 @@ mod classloader;
 mod utils;
 mod signature;
 mod primitive;
+mod array;
 mod instance;
 mod frame;
 mod eval;
@@ -9,6 +10,8 @@ mod native;
 mod string_pool;
 
 use std::collections::HashMap;
+use std::rc::Rc;
+use std::cell::RefCell;
 
 use classfile;
 use classfile::Classfile;
@@ -18,6 +21,7 @@ use classfile::constants::Constant;
 use vm::classloader::Classloader;
 use vm::frame::Frame;
 use vm::primitive::Primitive;
+use vm::array::Array;
 use vm::string_pool::StringPool;
 
 const MAIN_METHOD_NAME: &str = "main";
@@ -44,6 +48,12 @@ impl Vm {
 
     pub fn invoke_main(&mut self, class_path: &String) {
         let mut frame = Frame::new();
+
+        // Add args array
+        let args = Array::new_complex(0, "java/lang/String".to_string());
+        let rc_args = Rc::new(RefCell::new(args));
+        frame.stack_push(Primitive::Arrayref(rc_args));
+
         self.invoke_static(class_path,
                            &MAIN_METHOD_NAME.to_string(),
                            &MAIN_METHOD_SIGNATURE.to_string(),
@@ -63,14 +73,22 @@ impl Vm {
             panic!("{}.{}{} cannot be executed since it is abstract.", class_path, method_name, method_signature);
         } else {
             let mut frame = Frame::new();
+
+            // Parse signature and move arguments from caller frame to callee frame
+            let sig = signature::parse_method(method_signature);
+            for i in (0..sig.parameters.len()).rev() {
+                let arg = parent_frame.stack_pop();
+
+                trace!(" - Write argument no. {} to inner frame: {:?}", i, arg);
+                frame.locals_write(i, arg);
+            }
+
             self.execute_method(&class, &method, &mut frame, parent_frame);
         }
     }
 
     pub fn execute_method(&mut self, class: &Classfile, method: &Method, frame: &mut Frame, parent_frame: &mut Frame) {
         let code_attr = utils::find_code(method).unwrap();
-        trace!("{:#?}", code_attr);
-
         let mut pc = 0;
 
         loop {
@@ -93,14 +111,7 @@ impl Vm {
                     // Static field found -> check if there also is a ConstantValue attribute
                     for attr in field.attributes.iter() {
                         if let &Attribute::ConstantValue(ref index) = attr {
-                            let value = match classfile.constants.get(*index as usize).unwrap() {
-                                &Constant::Long(value) => Primitive::Long(value),
-//                                    float	CONSTANT_Float
-//                                    double	CONSTANT_Double
-//                                    int, short, char, byte, boolean	CONSTANT_Integer
-//                                String	CONSTANT_String
-                                c => panic!("Unexpected constant found: {:?}", c),
-                            };
+                            let value = Primitive::from_constant(classfile.constants.get(*index as usize).unwrap());
 
                             // Set value
                             match classfile.constants.get(field.name_index as usize).unwrap() {

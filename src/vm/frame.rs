@@ -1,11 +1,14 @@
+use std::rc::Rc;
+use std::cell::RefCell;
+
 use vm::primitive::Primitive;
+use vm::array::Array;
+use vm::instance::Instance;
 
 #[derive(Debug)]
 pub struct Frame {
-
     locals: Vec<Primitive>,
     stack: Vec<Primitive>,
-
 }
 
 impl Frame {
@@ -59,17 +62,24 @@ impl Frame {
         }
     }
 
-    pub fn stack_pop_arrayref(&mut self) -> (u8, Box<Vec<Primitive>>) {
+    pub fn stack_pop_arrayref(&mut self) -> Rc<RefCell<Array>> {
         match self.stack_pop() {
-            Primitive::Arrayref(atype, b) => (atype, b),
+            Primitive::Arrayref(rc_array) => rc_array,
             p => panic!("Expected to pop Arrayref from stack but found: {:?}", p),
+        }
+    }
+
+    pub fn stack_pop_objectref(&mut self) -> Rc<RefCell<Instance>> {
+        match self.stack_pop() {
+            Primitive::Objectref(rc_object) => rc_object,
+            p => panic!("Expected to pop Objectref from stack but found: {:?}", p),
         }
     }
 
     pub fn stack_pop_reference(&mut self) -> Primitive {
         let value = self.stack_pop();
         match value {
-            Primitive::Arrayref(_, _) => (),
+            Primitive::Arrayref(_) => (),
             Primitive::Objectref(_) => (),
             Primitive::ReturnAddress(_) => (),
             Primitive::Null => (),

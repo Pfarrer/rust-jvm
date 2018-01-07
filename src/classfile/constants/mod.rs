@@ -104,7 +104,7 @@ fn process_raw_constants(raw_constants: raw::Constants) -> Constants {
                 Constant::NameAndType(name, type_val)
             },
             &raw::Constant::Utf8(ref val) => Constant::Utf8(val.to_string()),
-            it => panic!("Mapping from raw constant to processed constant not implemented for {:?}", it),
+//            it => panic!("Mapping from raw constant to processed constant not implemented for {:?}", it),
         }
     }).collect()
 }

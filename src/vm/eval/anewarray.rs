@@ -1,7 +1,11 @@
+use std::rc::Rc;
+use std::cell::RefCell;
+
 use classfile::Classfile;
 use classfile::constants::Constant;
 use vm::Frame;
 use vm::primitive::Primitive;
+use vm::array::Array;
 use vm::utils;
 
 pub fn eval(class: &Classfile, code: &Vec<u8>, pc: u16, frame: &mut Frame) -> Option<u16> {
@@ -17,16 +21,11 @@ pub fn eval(class: &Classfile, code: &Vec<u8>, pc: u16, frame: &mut Frame) -> Op
         c => panic!("Unexpected constant ref: {:?}", c),
     };
 
-    let default_value = Primitive::Null;
-
-    let mut array = Vec::with_capacity(count as usize);
-    for _ in 0..count {
-        array.push(default_value.clone());
-    }
 
     trace!("anewarray: Create new Array of length {} and push Arrayref to stack", count);
 
-    frame.stack_push(Primitive::Arrayref(0, Box::new(array)));
+    let array = Array::new_complex(count as usize, class_path);
+    frame.stack_push(Primitive::Arrayref(Rc::new(RefCell::new(array))));
 
     Some(pc + 3)
 }

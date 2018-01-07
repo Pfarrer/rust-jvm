@@ -7,7 +7,7 @@ pub fn eval(code: &Vec<u8>, pc: u16, frame: &mut Frame) -> Option<u16> {
 
     let value = frame.locals_get(index as usize).clone();
     match value {
-        Primitive::Arrayref(_, _) => (),
+        Primitive::Arrayref(_) => (),
         Primitive::Objectref(_) => (),
         Primitive::ReturnAddress(_) => (),
         Primitive::Null => (),

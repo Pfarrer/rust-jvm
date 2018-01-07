@@ -3,7 +3,6 @@ use std::str::Chars;
 
 #[derive(Debug)]
 pub enum TypeSignature {
-
     Void,
     Boolean,
     Byte,
@@ -15,15 +14,12 @@ pub enum TypeSignature {
     Double,
     Class(String),
     Array(Box<TypeSignature>),
-
 }
 
 #[derive(Debug)]
 pub struct MethodSignature {
-
     pub parameters: Vec<TypeSignature>,
     pub return_type: TypeSignature,
-
 }
 
 pub fn parse_field(spec: &String) -> TypeSignature {
@@ -63,7 +59,7 @@ fn parse_type(iterator: &mut Peekable<Chars>) -> TypeSignature {
         'F' => TypeSignature::Float,
         'D' => TypeSignature::Double,
         'L' => TypeSignature::Class(read_class_path(iterator)),
-//        '[' => TypeSignature::Array(),
+        '[' => TypeSignature::Array(Box::new(parse_type(iterator))),
         c => panic!("Unexpected char of type signature: {}", c),
     }
 }

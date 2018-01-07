@@ -30,6 +30,15 @@ mod arraylength;
 mod iinc;
 mod isub;
 mod anewarray;
+mod getfield;
+mod putfield;
+mod monitorenter;
+mod ireturn;
+mod lreturn;
+mod pop;
+mod pop2;
+mod i2l;
+mod iadd;
 
 use classfile::Classfile;
 use vm::Vm;
@@ -53,22 +62,31 @@ pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16, frame: &mut
         42...45 => aload_x::eval(code, pc, frame),
         54 => istore_x::eval(code, pc, frame),
         55 => lstore_x::eval(code, pc, frame),
+        58 => astore_x::eval(code, pc, frame),
         59...62 => istore_x::eval(code, pc, frame),
         63...66 => lstore_x::eval(code, pc, frame),
         75...78 => astore_x::eval(code, pc, frame),
         85 => castore::eval(pc, frame),
+        87 => pop::eval(pc, frame),
+        88 => pop2::eval(pc, frame),
         89 => dup::eval(pc, frame),
+        96 => iadd::eval(pc, frame),
         97 => ladd::eval(pc, frame),
         100 => isub::eval(pc, frame),
         132 => iinc::eval(code, pc, frame),
+        133 => i2l::eval(pc, frame),
         148 => lcmp::eval(pc, frame),
         153...158 => if_x::eval(code, pc, frame),
         159...164 => if_icmp_x::eval(code, pc, frame),
         167 => goto::eval(code, pc),
+        172 => ireturn::eval(frame, parent_frame),
+        173 => lreturn::eval(frame, parent_frame),
         176 => areturn::eval(frame, parent_frame),
         177 => return_::eval(),
         178 => getstatic::eval(vm, class, code, pc, frame),
         179 => putstatic::eval(vm, class, code, pc, frame),
+        180 => getfield::eval(class, code, pc, frame),
+        181 => putfield::eval(class, code, pc, frame),
         182 => invokevirtual::eval(vm, class, code, pc, frame),
         183 => invokespecial::eval(vm, class, code, pc, frame),
         184 => invokestatic::eval(vm, class, code, pc, frame),
@@ -76,6 +94,7 @@ pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16, frame: &mut
         188 => newarray::eval(code, pc, frame),
         189 => anewarray::eval(class, code, pc, frame),
         190 => arraylength::eval(pc, frame),
+        194 => monitorenter::eval(pc, frame),
         instr => panic!("Instruction not implemented: {}", instr),
     }
 }
