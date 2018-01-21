@@ -47,7 +47,7 @@ impl Vm {
     }
 
     pub fn invoke_main(&mut self, class_path: &String) {
-        let mut frame = Frame::new();
+        let mut frame = Frame::new(class_path.clone(), MAIN_METHOD_NAME.to_string(), MAIN_METHOD_SIGNATURE.to_string());
 
         // Add args array
         let args = Array::new_complex(0, "java/lang/String".to_string());
@@ -72,7 +72,7 @@ impl Vm {
         } else if method.access_flags & classfile::ACC_ABSTRACT > 0 {
             panic!("{}.{}{} cannot be executed since it is abstract.", class_path, method_name, method_signature);
         } else {
-            let mut frame = Frame::new();
+            let mut frame = Frame::new(class_path.clone(), method_name.clone(), method_signature.clone());
 
             // Parse signature and move arguments from caller frame to callee frame
             let sig = signature::parse_method(method_signature);
@@ -131,8 +131,8 @@ impl Vm {
             if let Some(method) = utils::find_method(&classfile, &"<clinit>".to_string(), &"()V".to_string()) {
                 trace!("Class {} not initialized and contains <clinit> -> executing now", class_path);
 
-                let mut frame = Frame::new();
-                let mut parent_frame = Frame::new();
+                let mut frame = Frame::new(class_path.clone(), "<clinit>".to_string(), "()V".to_string());
+                let mut parent_frame = Frame::new(class_path.clone(), "<clinit>".to_string(), "()V".to_string());
                 self.execute_method(&classfile, &method, &mut frame, &mut parent_frame);
 
                 trace!("{}.<clinit> done", class_path);

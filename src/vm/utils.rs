@@ -4,6 +4,7 @@ use classfile::attributes;
 use classfile::Method;
 use vm::Vm;
 use vm::Frame;
+use vm::primitive::Primitive;
 use vm::signature;
 
 pub fn get_utf8_value(classfile: &Classfile, index: usize) -> String {
@@ -52,23 +53,31 @@ pub fn invoke_method(vm: &mut Vm, class_path: &String, method_name: &String, met
     let class = vm.load_and_clinit_class(class_path);
     let method = find_method(&class, method_name, method_signature)
         .unwrap_or_else(|| panic!("Method not found: {}.{}{}", class_path, method_name, method_signature));
-    let mut frame = Frame::new();
+    let mut frame = Frame::new(class_path.clone(), method_name.clone(), method_signature.clone());
 
     // Parse signature and move arguments from caller frame to callee frame
     let sig = signature::parse_method(method_signature);
     for i in (1..sig.parameters.len()+1).rev() {
         let arg = parent_frame.stack_pop();
 
-        trace!(" - Write argument no. {} to inner frame: {:?}", i, arg);
+//        trace!(" - Write argument no. {} to inner frame: {:?}", i, arg);
         frame.locals_write(i, arg);
     }
 
     // Push the instance reference to local no. 0
     let this_ref = parent_frame.stack_pop_reference();
-    trace!(" - Write 'this' reference to inner frame: {:?}", this_ref);
+//    trace!(" - Write 'this' reference to inner frame: {:?}", this_ref);
     frame.locals_write(0, this_ref);
 
     vm.execute_method(&class, &method, &mut frame, parent_frame);
+}
+
+pub fn invoke_instance_method(vm: &mut Vm, method_name: &String, method_signature: &String, parent_frame: &mut Frame) {
+    let rc_instance = parent_frame.stack_pop_objectref();
+    let instance = rc_instance.borrow();
+    parent_frame.stack_push(Primitive::Objectref(rc_instance.clone()));
+
+    invoke_method(vm, &instance.class_path, method_name, method_signature, parent_frame);
 }
 
 pub fn read_u16_code(code: &Vec<u8>, pc: u16) -> u16 {

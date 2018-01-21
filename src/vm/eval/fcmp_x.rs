@@ -1,0 +1,36 @@
+use std::f32::NAN;
+
+use vm::Frame;
+use vm::primitive::Primitive;
+
+pub fn eval(code: &Vec<u8>, pc: u16, frame: &mut Frame) -> Option<u16> {
+    let value2 = match frame.stack_pop() {
+        Primitive::Float(val) => val,
+        _ => panic!("Value set conversion (§2.8.3) not implemented"),
+    };
+    let value1 = match frame.stack_pop() {
+        Primitive::Float(val) => val,
+        _ => panic!("Value set conversion (§2.8.3) not implemented"),
+    };
+
+    let result = if value1 == NAN || value2 == NAN {
+        let instr = *code.get(pc as usize).unwrap();
+        if instr == 150 {
+            // fcmpg
+            1
+        } else if instr == 149 {
+            // fcmpl
+            -1
+        }
+        else {
+            panic!("Unexpected instruction: {}", instr);
+        }
+    } else {
+        if value1 > value2 { 1 } else if value2 > value1 { -1 } else { 0 }
+    };
+
+    trace!("fcmp_x: Comparing {} and {} -> pushing {} to stack", value1, value2, result);
+    frame.stack_push(Primitive::Int(result));
+
+    Some(pc + 1)
+}

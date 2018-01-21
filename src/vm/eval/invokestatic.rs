@@ -8,7 +8,7 @@ pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16, frame: &mut
     let index = utils::read_u16_code(code, pc);
     match class.constants.get(index as usize).unwrap() {
         &Constant::Methodref(ref class_name, ref method_name, ref method_signature) => {
-            trace!("invokestatic: {}.{}{}", class_name, method_name, method_signature);
+            debug!("invokestatic: {}.{}{}", class_name, method_name, method_signature);
             vm.invoke_static(class_name, method_name, method_signature, frame)
         },
         it => panic!("Unexpected constant ref: {:?}", it),

@@ -49,6 +49,7 @@ impl Primitive {
         match constant {
             &Constant::Long(value) => Primitive::Long(value),
             &Constant::Integer(value) => Primitive::Int(value),
+            &Constant::Float(value) => Primitive::Float(value),
 
 //                                    float	CONSTANT_Float
 //                                    double	CONSTANT_Double

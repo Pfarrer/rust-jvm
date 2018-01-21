@@ -7,7 +7,7 @@ use vm::utils;
 
 #[derive(Debug, Clone)]
 pub struct Instance {
-    class_path: String,
+    pub class_path: String,
     pub fields: HashMap<String, Primitive>
 }
 

@@ -13,7 +13,7 @@ pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16, frame: &mut
 
             // Pop value and push to statics
             let value = frame.stack_pop();
-            trace!("putstatic: Popping value from stack an store it in {}.{}", class_path, field_name);
+            trace!("putstatic: Popping value from stack and store it in {}.{}", class_path, field_name);
 
             vm.class_statics.get_mut(class_path).unwrap()
                 .insert(field_name.clone(), value);

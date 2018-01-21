@@ -23,6 +23,14 @@ pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16, frame: &mut
             let rc_instance = StringPool::intern(vm, value);
             frame.stack_push(Primitive::Objectref(rc_instance));
         },
+        &Constant::Float(ref value) => {
+            trace!("{}: Pushing Float {} to stack", instr_name, value);
+            frame.stack_push(Primitive::Float(value.clone()));
+        },
+        &Constant::Integer(ref value) => {
+            trace!("{}: Pushing Int {} to stack", instr_name, value);
+            frame.stack_push(Primitive::Int(value.clone()));
+        },
         it => panic!("Unexpected constant ref: {:?}", it),
     };
 

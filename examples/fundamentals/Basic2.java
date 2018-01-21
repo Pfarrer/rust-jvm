@@ -24,6 +24,25 @@ public class Basic2 {
 
     if (value2 >= value1) ge();
     else NOOOO();
+
+    /* COMPARE TO 0 */
+    if (value1 == 0) eq();
+    else NOOOO();
+
+    if (value1 != 0) ne();
+    else NOOOO();
+
+    if (0 < value1) lt();
+    else NOOOO();
+
+    if (0 <= value1) le();
+    else NOOOO();
+
+    if (value2 > 0) gt();
+    else NOOOO();
+
+    if (value2 >= 0) ge();
+    else NOOOO();
   }
 
   public static void eq() {}

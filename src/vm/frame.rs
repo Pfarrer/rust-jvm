@@ -7,13 +7,21 @@ use vm::instance::Instance;
 
 #[derive(Debug)]
 pub struct Frame {
+    pub class_path: String,
+    pub method_name: String,
+    pub method_signature: String,
+
     locals: Vec<Primitive>,
     stack: Vec<Primitive>,
 }
 
 impl Frame {
-    pub fn new() -> Frame {
+    pub fn new(class_path: String, method_name: String, method_signature: String) -> Frame {
         Frame {
+            class_path,
+            method_name,
+            method_signature,
+
             locals: Vec::new(),
             stack: Vec::new(),
         }
@@ -97,6 +105,13 @@ impl Frame {
         match self.locals.get(index).unwrap() {
             &Primitive::Int(ref value) => value.clone(),
             p => panic!("Expected to get Int from locals but found: {:?}", p),
+        }
+    }
+
+    pub fn locals_get_float(&mut self, index: usize) -> f32 {
+        match self.locals.get(index).unwrap() {
+            &Primitive::Float(ref value) => value.clone(),
+            p => panic!("Expected to get Float from locals but found: {:?}", p),
         }
     }
 

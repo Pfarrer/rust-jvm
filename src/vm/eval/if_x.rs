@@ -8,9 +8,9 @@ pub fn eval(code: &Vec<u8>, pc: u16, frame: &mut Frame) -> Option<u16> {
         153 => (value == 0, "ifeq"),
         154 => (value != 0, "ifne"),
         155 => (value < 0, "iflt"),
-        156 => (value <= 0, "ifle"),
+        156 => (value >= 0, "ifge"),
         157 => (value > 0, "ifgt"),
-        158 => (value >= 0, "ifge"),
+        158 => (value <= 0, "ifle"),
         i => panic!("if_x::eval was called on a non if_x instruction: {}", i),
     };
 
