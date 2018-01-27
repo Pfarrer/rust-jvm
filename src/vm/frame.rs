@@ -63,6 +63,13 @@ impl Frame {
         }
     }
 
+    pub fn stack_pop_float(&mut self) -> f32 {
+        match self.stack_pop() {
+            Primitive::Float(v) => v,
+            p => panic!("Expected to pop Float from stack but found: {:?}", p),
+        }
+    }
+
     pub fn stack_pop_long(&mut self) -> i64 {
         match self.stack_pop() {
             Primitive::Long(v) => v,
@@ -97,9 +104,9 @@ impl Frame {
         value
     }
 
-    pub fn locals_get(&mut self, index: usize) -> &Primitive {
-        self.locals.get(index).unwrap()
-    }
+//    pub fn locals_get(&mut self, index: usize) -> &Primitive {
+//        self.locals.get(index).unwrap()
+//    }
 
     pub fn locals_get_int(&mut self, index: usize) -> i32 {
         match self.locals.get(index).unwrap() {
@@ -121,4 +128,18 @@ impl Frame {
             p => panic!("Expected to get Long from locals but found: {:?}", p),
         }
     }
+
+    pub fn locals_get_reference(&mut self, index: usize) -> &Primitive {
+        let value = self.locals.get(index).unwrap();
+        match value {
+            &Primitive::Arrayref(_) => (),
+            &Primitive::Objectref(_) => (),
+            &Primitive::ReturnAddress(_) => (),
+            &Primitive::Null => (),
+            _ => panic!("Expected to get reference from locals but found: {:?}", value),
+        };
+
+        value
+    }
+
 }

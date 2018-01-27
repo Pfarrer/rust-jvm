@@ -1,6 +1,6 @@
 use vm::primitive::Primitive;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Array {
     pub atype: Option<u8>,
     pub class_path: Option<String>,

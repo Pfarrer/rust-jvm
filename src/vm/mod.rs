@@ -17,7 +17,6 @@ use classfile;
 use classfile::Classfile;
 use classfile::Method;
 use classfile::attributes::Attribute;
-use classfile::constants::Constant;
 use vm::classloader::Classloader;
 use vm::frame::Frame;
 use vm::primitive::Primitive;
@@ -107,21 +106,22 @@ impl Vm {
 
             // Search for static fields with a ConstantValue attribute and initialize accordingly
             for field in classfile.fields.iter() {
+                let field_name = utils::get_utf8_value(&classfile, field.name_index as usize);
+                let type_signature = utils::get_type_signature(&classfile, field.descriptor_index as usize);
+
                 if field.access_flags & classfile::ACC_STATIC > 0 {
-                    // Static field found -> check if there also is a ConstantValue attribute
+                    // Static field found -> Set the types default value
+                    self.class_statics.get_mut(class_path).unwrap()
+                        .insert(field_name.clone(), Primitive::get_default_value(&type_signature));
+
+                    // Maybe there is a ConstantValue attribute, so check for that
                     for attr in field.attributes.iter() {
                         if let &Attribute::ConstantValue(ref index) = attr {
-                            let value = Primitive::from_constant(classfile.constants.get(*index as usize).unwrap());
+                            let value = Primitive::from_constant(self, classfile.constants.get(*index as usize).unwrap());
 
                             // Set value
-                            match classfile.constants.get(field.name_index as usize).unwrap() {
-                                &Constant::Utf8(ref field_name) => {
-                                    self.class_statics.get_mut(class_path).unwrap()
-                                        .insert(field_name.clone(), value);
-                                },
-                                _ => panic!("Failed to get name of field from constant pool."),
-                            }
-
+                            self.class_statics.get_mut(class_path).unwrap()
+                                .insert(field_name.clone(), value);
                         }
                     }
                 }

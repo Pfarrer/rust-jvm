@@ -48,13 +48,19 @@ mod fconst_x;
 mod fcmp_x;
 mod dup2_x1;
 mod caload;
+mod ifnull;
+mod i2f;
+mod fmul;
+mod f2i;
+mod if_acmp_x;
+mod instanceof;
 
 use classfile::Classfile;
 use vm::Vm;
 use vm::Frame;
 
 pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16, frame: &mut Frame, parent_frame: &mut Frame) -> Option<u16> {
-    trace!("{}.{}{}#{}", frame.class_path, frame.method_name, frame.method_signature, pc);
+//    trace!("{}.{}{}#{}", frame.class_path, frame.method_name, frame.method_signature, pc);
 
     match *code.get(pc as usize).unwrap() {
         0 => Some(pc + 1),
@@ -71,6 +77,7 @@ pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16, frame: &mut
         21 => iload_x::eval(code, pc, frame),
         22 => lload_x::eval(code, pc, frame),
         23 => fload_x::eval(code, pc, frame),
+        25 => aload_x::eval(code, pc, frame),
         26...29 => iload_x::eval(code, pc, frame),
         30...33 => lload_x::eval(code, pc, frame),
         34...37 => fload_x::eval(code, pc, frame),
@@ -91,12 +98,16 @@ pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16, frame: &mut
         96 => iadd::eval(pc, frame),
         97 => ladd::eval(pc, frame),
         100 => isub::eval(pc, frame),
+        106 => fmul::eval(pc, frame),
         132 => iinc::eval(code, pc, frame),
         133 => i2l::eval(pc, frame),
+        134 => i2f::eval(pc, frame),
+        139 => f2i::eval(pc, frame),
         148 => lcmp::eval(pc, frame),
         149...150 => fcmp_x::eval(code, pc, frame),
         153...158 => if_x::eval(code, pc, frame),
         159...164 => if_icmp_x::eval(code, pc, frame),
+        156...166 => if_acmp_x::eval(code, pc, frame),
         167 => goto::eval(code, pc),
         172 => ireturn::eval(frame, parent_frame),
         173 => lreturn::eval(frame, parent_frame),
@@ -114,7 +125,9 @@ pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16, frame: &mut
         189 => anewarray::eval(class, code, pc, frame),
         190 => arraylength::eval(pc, frame),
         192 => checkcast::eval(pc),
+        193 => instanceof::eval(class, code, pc, frame),
         194 => monitorenter::eval(pc, frame),
+        198 => ifnull::eval(code, pc, frame),
         199 => ifnonnull::eval(code, pc, frame),
         instr => panic!("Instruction not implemented: {}", instr),
     }

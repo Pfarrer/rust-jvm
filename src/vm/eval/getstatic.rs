@@ -12,7 +12,7 @@ pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16, frame: &mut
 
             let value = vm.class_statics.get(class_path).unwrap()
                 .get(field_name).unwrap();
-            trace!("getstatic: {}.{}{} -> pushing {:?} to stack", class_path, field_name, type_name, value);
+            trace!("getstatic: {}.{}{} -> push value to stack", class_path, field_name, type_name);
 
             frame.stack_push(value.clone());
         },

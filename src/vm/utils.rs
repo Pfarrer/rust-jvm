@@ -49,6 +49,15 @@ pub fn find_code<'a>(method: &'a Method) -> Option<&'a attributes::CodeAttribute
     None
 }
 
+pub fn get_type_signature(classfile: &Classfile, index: usize) -> signature::TypeSignature {
+    match classfile.constants.get(index).unwrap() {
+//        &Constant::Fieldref(_, _, ref type_descriptor) => signature::parse_field(type_descriptor),
+        &Constant::Utf8(ref type_descriptor) => signature::parse_field(type_descriptor),
+        it => panic!("Expected Utf8 but found: {:?}", it),
+    }
+}
+
+
 pub fn invoke_method(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String, parent_frame: &mut Frame) {
     let class = vm.load_and_clinit_class(class_path);
     let method = find_method(&class, method_name, method_signature)

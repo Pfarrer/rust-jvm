@@ -5,7 +5,7 @@ use vm::primitive::Primitive;
 use vm::signature;
 use vm::utils;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Instance {
     pub class_path: String,
     pub fields: HashMap<String, Primitive>

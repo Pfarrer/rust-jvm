@@ -2,11 +2,13 @@ use std::rc::Rc;
 use std::cell::RefCell;
 
 use classfile::constants::Constant;
+use vm::Vm;
 use vm::signature::TypeSignature;
 use vm::array::Array;
 use vm::instance::Instance;
+use vm::string_pool::StringPool;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Primitive {
     Boolean(bool),
 
@@ -45,16 +47,16 @@ impl Primitive {
         }
     }
 
-    pub fn from_constant(constant: &Constant) -> Primitive {
+    pub fn from_constant(vm: &mut Vm, constant: &Constant) -> Primitive {
         match constant {
             &Constant::Long(value) => Primitive::Long(value),
             &Constant::Integer(value) => Primitive::Int(value),
             &Constant::Float(value) => Primitive::Float(value),
+            &Constant::String(ref value) => Primitive::Objectref(StringPool::intern(vm, value)),
 
 //                                    float	CONSTANT_Float
 //                                    double	CONSTANT_Double
 //                                    int, short, char, byte, boolean	CONSTANT_Integer
-//                                String	CONSTANT_String
             c => panic!("Unexpected constant found: {:?}", c),
         }
     }
