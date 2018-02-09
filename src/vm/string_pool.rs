@@ -24,11 +24,12 @@ impl StringPool {
         // Load String class
         let class = vm.load_and_clinit_class(&"java/lang/String".to_string());
 
+        // Create instance ...
+        // THISISSHIT Should be located in the following lambda
+        let mut instance = Instance::new(vm, class);
+
         // Get pooled String instance or create new instance
         vm.string_pool.pool.entry(value.clone()).or_insert_with(|| {
-            // Create instance ...
-            let mut instance = Instance::new(class);
-
             // ... and set fields
             let count = value.encode_utf16().count();
             instance.fields.insert("count".to_string(), Primitive::Int(count as i32));

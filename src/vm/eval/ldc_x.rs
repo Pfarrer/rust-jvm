@@ -3,6 +3,7 @@ use classfile::constants::Constant;
 use vm::Vm;
 use vm::Frame;
 use vm::primitive::Primitive;
+use vm::classloader::Classloader;
 use vm::string_pool::StringPool;
 use vm::utils;
 
@@ -31,6 +32,11 @@ pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16, frame: &mut
             trace!("{}: Pushing Int {} to stack", instr_name, value);
             frame.stack_push(Primitive::Int(value.clone()));
         },
+        &Constant::Class(ref class_path) => {
+            trace!("{}: Found Class {}", instr_name, class_path);
+            let rc_instance = Classloader::get_class(vm, class_path);
+            frame.stack_push(Primitive::Objectref(rc_instance));
+        }
         it => panic!("Unexpected constant ref: {:?}", it),
     };
 

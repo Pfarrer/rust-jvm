@@ -8,7 +8,7 @@ pub fn eval(pc: u16, frame: &mut Frame) -> Option<u16> {
         _ => (),
     };
 
-    trace!("monitorenter: Popped one reference from stack and did nothing else");
+    trace!("monitorexit: Popped one reference from stack and did nothing else");
 
     Some(pc + 1)
 }

@@ -33,6 +33,7 @@ mod anewarray;
 mod getfield;
 mod putfield;
 mod monitorenter;
+mod monitorexit;
 mod ireturn;
 mod lreturn;
 mod pop;
@@ -54,15 +55,22 @@ mod fmul;
 mod f2i;
 mod if_acmp_x;
 mod instanceof;
+mod iand;
+mod irem;
+mod aaload;
+mod aastore;
+mod dup_x1;
+mod dup2;
 
 use classfile::Classfile;
 use vm::Vm;
 use vm::Frame;
 
 pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16, frame: &mut Frame, parent_frame: &mut Frame) -> Option<u16> {
-//    trace!("{}.{}{}#{}", frame.class_path, frame.method_name, frame.method_signature, pc);
+    let instr = *code.get(pc as usize).unwrap();
+    trace!("{}.{}{}#{} = {}", frame.class_path, frame.method_name, frame.method_signature, pc, instr);
 
-    match *code.get(pc as usize).unwrap() {
+    match instr {
         0 => Some(pc + 1),
         1 => aconst_null::eval(pc, frame),
         2...8 => iconst_x::eval(code, pc, frame),
@@ -82,6 +90,7 @@ pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16, frame: &mut
         30...33 => lload_x::eval(code, pc, frame),
         34...37 => fload_x::eval(code, pc, frame),
         42...45 => aload_x::eval(code, pc, frame),
+        50 => aaload::eval(pc, frame),
         52 => caload::eval(pc, frame),
         54 => istore_x::eval(code, pc, frame),
         55 => lstore_x::eval(code, pc, frame),
@@ -90,15 +99,20 @@ pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16, frame: &mut
         63...66 => lstore_x::eval(code, pc, frame),
         75...78 => astore_x::eval(code, pc, frame),
         79 => iastore::eval(pc, frame),
+        83 => aastore::eval(pc, frame),
         85 => castore::eval(pc, frame),
         87 => pop::eval(pc, frame),
         88 => pop2::eval(pc, frame),
         89 => dup::eval(pc, frame),
+        90 => dup_x1::eval(pc, frame),
+        92 => dup2::eval(pc, frame),
         93 => dup2_x1::eval(pc, frame),
         96 => iadd::eval(pc, frame),
         97 => ladd::eval(pc, frame),
         100 => isub::eval(pc, frame),
         106 => fmul::eval(pc, frame),
+        112 => irem::eval(pc, frame),
+        126 => iand::eval(pc, frame),
         132 => iinc::eval(code, pc, frame),
         133 => i2l::eval(pc, frame),
         134 => i2f::eval(pc, frame),
@@ -127,6 +141,7 @@ pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16, frame: &mut
         192 => checkcast::eval(pc),
         193 => instanceof::eval(class, code, pc, frame),
         194 => monitorenter::eval(pc, frame),
+        195 => monitorexit::eval(pc, frame),
         198 => ifnull::eval(code, pc, frame),
         199 => ifnonnull::eval(code, pc, frame),
         instr => panic!("Instruction not implemented: {}", instr),

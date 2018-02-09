@@ -49,14 +49,11 @@ impl Primitive {
 
     pub fn from_constant(vm: &mut Vm, constant: &Constant) -> Primitive {
         match constant {
-            &Constant::Long(value) => Primitive::Long(value),
             &Constant::Integer(value) => Primitive::Int(value),
             &Constant::Float(value) => Primitive::Float(value),
+            &Constant::Long(value) => Primitive::Long(value),
+            &Constant::Double(value) => Primitive::Double(value),
             &Constant::String(ref value) => Primitive::Objectref(StringPool::intern(vm, value)),
-
-//                                    float	CONSTANT_Float
-//                                    double	CONSTANT_Double
-//                                    int, short, char, byte, boolean	CONSTANT_Integer
             c => panic!("Unexpected constant found: {:?}", c),
         }
     }

@@ -1,0 +1,18 @@
+use vm::Vm;
+use vm::frame::Frame;
+use vm::primitive::Primitive;
+use vm::string_pool::StringPool;
+use vm::utils;
+
+pub fn invoke(_vm: &mut Vm, _parent_frame: &mut Frame, class_path: &String, method_name: &String, method_signature: &String) {
+//    match method_name.as_ref() {
+    match method_name {
+//        "intern" => intern(vm, parent_frame, class_path, method_name, method_signature), // ()Ljava/lang/String;
+        _ => panic!("Native implementation of method {}.{}{} missing.", class_path, method_name, method_signature),
+    }
+}
+
+//fn noop(class_path: &String, method_name: &String, method_signature: &String) {
+//    // Nothing to do
+//    trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
+//}

@@ -15,7 +15,7 @@ pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16, frame: &mut
     match class.constants.get(index as usize).unwrap() {
         &Constant::Class(ref class_path) => {
             let class = vm.load_and_clinit_class(class_path);
-            let instance = Instance::new(class);
+            let instance = Instance::new(vm, class);
 
             trace!("new: {} -> pushing reference to stack", class_path);
             frame.stack_push(Primitive::Objectref(Rc::new(RefCell::new(instance))));

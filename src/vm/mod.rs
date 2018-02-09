@@ -1,4 +1,5 @@
 mod classloader;
+mod class_hierarchy;
 mod utils;
 mod signature;
 mod primitive;
@@ -18,6 +19,7 @@ use classfile::Classfile;
 use classfile::Method;
 use classfile::attributes::Attribute;
 use vm::classloader::Classloader;
+use vm::class_hierarchy::ClassHierarchy;
 use vm::frame::Frame;
 use vm::primitive::Primitive;
 use vm::array::Array;
@@ -28,6 +30,7 @@ const MAIN_METHOD_SIGNATURE: &str = "([Ljava/lang/String;)V";
 
 pub struct Vm {
     classloader: Classloader,
+    class_hierarchy: ClassHierarchy,
     pub class_statics: HashMap<String, HashMap<String, Primitive>>,
     pub string_pool: StringPool,
 }
@@ -35,11 +38,13 @@ pub struct Vm {
 impl Vm {
     pub fn new(class_paths: Vec<String>) -> Vm {
         let classloader = Classloader::new(class_paths);
+        let class_hierarchy = ClassHierarchy::new();
         let class_statics = HashMap::new();
         let string_pool = StringPool::new();
 
         Vm {
             classloader,
+            class_hierarchy,
             class_statics,
             string_pool,
         }
@@ -60,14 +65,12 @@ impl Vm {
     }
 
     pub fn invoke_static(&mut self, class_path: &String, method_name: &String, method_signature: &String, parent_frame: &mut Frame) {
-        let class = self.load_and_clinit_class(class_path);
-        let method = utils::find_method(&class, &method_name, &method_signature)
-            .unwrap_or_else(|| panic!("Method not found: {}.{}{}", class_path, method_name, method_signature));
+        let (class, method) = utils::find_method(self, class_path, method_name, method_signature);
 
         // TODO access_flags: method.access_flags == classfile.ACC_PUBLIC | classfile.ACC_STATIC;
 
         if method.access_flags & classfile::ACC_NATIVE > 0 {
-            native::invoke(self, parent_frame, &class, method, class_path, method_name, method_signature);
+            native::invoke(self, parent_frame, &class, &method, class_path, method_name, method_signature);
         } else if method.access_flags & classfile::ACC_ABSTRACT > 0 {
             panic!("{}.{}{} cannot be executed since it is abstract.", class_path, method_name, method_signature);
         } else {
@@ -78,7 +81,7 @@ impl Vm {
             for i in (0..sig.parameters.len()).rev() {
                 let arg = parent_frame.stack_pop();
 
-                trace!(" - Write argument no. {} to inner frame: {:?}", i, arg);
+//                trace!(" - Write argument no. {} to inner frame: {:?}", i, arg);
                 frame.locals_write(i, arg);
             }
 
@@ -98,8 +101,8 @@ impl Vm {
         }
     }
 
-    fn load_and_clinit_class(&mut self, class_path: &String) -> Classfile {
-        let classfile = self.classloader.get_class(&class_path);
+    pub fn load_and_clinit_class(&mut self, class_path: &String) -> Classfile {
+        let classfile = self.classloader.get_classfile(&class_path);
 
         if !self.class_statics.contains_key(class_path) {
             self.class_statics.insert(class_path.clone(), HashMap::new());
@@ -128,7 +131,7 @@ impl Vm {
             }
 
             // Initialize class if necessary
-            if let Some(method) = utils::find_method(&classfile, &"<clinit>".to_string(), &"()V".to_string()) {
+            if let Some(method) = utils::find_method_in_classfile(&classfile, &"<clinit>".to_string(), &"()V".to_string()) {
                 trace!("Class {} not initialized and contains <clinit> -> executing now", class_path);
 
                 let mut frame = Frame::new(class_path.clone(), "<clinit>".to_string(), "()V".to_string());

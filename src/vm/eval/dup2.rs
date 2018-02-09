@@ -2,10 +2,9 @@ use vm::Frame;
 use vm::primitive::Primitive;
 
 pub fn eval(pc: u16, frame: &mut Frame) -> Option<u16> {
-    trace!("dup2_x1: Duplicate the top one or two operand stack values and insert two or three values down");
+    trace!("dup2: Duplicate the top one or two operand stack values");
 
     let value1 = frame.stack_pop();
-    let value2 = frame.stack_pop();
 
     let value1_is_computational_category_1 = match value1 {
         Primitive::Long(_) | Primitive::Double(_) => false,
@@ -14,20 +13,18 @@ pub fn eval(pc: u16, frame: &mut Frame) -> Option<u16> {
 
     if value1_is_computational_category_1 {
         // Stack:
-        // ..., value3, value2, value1 → ..., value2, value1, value3, value2, value1
-        let value3 = frame.stack_pop();
+        // ..., value2, value1 → ..., value2, value1, value2, value1
+        let value2 = frame.stack_pop();
 
         frame.stack_push(value2.clone());
         frame.stack_push(value1.clone());
-        frame.stack_push(value3);
         frame.stack_push(value2);
         frame.stack_push(value1);
     }
     else {
         // Stack
-        // ..., value2, value1 → ..., value1, value2, value1
+        // ..., value1 → ..., value1, value1
         frame.stack_push(value1.clone());
-        frame.stack_push(value2);
         frame.stack_push(value1);
     }
 
