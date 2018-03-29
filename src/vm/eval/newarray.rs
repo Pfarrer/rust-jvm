@@ -1,11 +1,12 @@
 use std::rc::Rc;
 use std::cell::RefCell;
 
-use vm::Frame;
+use vm::Vm;
 use vm::primitive::Primitive;
 use vm::array::Array;
 
-pub fn eval(code: &Vec<u8>, pc: u16, frame: &mut Frame) -> Option<u16> {
+pub fn eval(vm: &mut Vm, code: &Vec<u8>, pc: u16) -> Option<u16> {
+    let frame = vm.frame_stack.last_mut().unwrap();
     let count = frame.stack_pop_int();
     let atype = *code.get(pc as usize + 1).unwrap();
 

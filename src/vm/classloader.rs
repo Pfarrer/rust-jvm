@@ -121,7 +121,8 @@ impl Classloader {
 
         // Get pooled String instance or create new instance
         vm.classloader.class_pool.entry(class_path.clone()).or_insert_with(|| {
-            instance.fields.insert("name".to_string(), Primitive::Objectref(rc_class_path));
+            instance.fields.insert("name".to_string(), Primitive::Objectref(rc_class_path.clone()));
+//            instance.fields.insert("classLoader".to_string(), Primitive::Objectref(rc_class_path));
 
             Rc::new(RefCell::new(instance))
         }).clone()

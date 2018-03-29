@@ -1,11 +1,17 @@
-use vm::Frame;
+use vm::Vm;
 use vm::primitive::Primitive;
 
-pub fn eval(frame: &mut Frame, parent_frame: &mut Frame) -> Option<u16> {
-    let ret_val = frame.stack_pop_long();
+pub fn eval(vm: &mut Vm) -> Option<u16> {
+    let mut frame = vm.frame_stack.pop().unwrap();
+    let mut parent_frame = vm.frame_stack.pop().unwrap();
 
-    trace!("lreturn: Popped Long {} from stack, returning to parent method", ret_val);
+    let ret_val = frame.stack_pop_long();
     parent_frame.stack_push(Primitive::Long(ret_val));
+    trace!("lreturn: Popped Long {} from stack, returning to parent method", ret_val);
+
+    // Push frames back to the stack
+    vm.frame_stack.push(parent_frame);
+    vm.frame_stack.push(frame);
 
     None
 }

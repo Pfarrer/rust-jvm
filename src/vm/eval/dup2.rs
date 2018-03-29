@@ -1,15 +1,16 @@
-use vm::Frame;
 use vm::primitive::Primitive;
+use vm::Vm;
 
-pub fn eval(pc: u16, frame: &mut Frame) -> Option<u16> {
-    trace!("dup2: Duplicate the top one or two operand stack values");
-
+pub fn eval(vm: &mut Vm, pc: u16) -> Option<u16> {
+    let frame = vm.frame_stack.last_mut().unwrap();
     let value1 = frame.stack_pop();
 
     let value1_is_computational_category_1 = match value1 {
         Primitive::Long(_) | Primitive::Double(_) => false,
         _ => true,
     };
+
+    trace!("dup2: Duplicate the top one or two operand stack values");
 
     if value1_is_computational_category_1 {
         // Stack:

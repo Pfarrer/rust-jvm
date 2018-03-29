@@ -1,14 +1,13 @@
 use classfile::Classfile;
 use classfile::constants::Constant;
-use vm::Vm;
-use vm::Frame;
-use vm::primitive::Primitive;
 use vm::classloader::Classloader;
+use vm::primitive::Primitive;
 use vm::string_pool::StringPool;
 use vm::utils;
+use vm::Vm;
 
 /// Can handle instructions ldc (decimal 18) and ldc_2 (decimal 19).
-pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16, frame: &mut Frame) -> Option<u16> {
+pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16) -> Option<u16> {
     // Check which instruction triggered this call, if it was ldc, then only one byte should be read,
     // when it was ldc_w, two bytes must be read
     let (index, pc_inc, instr_name) = match *code.get(pc as usize).unwrap() {
@@ -22,20 +21,20 @@ pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16, frame: &mut
             trace!("{}: Pushing String \"{}\" to stack", instr_name, value);
 
             let rc_instance = StringPool::intern(vm, value);
-            frame.stack_push(Primitive::Objectref(rc_instance));
+            vm.frame_stack.last_mut().unwrap().stack_push(Primitive::Objectref(rc_instance));
         },
         &Constant::Float(ref value) => {
             trace!("{}: Pushing Float {} to stack", instr_name, value);
-            frame.stack_push(Primitive::Float(value.clone()));
+            vm.frame_stack.last_mut().unwrap().stack_push(Primitive::Float(value.clone()));
         },
         &Constant::Integer(ref value) => {
             trace!("{}: Pushing Int {} to stack", instr_name, value);
-            frame.stack_push(Primitive::Int(value.clone()));
+            vm.frame_stack.last_mut().unwrap().stack_push(Primitive::Int(value.clone()));
         },
         &Constant::Class(ref class_path) => {
             trace!("{}: Found Class {}", instr_name, class_path);
             let rc_instance = Classloader::get_class(vm, class_path);
-            frame.stack_push(Primitive::Objectref(rc_instance));
+            vm.frame_stack.last_mut().unwrap().stack_push(Primitive::Objectref(rc_instance));
         }
         it => panic!("Unexpected constant ref: {:?}", it),
     };

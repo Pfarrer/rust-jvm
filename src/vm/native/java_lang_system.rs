@@ -1,27 +1,27 @@
 extern crate time;
 
 use vm::Vm;
-use vm::frame::Frame;
 use vm::primitive::Primitive;
+use vm::utils;
 
-pub fn invoke(vm: &mut Vm, frame: &mut Frame, class_path: &String, method_name: &String, method_signature: &String) {
+pub fn invoke(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
     match method_name.as_ref() {
-        "registerNatives" => register_natives(vm, class_path, method_name, method_signature, frame),
-        "currentTimeMillis" => current_time_millis(class_path, method_name, method_signature, frame), // ()J
-        "nanoTime" => nano_time(class_path, method_name, method_signature, frame), // ()J
-        "initProperties" => init_properties(class_path, method_name, method_signature, frame), // (Ljava/util/Properties;)Ljava/util/Properties;
-        "arraycopy" => arraycopy(class_path, method_name, method_signature, frame), // arraycopy(Ljava/lang/Object;ILjava/lang/Object;II)V
+        "registerNatives" => register_natives(vm, class_path, method_name, method_signature),
+        "currentTimeMillis" => current_time_millis(vm, class_path, method_name, method_signature), // ()J
+        "nanoTime" => nano_time(vm, class_path, method_name, method_signature), // ()J
+        "initProperties" => init_properties(class_path, method_name, method_signature), // (Ljava/util/Properties;)Ljava/util/Properties;
+        "arraycopy" => arraycopy(vm, class_path, method_name, method_signature), // arraycopy(Ljava/lang/Object;ILjava/lang/Object;II)V
         _ => panic!("Native implementation of method {}.{}{} missing.", class_path, method_name, method_signature),
     }
 }
 
-fn register_natives(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String, frame: &mut Frame) {
+fn register_natives(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
     trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
 
-    vm.invoke_static(class_path, &"initializeSystemClass".to_string(), &"()V".to_string(), frame);
+    utils::invoke_method(vm, class_path, &"initializeSystemClass".to_string(), &"()V".to_string(), false);
 }
 
-fn current_time_millis(class_path: &String, method_name: &String, method_signature: &String, parent_frame: &mut Frame) {
+fn current_time_millis(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
     trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
 
     let time_spec = time::get_time();
@@ -31,20 +31,22 @@ fn current_time_millis(class_path: &String, method_name: &String, method_signatu
     let millis_int = (millis_float * 1000.0) as i64;
 
     // Push result to stack
-    parent_frame.stack_push(Primitive::Long(millis_int));
+    let frame = vm.frame_stack.last_mut().unwrap();
+    frame.stack_push(Primitive::Long(millis_int));
 }
 
-fn nano_time(class_path: &String, method_name: &String, method_signature: &String, parent_frame: &mut Frame) {
+fn nano_time(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
     trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
 
     let nano_time = time::precise_time_ns();
 
     // Push result to stack
-    parent_frame.stack_push(Primitive::Long(nano_time as i64));
+    let frame = vm.frame_stack.last_mut().unwrap();
+    frame.stack_push(Primitive::Long(nano_time as i64));
 }
 
 /// java/lang/System.initProperties(Ljava/util/Properties;)Ljava/util/Properties;
-fn init_properties(class_path: &String, method_name: &String, method_signature: &String, _frame: &mut Frame) {
+fn init_properties(class_path: &String, method_name: &String, method_signature: &String) {
     // java.version         <dd>Java version number
 //    * <dt>java.vendor          <dd>Java vendor specific string
 //        * <dt>java.vendor.url      <dd>Java vendor URL
@@ -73,8 +75,10 @@ fn init_properties(class_path: &String, method_name: &String, method_signature: 
 }
 
 /// arraycopy(Ljava/lang/Object;ILjava/lang/Object;II)V
-fn arraycopy(class_path: &String, method_name: &String, method_signature: &String, frame: &mut Frame) {
+fn arraycopy(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
     trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
+
+    let frame = vm.frame_stack.last_mut().unwrap();
 
     let length = frame.stack_pop_int() as usize;
     let dest_pos = frame.stack_pop_int() as usize;

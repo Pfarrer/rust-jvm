@@ -1,7 +1,10 @@
-use vm::Frame;
+use vm::Vm;
 use vm::primitive::Primitive;
 
-pub fn eval(frame: &mut Frame, parent_frame: &mut Frame) -> Option<u16> {
+pub fn eval(vm: &mut Vm) -> Option<u16> {
+    let mut frame = vm.frame_stack.pop().unwrap();
+    let mut parent_frame = vm.frame_stack.pop().unwrap();
+
     let ret_val = frame.stack_pop();
 
     match ret_val {
@@ -15,6 +18,10 @@ pub fn eval(frame: &mut Frame, parent_frame: &mut Frame) -> Option<u16> {
         },
         v => panic!("Popped {:?} from stack but expected a Reference or Null", v),
     };
+
+    // Push frames back to the stack
+    vm.frame_stack.push(parent_frame);
+    vm.frame_stack.push(frame);
 
     None
 }

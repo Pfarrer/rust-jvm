@@ -1,10 +1,9 @@
 use classfile::Classfile;
 use classfile::constants::Constant;
-use vm::Vm;
-use vm::Frame;
 use vm::utils;
+use vm::Vm;
 
-pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16, frame: &mut Frame) -> Option<u16> {
+pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16) -> Option<u16> {
     let index = utils::read_u16_code(code, pc);
     match class.constants.get(index as usize).unwrap() {
         &Constant::Fieldref(ref class_path, ref field_name, ref type_name) => {
@@ -14,6 +13,7 @@ pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16, frame: &mut
                 .get(field_name).unwrap();
             trace!("getstatic: {}.{}{} -> push value to stack", class_path, field_name, type_name);
 
+            let frame = vm.frame_stack.last_mut().unwrap();
             frame.stack_push(value.clone());
         },
         it => panic!("Unexpected constant ref: {:?}", it),

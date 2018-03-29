@@ -1,12 +1,13 @@
-use vm::Frame;
+use vm::Vm;
 use vm::primitive::Primitive;
 
-pub fn eval(pc: u16, frame: &mut Frame) -> Option<u16> {
+pub fn eval(vm: &mut Vm, pc: u16) -> Option<u16> {
+    let frame = vm.frame_stack.last_mut().unwrap();
     let rc_array = frame.stack_pop_arrayref();
     let array = rc_array.borrow();
     let length = array.elements.len();
 
-    trace!("arraylength: Popping Arrayref from stack and push Int {} to stack", length);
+    trace!("arraylength: Popped Arrayref from stack and push Int {} to stack", length);
     frame.stack_push(Primitive::Int(length as i32));
 
     Some(pc + 1)

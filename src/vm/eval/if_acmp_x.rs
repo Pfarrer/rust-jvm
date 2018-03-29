@@ -1,8 +1,9 @@
-use vm::Frame;
 use vm::primitive::Primitive;
 use vm::utils;
+use vm::Vm;
 
-pub fn eval(code: &Vec<u8>, pc: u16, frame: &mut Frame) -> Option<u16> {
+pub fn eval(vm: &mut Vm, code: &Vec<u8>, pc: u16) -> Option<u16> {
+    let frame = vm.frame_stack.last_mut().unwrap();
     let value2 = frame.stack_pop();
     let value1 = frame.stack_pop();
 

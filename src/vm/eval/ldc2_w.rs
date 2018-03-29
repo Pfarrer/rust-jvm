@@ -1,10 +1,12 @@
 use classfile::Classfile;
 use classfile::constants::Constant;
-use vm::Frame;
+use vm::Vm;
 use vm::primitive::Primitive;
 use vm::utils;
 
-pub fn eval(class: &Classfile, code: &Vec<u8>, pc: u16, frame: &mut Frame) -> Option<u16> {
+pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16) -> Option<u16> {
+    let frame = vm.frame_stack.last_mut().unwrap();
+
     let index = utils::read_u16_code(code, pc);
     match class.constants.get(index as usize).unwrap() {
         &Constant::Long(ref value) => {

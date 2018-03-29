@@ -1,12 +1,11 @@
 use vm::Vm;
-use vm::frame::Frame;
-//use vm::primitive::Primitive;
+use vm::primitive::Primitive;
 use vm::utils;
 
-pub fn invoke(vm: &mut Vm, parent_frame: &mut Frame, class_path: &String, method_name: &String, method_signature: &String) {
+pub fn invoke(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
     match method_name.as_ref() {
         "registerNatives" => register_natives(class_path, method_name, method_signature),
-        "doPrivileged" => do_privileged(vm, parent_frame, class_path, method_name, method_signature),
+        "doPrivileged" => do_privileged(vm, class_path, method_name, method_signature),
         _ => panic!("Native implementation of method {}.{}{} missing.", class_path, method_name, method_signature),
     }
 }
@@ -17,10 +16,19 @@ fn register_natives(class_path: &String, method_name: &String, method_signature:
 }
 
 /// doPrivileged(Ljava/security/PrivilegedAction;)Ljava/lang/Object;
-fn do_privileged(vm: &mut Vm, frame: &mut Frame, class_path: &String, method_name: &String, method_signature: &String) {
+fn do_privileged(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
     trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
 
     // TODO check if privileged to call run()Ljava/lang/Object;
 
-    utils::invoke_instance_method(vm, &"run".to_string(), &"()Ljava/lang/Object;".to_string(), frame);
+    let class_path = {
+        let frame = vm.frame_stack.last_mut().unwrap();
+        let rc_instance = frame.stack_pop_objectref();
+        let class_path = rc_instance.borrow().class_path.clone();
+        frame.stack_push(Primitive::Objectref(rc_instance));
+
+        class_path
+    };
+
+    utils::invoke_method(vm, &class_path, &"run".to_string(), &"()Ljava/lang/Object;".to_string(), true);
 }

@@ -87,39 +87,37 @@ pub fn get_type_signature(classfile: &Classfile, index: usize) -> signature::Typ
     }
 }
 
-pub fn invoke_method(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String, parent_frame: &mut Frame) {
+pub fn invoke_method(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String, is_instance: bool) {
     let (class, method) = find_method(vm, class_path, method_name, method_signature);
 
     if method.access_flags & classfile::ACC_NATIVE > 0 {
-        native::invoke(vm, parent_frame, &class, &method, class_path, method_name, method_signature);
+        native::invoke(vm, class_path, method_name, method_signature);
     }
     else {
         let mut frame = Frame::new(class_path.clone(), method_name.clone(), method_signature.clone());
 
         // Parse signature and move arguments from caller frame to callee frame
-        let sig = signature::parse_method(method_signature);
-        for i in (1..sig.parameters.len() + 1).rev() {
-            let arg = parent_frame.stack_pop();
+        {
+            let parent_frame = vm.frame_stack.last_mut().unwrap();
 
-            //        trace!(" - Write argument no. {} to inner frame: {:?}", i, arg);
-            frame.locals_write(i, arg);
+            let sig = signature::parse_method(method_signature);
+            let number_of_locals = sig.parameters.len() + if is_instance { 1 } else { 0 };
+            for i in (0..number_of_locals).rev() {
+                let arg = parent_frame.stack_pop();
+                frame.locals_write(i, arg);
+            }
+
+//            warn!("{:#?} -- {:#?}", parent_frame, frame);
+
+//            if is_instance {
+//                // Push the instance reference to local no. 0
+//                let this_ref = parent_frame.stack_pop_reference();
+//                frame.locals_write(0, this_ref);
+//            }
         }
 
-        // Push the instance reference to local no. 0
-        let this_ref = parent_frame.stack_pop_reference();
-        //    trace!(" - Write 'this' reference to inner frame: {:?}", this_ref);
-        frame.locals_write(0, this_ref);
-
-        vm.execute_method(&class, &method, &mut frame, parent_frame);
+        vm.execute_method(&class, &method, frame);
     }
-}
-
-pub fn invoke_instance_method(vm: &mut Vm, method_name: &String, method_signature: &String, parent_frame: &mut Frame) {
-    let rc_instance = parent_frame.stack_pop_objectref();
-    let instance = rc_instance.borrow();
-    parent_frame.stack_push(Primitive::Objectref(rc_instance.clone()));
-
-    invoke_method(vm, &instance.class_path, method_name, method_signature, parent_frame);
 }
 
 pub fn read_u16_code(code: &Vec<u8>, pc: u16) -> u16 {

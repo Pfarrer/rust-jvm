@@ -1,7 +1,8 @@
-use vm::Frame;
+use vm::Vm;
 use vm::primitive::Primitive;
 
-pub fn eval(pc: u16, frame: &mut Frame) -> Option<u16> {
+pub fn eval(vm: &mut Vm, pc: u16) -> Option<u16> {
+    let frame = vm.frame_stack.last_mut().unwrap();
     let objectref = frame.stack_pop_reference();
     match objectref {
         Primitive::Null => panic!("Not implemented -> throw NullPointerException"),

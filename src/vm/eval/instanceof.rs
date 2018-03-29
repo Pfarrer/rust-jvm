@@ -1,12 +1,14 @@
 use classfile::Classfile;
 use classfile::constants::Constant;
-use vm::Frame;
+use vm::Vm;
 use vm::primitive::Primitive;
 use vm::utils;
 
-pub fn eval(class: &Classfile, code: &Vec<u8>, pc: u16, frame: &mut Frame) -> Option<u16> {
+pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16) -> Option<u16> {
     let index = utils::read_u16_code(code, pc);
     let constant = class.constants.get(index as usize).unwrap();
+
+    let frame = vm.frame_stack.last_mut().unwrap();
     let reference = frame.stack_pop();
 
     let (name1, name2, value) = match (constant, reference) {
@@ -33,6 +35,6 @@ fn for_class_instance(expected_class_path: &String, instance_class_path: &String
         1
     }
     else {
-        panic!("Class hierarchie not implemented!");
+        panic!("Class hierarchy not implemented!");
     }
 }

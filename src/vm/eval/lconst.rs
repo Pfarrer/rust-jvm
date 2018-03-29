@@ -1,9 +1,9 @@
-use vm::Frame;
+use vm::Vm;
 use vm::primitive::Primitive;
 
-pub fn eval(val: i64, pc: u16, frame: &mut Frame) -> Option<u16> {
+pub fn eval(val: i64, vm: &mut Vm, pc: u16) -> Option<u16> {
     trace!("lconst_{}: Pushing {}L to stack", val, val);
-    frame.stack_push(Primitive::Long(val));
+    vm.frame_stack.last_mut().unwrap().stack_push(Primitive::Long(val));
 
-    Some(pc+1)
+    Some(pc + 1)
 }

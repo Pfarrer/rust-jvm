@@ -1,9 +1,9 @@
 use std::f32::NAN;
-
-use vm::Frame;
 use vm::primitive::Primitive;
+use vm::Vm;
 
-pub fn eval(code: &Vec<u8>, pc: u16, frame: &mut Frame) -> Option<u16> {
+pub fn eval(vm: &mut Vm, code: &Vec<u8>, pc: u16) -> Option<u16> {
+    let frame = vm.frame_stack.last_mut().unwrap();
     let value2 = match frame.stack_pop() {
         Primitive::Float(val) => val,
         _ => panic!("Value set conversion (§2.8.3) not implemented"),

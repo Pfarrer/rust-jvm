@@ -31,6 +31,7 @@ const MAIN_METHOD_SIGNATURE: &str = "([Ljava/lang/String;)V";
 pub struct Vm {
     classloader: Classloader,
     class_hierarchy: ClassHierarchy,
+    frame_stack: Vec<Frame>,
     pub class_statics: HashMap<String, HashMap<String, Primitive>>,
     pub string_pool: StringPool,
 }
@@ -39,66 +40,45 @@ impl Vm {
     pub fn new(class_paths: Vec<String>) -> Vm {
         let classloader = Classloader::new(class_paths);
         let class_hierarchy = ClassHierarchy::new();
+        let frame_stack = Vec::new();
         let class_statics = HashMap::new();
         let string_pool = StringPool::new();
 
         Vm {
             classloader,
             class_hierarchy,
+            frame_stack,
             class_statics,
             string_pool,
         }
     }
 
     pub fn invoke_main(&mut self, class_path: &String) {
-        let mut frame = Frame::new(class_path.clone(), MAIN_METHOD_NAME.to_string(), MAIN_METHOD_SIGNATURE.to_string());
-
         // Add args array
         let args = Array::new_complex(0, "java/lang/String".to_string());
         let rc_args = Rc::new(RefCell::new(args));
+
+        let mut frame = Frame::new("<root_frame>".to_string(), "<root_frame>".to_string(), "<root_frame>".to_string());
         frame.stack_push(Primitive::Arrayref(rc_args));
+        self.frame_stack.push(frame);
 
-        self.invoke_static(class_path,
-                           &MAIN_METHOD_NAME.to_string(),
-                           &MAIN_METHOD_SIGNATURE.to_string(),
-                           &mut frame);
+        utils::invoke_method(self, class_path, &MAIN_METHOD_NAME.to_string(), &MAIN_METHOD_SIGNATURE.to_string(), false);
     }
 
-    pub fn invoke_static(&mut self, class_path: &String, method_name: &String, method_signature: &String, parent_frame: &mut Frame) {
-        let (class, method) = utils::find_method(self, class_path, method_name, method_signature);
+    pub fn execute_method(&mut self, class: &Classfile, method: &Method, frame: Frame) {
+        self.frame_stack.push(frame);
 
-        // TODO access_flags: method.access_flags == classfile.ACC_PUBLIC | classfile.ACC_STATIC;
-
-        if method.access_flags & classfile::ACC_NATIVE > 0 {
-            native::invoke(self, parent_frame, &class, &method, class_path, method_name, method_signature);
-        } else if method.access_flags & classfile::ACC_ABSTRACT > 0 {
-            panic!("{}.{}{} cannot be executed since it is abstract.", class_path, method_name, method_signature);
-        } else {
-            let mut frame = Frame::new(class_path.clone(), method_name.clone(), method_signature.clone());
-
-            // Parse signature and move arguments from caller frame to callee frame
-            let sig = signature::parse_method(method_signature);
-            for i in (0..sig.parameters.len()).rev() {
-                let arg = parent_frame.stack_pop();
-
-//                trace!(" - Write argument no. {} to inner frame: {:?}", i, arg);
-                frame.locals_write(i, arg);
-            }
-
-            self.execute_method(&class, &method, &mut frame, parent_frame);
-        }
-    }
-
-    pub fn execute_method(&mut self, class: &Classfile, method: &Method, frame: &mut Frame, parent_frame: &mut Frame) {
         let code_attr = utils::find_code(method).unwrap();
         let mut pc = 0;
 
         loop {
-            match eval::eval(self, class, &code_attr.code, pc, frame, parent_frame) {
+            match eval::eval(self, class, &code_attr.code, pc) {
                 Some(new_pc) => pc = new_pc,
                 None => break,
             }
         }
+
+        self.frame_stack.pop();
     }
 
     pub fn load_and_clinit_class(&mut self, class_path: &String) -> Classfile {
@@ -134,9 +114,14 @@ impl Vm {
             if let Some(method) = utils::find_method_in_classfile(&classfile, &"<clinit>".to_string(), &"()V".to_string()) {
                 trace!("Class {} not initialized and contains <clinit> -> executing now", class_path);
 
-                let mut frame = Frame::new(class_path.clone(), "<clinit>".to_string(), "()V".to_string());
-                let mut parent_frame = Frame::new(class_path.clone(), "<clinit>".to_string(), "()V".to_string());
-                self.execute_method(&classfile, &method, &mut frame, &mut parent_frame);
+                let frame = Frame::new(class_path.clone(), "<clinit>".to_string(), "()V".to_string());
+                let frame2 = Frame::new(class_path.clone(), "<clinit>".to_string(), "()V".to_string());
+
+                self.frame_stack.push(frame2);
+
+                self.execute_method(&classfile, &method, frame);
+
+                self.frame_stack.pop();
 
                 trace!("{}.<clinit> done", class_path);
             }

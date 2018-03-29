@@ -1,8 +1,8 @@
-use vm::Frame;
+use vm::Vm;
 use vm::primitive::Primitive;
 
 /// Can handle instructions istore and istore_<n>.
-pub fn eval(code: &Vec<u8>, pc: u16, frame: &mut Frame) -> Option<u16> {
+pub fn eval(vm: &mut Vm, code: &Vec<u8>, pc: u16) -> Option<u16> {
     // Check which instruction triggered this call, if it was istore, then one byte should be read,
     // when it was istore_<n>, the index is implicit
     let (index, pc_inc) = match *code.get(pc as usize).unwrap() {
@@ -13,8 +13,10 @@ pub fn eval(code: &Vec<u8>, pc: u16, frame: &mut Frame) -> Option<u16> {
         i => panic!("Unexpected invocation of this instruction, found: {}", i),
     };
 
+    let frame = vm.frame_stack.last_mut().unwrap();
     let value = frame.stack_pop_int();
-    trace!("istore_{}: Popping Int {} from to stack and write to locals", index, value);
+
+    trace!("istore_{}: Popped Int {} from to stack and write to locals", index, value);
 
     frame.locals_write(index as usize, Primitive::Int(value));
 

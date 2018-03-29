@@ -1,6 +1,8 @@
-use vm::Frame;
+use vm::Vm;
 
-pub fn eval(pc: u16, frame: &mut Frame) -> Option<u16> {
+pub fn eval(vm: &mut Vm, pc: u16) -> Option<u16> {
+    let frame = vm.frame_stack.last_mut().unwrap();
+
     let value = frame.stack_pop();
     trace!("dup: Duplicating last stack element");
 

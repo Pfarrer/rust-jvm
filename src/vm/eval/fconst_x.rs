@@ -1,11 +1,13 @@
-use vm::Frame;
 use vm::primitive::Primitive;
+use vm::Vm;
 
-pub fn eval(code: &Vec<u8>, pc: u16, frame: &mut Frame) -> Option<u16> {
-    let index = code.get(pc as usize).unwrap() - 11;
-    trace!("fconst_{}: Pushing constant Float {} to stack", index, index);
+pub fn eval(vm: &mut Vm, code: &Vec<u8>, pc: u16) -> Option<u16> {
+    let value = code.get(pc as usize).unwrap() - 11;
 
-    frame.stack_push(Primitive::Float(index as f32));
+    let frame = vm.frame_stack.last_mut().unwrap();
+    frame.stack_push(Primitive::Float(value as f32));
+
+    trace!("fconst_{}: Pushed constant Float {} to stack", value, value);
 
     Some(pc + 1)
 }

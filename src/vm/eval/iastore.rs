@@ -1,7 +1,8 @@
-use vm::Frame;
 use vm::primitive::Primitive;
+use vm::Vm;
 
-pub fn eval(pc: u16, frame: &mut Frame) -> Option<u16> {
+pub fn eval(vm: &mut Vm, pc: u16) -> Option<u16> {
+    let frame = vm.frame_stack.last_mut().unwrap();
     let value = frame.stack_pop_int();
     let index = frame.stack_pop_int() as usize;
 
@@ -9,7 +10,7 @@ pub fn eval(pc: u16, frame: &mut Frame) -> Option<u16> {
     let mut array = rc_array.borrow_mut();
     assert_eq!(array.atype.unwrap(), 10);
 
-    trace!("iastore: Popping three values from stack and write '{}' at array index {}", value, index);
+    trace!("iastore: Popped three values from stack and write '{}' at array index {}", value, index);
     array.elements[index] = Primitive::Int(value);
 
     Some(pc + 1)
