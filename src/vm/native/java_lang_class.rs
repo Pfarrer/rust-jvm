@@ -168,7 +168,16 @@ fn get_class_loader0(vm: &mut Vm, class_path: &String, method_name: &String, met
     let classloader_instance = Instance::new(vm, classloader_classfile);
 
     let frame = vm.frame_stack.last_mut().unwrap();
-    frame.stack_push(Primitive::Objectref(Rc::new(RefCell::new(classloader_instance))));
+
+    // Check whether the current class is a system class
+    if frame.class_path == "java/lang/Class" {
+        debug!("Providing Null as class loader of {}", frame.class_path);
+        frame.stack_push(Primitive::Null);
+    }
+    else {
+        debug!("Providing fake class loader of {}", frame.class_path);
+        frame.stack_push(Primitive::Objectref(Rc::new(RefCell::new(classloader_instance))));
+    }
 }
 
 ///(Ljava/lang/Class;)Z

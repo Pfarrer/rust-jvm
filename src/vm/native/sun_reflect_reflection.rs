@@ -20,19 +20,19 @@ fn get_caller_class(vm: &mut Vm, class_path: &String, method_name: &String, meth
     implementation are completely ignored and do not count toward the number of "real" frames
     skipped. */
 
-    debug!("{:#?}", vm.frame_stack);
-
 //    let real_frames_to_skip = vm.frame_stack.last_mut().unwrap().stack_pop_int();
 //    assert_eq!(real_frames_to_skip, 1);
 
-    let class_path = {
-        let frame_stack_len = vm.frame_stack.len();
-        let parent_frame = &vm.frame_stack[frame_stack_len - 2];
-
-        parent_frame.class_path.clone()
-    };
+//    let class_path = {
+//        let frame_stack_len = vm.frame_stack.len();
+//        let parent_frame = &vm.frame_stack[frame_stack_len - 2];
+//
+//        parent_frame.class_path.clone()
+//    };
 
 //    let return_value = Classloader::get_class(vm, &class_path);
     let return_value = Classloader::get_class(vm, &"java/util/Random".to_string());
     vm.frame_stack.last_mut().unwrap().stack_push(Primitive::Objectref(return_value));
+
+    warn!("WARNING! Used hacky implementation here...");
 }
