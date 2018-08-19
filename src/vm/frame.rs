@@ -1,5 +1,6 @@
 use std::rc::Rc;
 use std::cell::RefCell;
+use std::fmt;
 
 use vm::primitive::Primitive;
 use vm::array::Array;
@@ -56,9 +57,18 @@ impl Frame {
 //        }
 //    }
 
+    pub fn stack_pop_boolean(&mut self) -> bool {
+        match self.stack_pop() {
+            Primitive::Boolean(v) => v,
+            Primitive::Int(v) => v == 1,
+            p => panic!("Expected to pop Boolean from stack but found: {:?}", p),
+        }
+    }
+
     pub fn stack_pop_int(&mut self) -> i32 {
         match self.stack_pop() {
             Primitive::Int(v) => v,
+            Primitive::Boolean(v) => if v { 1 } else { 0 },
             p => panic!("Expected to pop Int from stack but found: {:?}", p),
         }
     }
@@ -96,7 +106,6 @@ impl Frame {
         match value {
             Primitive::Arrayref(_) => (),
             Primitive::Objectref(_) => (),
-            Primitive::ReturnAddress(_) => (),
             Primitive::Null => (),
             _ => panic!("Popped unexpected value from stack, found: {:?}", value),
         };
@@ -134,7 +143,6 @@ impl Frame {
         match value {
             &Primitive::Arrayref(_) => (),
             &Primitive::Objectref(_) => (),
-            &Primitive::ReturnAddress(_) => (),
             &Primitive::Null => (),
             _ => panic!("Expected to get reference from locals but found: {:?}", value),
         };
@@ -142,4 +150,23 @@ impl Frame {
         value
     }
 
+}
+
+impl fmt::Display for Frame {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        // Method name
+        fmt.write_str("Frame of ")?;
+        fmt.write_str(&self.class_path)?;
+        fmt.write_str(".")?;
+        fmt.write_str(&self.method_name)?;
+        fmt.write_str(&self.method_signature)?;
+        fmt.write_str("\nStack:\n")?;
+
+        for primitive in self.stack.iter() {
+            let desc = format!("  - {}\n", primitive);
+            fmt.write_str(&desc)?;
+        }
+
+        Ok(())
+    }
 }

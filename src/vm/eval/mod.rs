@@ -3,6 +3,7 @@ mod putstatic;
 mod invokevirtual;
 mod invokespecial;
 mod invokestatic;
+mod invokeinterface;
 mod new;
 mod lconst;
 mod lcmp;
@@ -61,6 +62,7 @@ mod aaload;
 mod aastore;
 mod dup_x1;
 mod dup2;
+mod ishl;
 
 use classfile::Classfile;
 use vm::Vm;
@@ -115,6 +117,7 @@ pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16) -> Option<u
         100 => isub::eval(vm, pc),
         106 => fmul::eval(vm, pc),
         112 => irem::eval(vm, pc),
+        120 => ishl::eval(vm, pc),
         126 => iand::eval(vm, pc),
         132 => iinc::eval(vm, code, pc),
         133 => i2l::eval(vm, pc),
@@ -137,6 +140,7 @@ pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16) -> Option<u
         182 => invokevirtual::eval(vm, class, code, pc),
         183 => invokespecial::eval(vm, class, code, pc),
         184 => invokestatic::eval(vm, class, code, pc),
+        185 => invokeinterface::eval(vm, class, code, pc),
         187 => new::eval(vm, class, code, pc),
         188 => newarray::eval(vm, code, pc),
         189 => anewarray::eval(vm, class, code, pc),

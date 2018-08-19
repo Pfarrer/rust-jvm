@@ -65,7 +65,7 @@ fn init_properties(class_path: &String, method_name: &String, method_signature: 
 
     trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
 
-    warn!("This method is not implemented!");
+    warn!("Skipping {}.{}{} -> this method is not implemented!", class_path, method_name, method_signature);
 
 //    let rc_instance = frame.stack_pop_objectref();
 //    let instance = rc_instance.borrow_mut();

@@ -61,6 +61,14 @@ pub fn read_attribute(reader: &mut Read, constants: &constants::Constants) -> At
                 Attribute::NotImplemented
             },
 
+            "EnclosingMethod" => {
+                let attribute_length = util::read_u32(reader);
+                assert_eq!(4, attribute_length);
+                util::read_u32(reader);
+
+                Attribute::NotImplemented
+            },
+
             "Deprecated" => {
                 /*let attribute_length = */util::read_u32(reader);
                 Attribute::Deprecated

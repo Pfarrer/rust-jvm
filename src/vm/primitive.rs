@@ -1,5 +1,6 @@
 use std::rc::Rc;
 use std::cell::RefCell;
+use std::fmt;
 
 use classfile::constants::Constant;
 use vm::Vm;
@@ -25,7 +26,6 @@ pub enum Primitive {
 
     Arrayref(Rc<RefCell<Array>>),
     Objectref(Rc<RefCell<Instance>>),
-    ReturnAddress(u16),
 
     Null,
 }
@@ -56,5 +56,24 @@ impl Primitive {
             &Constant::String(ref value) => Primitive::Objectref(StringPool::intern(vm, value)),
             c => panic!("Unexpected constant found: {:?}", c),
         }
+    }
+}
+
+impl fmt::Display for Primitive {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        fn fmt_instance(instance: &Instance) -> String {
+            format!("Objectref {}", instance.class_path)
+        }
+
+        let desc = match self {
+            &Primitive::Int(_) => "Int".to_string(),
+            &Primitive::Arrayref(_) => "Arrayref".to_string(),
+            &Primitive::Objectref(ref rc) => fmt_instance(&rc.borrow()),
+            &Primitive::Null => "Null".to_string(),
+            _ => format!("Formatter not implemented, found: {:?}", self),
+        };
+        let _ = fmt.write_str(&desc);
+
+        Ok(())
     }
 }

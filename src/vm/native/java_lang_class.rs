@@ -1,11 +1,13 @@
-use std::rc::Rc;
+use classfile;
 use std::cell::RefCell;
-
-use vm::Vm;
+use std::rc::Rc;
+use vm::array::Array;
 use vm::classloader::Classloader;
-use vm::primitive::Primitive;
 use vm::instance::Instance;
+use vm::primitive::Primitive;
+use vm::string_pool::StringPool;
 use vm::utils;
+use vm::Vm;
 
 pub fn invoke(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
     match method_name.as_ref() {
@@ -16,6 +18,7 @@ pub fn invoke(vm: &mut Vm, class_path: &String, method_name: &String, method_sig
         "isPrimitive" => is_primitive(vm, class_path, method_name, method_signature), // ()Z
         "getClassLoader0" => get_class_loader0(vm, class_path, method_name, method_signature), // ()Ljava/lang/ClassLoader;
         "desiredAssertionStatus0" => desired_assertion_status0(vm, class_path, method_name, method_signature), //(Ljava/lang/Class;)Z
+        "getDeclaredFields0" => get_declared_fields0(vm, class_path, method_name, method_signature), // (Z)[Ljava/lang/reflect/Field;
         _ => panic!("Native implementation of method {}.{}{} missing.", class_path, method_name, method_signature),
     }
 }
@@ -46,10 +49,10 @@ fn is_array(vm: &mut Vm, class_path: &String, method_name: &String, method_signa
                         &Primitive::Char(ref code) => *code == 91u16, // 91 = [
                         _ => false,
                     }
-                },
+                }
                 p => panic!("Unexpected primitive: {:?}", p),
             }
-        },
+        }
         p => panic!("Unexpected primitive: {:?}", p),
     };
 
@@ -113,10 +116,10 @@ fn get_component_type(vm: &mut Vm, class_path: &String, method_name: &String, me
                             },
                             p => panic!("Unexpected primitive: {:?}", p),
                         }
-                    },
+                    }
                     p => panic!("Unexpected primitive: {:?}", p),
                 }
-            },
+            }
             p => panic!("Unexpected primitive: {:?}", p),
         }
     };
@@ -152,11 +155,92 @@ fn is_primitive(vm: &mut Vm, class_path: &String, method_name: &String, method_s
                 "java/lang/Byte" => true,
                 p => panic!("Not implemented for: {:?}", p),
             }
-        },
+        }
         p => panic!("Unexpected primitive: {:?}", p),
     };
 
     frame.stack_push(Primitive::Int(if is_primi { 1 } else { 0 }));
+}
+
+/// (Z)[Ljava/lang/reflect/Field;
+fn get_declared_fields0(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
+    trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
+
+    // Get the last stack frame and pop the boolean value
+    let public_only = {
+        let mut frame = vm.frame_stack.last_mut().unwrap();
+        frame.stack_pop_boolean()
+    };
+
+    // Get class_path based on the "name" field of the Class instance of the
+    // last stack frame
+    let class_path = {
+        let mut frame = vm.frame_stack.last_mut().unwrap();
+        let rc_instance = frame.stack_pop_objectref();
+        let class_instance = rc_instance.borrow();
+
+        let name_instance = class_instance.fields.get("name").unwrap();
+        match name_instance {
+            &Primitive::Objectref(ref rc_name) => utils::get_java_string_value(&rc_name.borrow()),
+            _ => panic!("Unexpected instance found: {:?}", name_instance)
+        }
+    };
+
+    let classfile = vm.load_and_clinit_class(&class_path);
+    let field_classfile = vm.load_and_clinit_class(&"java/lang/reflect/Field".to_string());
+    let field_instance_template = Instance::new(vm, field_classfile.clone());
+
+    // Prepare a Java Field class instance per field found
+    let field_instances: Vec<Primitive> = classfile.fields.iter()
+        .filter(|field| {
+            if public_only {
+                classfile::ACC_PUBLIC & field.access_flags > 0
+            } else { true }
+        })
+        .map(|field| {
+            let mut field_instance = field_instance_template.clone();
+
+            // This is guaranteed to be interned by the VM in the 1.4
+            // reflection implementation
+            // private String              name;
+            let name = utils::get_utf8_value(&classfile, field.name_index as usize);
+
+            let rc_interned_name = StringPool::intern(vm, &name);
+            field_instance.fields.insert("name".to_string(), Primitive::Objectref(rc_interned_name));
+
+//            private Class<?>            clazz;
+//            private int                 slot;
+//            private Class<?>            type;
+//            private int                 modifiers;
+//            // Generics and annotations support
+//            private transient String    signature;
+//            // generic info repository; lazily initialized
+//            private transient FieldRepository genericInfo;
+//            private byte[]              annotations;
+//            // Cached field accessor created without override
+//            private FieldAccessor fieldAccessor;
+//            // Cached field accessor created with override
+//            private FieldAccessor overrideFieldAccessor;
+//            // For sharing of FieldAccessors. This branching structure is
+//            // currently only two levels deep (i.e., one root Field and
+//            // potentially many Field objects pointing to it.)
+//            //
+//            // If this branching structure would ever contain cycles, deadlocks can
+//            // occur in annotation code.
+//            private Field               root;
+
+            Primitive::Objectref(Rc::new(RefCell::new(field_instance)))
+        })
+        .collect();
+
+    // Make a Java array with all these Field class instances as elements
+    let mut fields_array = Array::new_complex(field_instances.len(), "java/lang/reflect/Field".to_string());
+    fields_array.elements = field_instances;
+
+    // Push the array to the stack and quit
+    let frame = vm.frame_stack.last_mut().unwrap();
+    frame.stack_push(Primitive::Arrayref(Rc::new(RefCell::new(fields_array))));
+    trace!("Pushed Arrayref to stack");
 }
 
 /// ()Ljava/lang/ClassLoader;
@@ -173,8 +257,7 @@ fn get_class_loader0(vm: &mut Vm, class_path: &String, method_name: &String, met
     if frame.class_path == "java/lang/Class" {
         debug!("Providing Null as class loader of {}", frame.class_path);
         frame.stack_push(Primitive::Null);
-    }
-    else {
+    } else {
         debug!("Providing fake class loader of {}", frame.class_path);
         frame.stack_push(Primitive::Objectref(Rc::new(RefCell::new(classloader_instance))));
     }

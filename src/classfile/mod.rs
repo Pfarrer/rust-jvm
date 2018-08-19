@@ -19,7 +19,7 @@ pub struct Classfile {
     pub attributes: attributes::Attributes,
 }
 
-//pub const ACC_PUBLIC: u16 = 0x0001; // Declared public; may be accessed from outside its package.
+pub const ACC_PUBLIC: u16 = 0x0001; // Declared public; may be accessed from outside its package.
 //pub const ACC_PRIVATE: u16 = 0x0002; // Declared private; usable only within the defining class.
 //pub const ACC_PROTECTED: u16 = 0x0004; // Declared protected; may be accessed within subclasses.
 pub const ACC_STATIC: u16 = 0x0008; // Declared static.

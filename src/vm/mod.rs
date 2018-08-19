@@ -1,3 +1,17 @@
+use classfile;
+use classfile::attributes::Attribute;
+use classfile::Classfile;
+use classfile::Method;
+use std::cell::RefCell;
+use std::collections::HashMap;
+use std::rc::Rc;
+use vm::array::Array;
+use vm::class_hierarchy::ClassHierarchy;
+use vm::classloader::Classloader;
+use vm::frame::Frame;
+use vm::primitive::Primitive;
+use vm::string_pool::StringPool;
+
 mod classloader;
 mod class_hierarchy;
 mod utils;
@@ -9,21 +23,6 @@ mod frame;
 mod eval;
 mod native;
 mod string_pool;
-
-use std::collections::HashMap;
-use std::rc::Rc;
-use std::cell::RefCell;
-
-use classfile;
-use classfile::Classfile;
-use classfile::Method;
-use classfile::attributes::Attribute;
-use vm::classloader::Classloader;
-use vm::class_hierarchy::ClassHierarchy;
-use vm::frame::Frame;
-use vm::primitive::Primitive;
-use vm::array::Array;
-use vm::string_pool::StringPool;
 
 const MAIN_METHOD_NAME: &str = "main";
 const MAIN_METHOD_SIGNATURE: &str = "([Ljava/lang/String;)V";
@@ -112,18 +111,12 @@ impl Vm {
 
             // Initialize class if necessary
             if let Some(method) = utils::find_method_in_classfile(&classfile, &"<clinit>".to_string(), &"()V".to_string()) {
-                trace!("Class {} not initialized and contains <clinit> -> executing now", class_path);
+                debug!("Class {} not initialized and contains <clinit> -> executing now", class_path);
 
                 let frame = Frame::new(class_path.clone(), "<clinit>".to_string(), "()V".to_string());
-                let frame2 = Frame::new(class_path.clone(), "<clinit>".to_string(), "()V".to_string());
-
-                self.frame_stack.push(frame2);
-
                 self.execute_method(&classfile, &method, frame);
 
-                self.frame_stack.pop();
-
-                trace!("{}.<clinit> done", class_path);
+                debug!("{}.<clinit> done", class_path);
             }
         }
 

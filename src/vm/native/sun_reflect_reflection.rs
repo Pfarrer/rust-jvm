@@ -19,20 +19,29 @@ fn get_caller_class(vm: &mut Vm, class_path: &String, method_name: &String, meth
     sun.reflect.Reflection. Frames associated with java.lang.reflect.Method.invoke() and its
     implementation are completely ignored and do not count toward the number of "real" frames
     skipped. */
+    let mut real_frames_to_skip = vm.frame_stack.last_mut().unwrap().stack_pop_int() as usize;
 
-//    let real_frames_to_skip = vm.frame_stack.last_mut().unwrap().stack_pop_int();
-//    assert_eq!(real_frames_to_skip, 1);
+    let class_path = {
+        let mut class_path = None;
+        for frame in vm.frame_stack.iter().rev() {
+            if frame.class_path == "java/lang/reflect/Method".to_string() && frame.method_name == "invoke" {
+                warn!("Skip frame java/lang/reflect/Method.invoke");
+            }
+            else {
+                real_frames_to_skip -= 1;
+            }
 
-//    let class_path = {
-//        let frame_stack_len = vm.frame_stack.len();
-//        let parent_frame = &vm.frame_stack[frame_stack_len - 2];
-//
-//        parent_frame.class_path.clone()
-//    };
+            if real_frames_to_skip == 0 {
+                class_path = Some(frame.class_path.clone());
+                break;
+            }
+        };
 
-//    let return_value = Classloader::get_class(vm, &class_path);
-    let return_value = Classloader::get_class(vm, &"java/util/Random".to_string());
+        class_path.unwrap()
+    };
+
+    let return_value = Classloader::get_class(vm, &class_path);
     vm.frame_stack.last_mut().unwrap().stack_push(Primitive::Objectref(return_value));
 
-    warn!("WARNING! Used hacky implementation here...");
+    trace!("Pushed Objectref for caller class {} to stack", class_path);
 }

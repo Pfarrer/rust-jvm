@@ -4,6 +4,8 @@ mod java_lang_class;
 mod java_lang_classloader;
 mod java_lang_accesscontroller;
 mod java_lang_string;
+mod java_lang_thread;
+mod java_lang_throwable;
 mod java_io_objectstreamclass;
 mod java_io_fileinputstream;
 mod java_io_filedescriptor;
@@ -22,6 +24,8 @@ pub fn invoke(vm: &mut Vm, class_path: &String, method_name: &String, method_sig
         "java/lang/ClassLoader" => java_lang_classloader::invoke(class_path, method_name, method_signature),
         "java/security/AccessController" => java_lang_accesscontroller::invoke(vm, class_path, method_name, method_signature),
         "java/lang/String" => java_lang_string::invoke(vm, class_path, method_name, method_signature),
+        "java/lang/Thread" => java_lang_thread::invoke(vm, class_path, method_name, method_signature),
+        "java/lang/Throwable" => java_lang_throwable::invoke(vm, class_path, method_name, method_signature),
         "java/io/ObjectStreamClass" => java_io_objectstreamclass::invoke(class_path, method_name, method_signature),
         "java/io/FileInputStream" => java_io_fileinputstream::invoke(class_path, method_name, method_signature),
         "java/io/FileDescriptor" => java_io_filedescriptor::invoke(class_path, method_name, method_signature),

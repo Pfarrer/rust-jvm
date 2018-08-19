@@ -17,7 +17,7 @@ pub fn read_u32(reader: &mut Read) -> u32 {
 }
 
 pub fn read_raw(reader: &mut Read, length: usize) -> Vec<u8> {
-    let mut bytes = Vec::with_capacity(length as usize);
+    let mut bytes = Vec::with_capacity(length);
     let n = reader.take(length as u64).read_to_end(&mut bytes).expect("Unexpected end of file");
     assert_eq!(length, n);
 
