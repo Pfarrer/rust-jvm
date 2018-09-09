@@ -106,14 +106,6 @@ pub fn invoke_method(vm: &mut Vm, class_path: &String, method_name: &String, met
                 let arg = parent_frame.stack_pop();
                 frame.locals_write(i, arg);
             }
-
-//            warn!("{:#?} -- {:#?}", parent_frame, frame);
-
-//            if is_instance {
-//                // Push the instance reference to local no. 0
-//                let this_ref = parent_frame.stack_pop_reference();
-//                frame.locals_write(0, this_ref);
-//            }
         }
 
         vm.execute_method(&class, &method, frame);

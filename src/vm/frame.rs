@@ -50,6 +50,10 @@ impl Frame {
         self.stack.pop().unwrap()
     }
 
+    pub fn stack_peek_reverse(&mut self, n: usize) -> &Primitive {
+        &self.stack[self.stack.len()-1-n]
+    }
+
 //    pub fn stack_pop_byte(&mut self) -> u8 {
 //        match self.stack_pop() {
 //            Primitive::Byte(v) => v,
