@@ -23,8 +23,10 @@ pub fn eval(vm: &mut Vm, code: &Vec<u8>, pc: u16) -> Option<u16> {
     trace!("if_acmp{}: Popped two references from stack, compare result: {}? -> {}", instr_name, instr_name, cmp_result);
 
     if cmp_result {
-        let branchoffset = utils::read_u16_code(code, pc);
-        Some(pc + branchoffset)
+        let branchoffset = utils::read_i16_code(code, pc);
+        let target_pc: u16 = (pc as i16 + branchoffset) as u16;
+
+        Some(target_pc)
     } else {
         Some(pc + 3)
     }

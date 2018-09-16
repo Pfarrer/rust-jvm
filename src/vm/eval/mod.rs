@@ -63,6 +63,12 @@ mod aastore;
 mod dup_x1;
 mod dup2;
 mod ishl;
+mod lxor;
+mod land;
+mod ixor;
+mod iushr;
+mod ior;
+mod imul;
 
 use classfile::Classfile;
 use vm::Vm;
@@ -115,10 +121,16 @@ pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16) -> Option<u
         96 => iadd::eval(vm, pc),
         97 => ladd::eval(vm, pc),
         100 => isub::eval(vm, pc),
+        104 => imul::eval(vm, pc),
         106 => fmul::eval(vm, pc),
         112 => irem::eval(vm, pc),
         120 => ishl::eval(vm, pc),
+        124 => iushr::eval(vm, pc),
         126 => iand::eval(vm, pc),
+        127 => land::eval(vm, pc),
+        128 => ior::eval(vm, pc),
+        130 => ixor::eval(vm, pc),
+        131 => lxor::eval(vm, pc),
         132 => iinc::eval(vm, code, pc),
         133 => i2l::eval(vm, pc),
         134 => i2f::eval(vm, pc),

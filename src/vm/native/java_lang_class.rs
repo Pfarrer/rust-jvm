@@ -3,11 +3,13 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use vm::array::Array;
 use vm::classloader::Classloader;
+use classfile::constants::Constant;
 use vm::instance::Instance;
 use vm::primitive::Primitive;
 use vm::string_pool::StringPool;
 use vm::utils;
 use vm::Vm;
+use vm::signature;
 
 pub fn invoke(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
     match method_name.as_ref() {
@@ -63,31 +65,24 @@ fn is_array(vm: &mut Vm, class_path: &String, method_name: &String, method_signa
 fn get_primitive_class(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
     trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
 
-    let matched_class_path = {
+    // primitive_name will be something like "void" or "long" etc.
+    let primitive_name = {
         let frame = vm.frame_stack.last_mut().unwrap();
 
         let rc_instance = frame.stack_pop_objectref();
         let instance = rc_instance.borrow();
-        let referenced_class_path = utils::get_java_string_value(&*instance);
 
-        match referenced_class_path.as_ref() {
-            "void" => "java/lang/Void".to_string(),
-            "float" => "java/lang/Float".to_string(),
-            "long" => "java/lang/Long".to_string(),
-            "int" => "java/lang/Integer".to_string(),
-            "byte" => "java/lang/Byte".to_string(),
-            "double" => "java/lang/Double".to_string(),
-            "short" => "java/lang/Short".to_string(),
-            "char" => "java/lang/Character".to_string(),
-            "boolean" => "java/lang/Boolean".to_string(),
-            s => panic!("Class or type not whitelisted: {}", s),
-        }
+        utils::get_java_string_value(&*instance)
     };
 
-    let rc_class = Classloader::get_class(vm, &matched_class_path);
+    let classfile = vm.load_and_clinit_class(&"java/lang/Class".to_string());
+    let mut class_instance = Instance::new(vm, classfile);
+
+    let rc_interned_name = StringPool::intern(vm, &primitive_name);
+    class_instance.fields.insert("name".to_string(), Primitive::Objectref(rc_interned_name));
 
     let frame = vm.frame_stack.last_mut().unwrap();
-    frame.stack_push(Primitive::Objectref(rc_class));
+    frame.stack_push(Primitive::Objectref(Rc::new(RefCell::new(class_instance))));
 }
 
 /// ()Ljava/lang/Class;
@@ -145,15 +140,18 @@ fn is_primitive(vm: &mut Vm, class_path: &String, method_name: &String, method_s
             let referenced_class_path = utils::get_java_string_value(&*string_instance);
 
             match referenced_class_path.as_ref() {
-                "java/lang/Character" => true,
-                "java/lang/Integer" => true,
-                "java/lang/Boolean" => true,
-                "java/lang/Long" => true,
-                "java/lang/Double" => true,
-                "java/lang/Float" => true,
-                "java/lang/Short" => true,
-                "java/lang/Byte" => true,
-                p => panic!("Not implemented for: {:?}", p),
+                "character" => true,
+                "char" => true, // character and char?
+                "integer" => true,
+                "int" => true,
+                "boolean" => true,
+                "long" => true,
+                "double" => true,
+                "float" => true,
+                "short" => true,
+                "byte" => true,
+                "void" => true,
+                _ => false,
             }
         }
         p => panic!("Unexpected primitive: {:?}", p),
@@ -202,18 +200,53 @@ fn get_declared_fields0(vm: &mut Vm, class_path: &String, method_name: &String, 
 
             // This is guaranteed to be interned by the VM in the 1.4
             // reflection implementation
-            // private String              name;
             let name = utils::get_utf8_value(&classfile, field.name_index as usize);
 
             let rc_interned_name = StringPool::intern(vm, &name);
+
+            // name
             field_instance.fields.insert("name".to_string(), Primitive::Objectref(rc_interned_name));
 
+            // modifiers
+            field_instance.fields.insert("modifiers".to_string(), Primitive::Int(field.access_flags as i32));
+
+            // signature
+            let signature_string = match classfile.constants.get(field.descriptor_index as usize).unwrap() {
+                &Constant::Utf8(ref signature_string) => signature_string.clone(),
+                it => panic!("Expected Utf8 but found: {:?}", it),
+            };
+            let rc_interned_signature = StringPool::intern(vm, &signature_string);
+            field_instance.fields.insert("signature".to_string(), Primitive::Objectref(rc_interned_signature));
+
+            // type
+            {
+                let type_name = match signature::parse_field(&signature_string) {
+                    signature::TypeSignature::Char => "char".to_string(),
+                    signature::TypeSignature::Int => "int".to_string(),
+                    signature::TypeSignature::Boolean => "boolean".to_string(),
+                    signature::TypeSignature::Long => "long".to_string(),
+                    signature::TypeSignature::Double => "double".to_string(),
+                    signature::TypeSignature::Float => "float".to_string(),
+                    signature::TypeSignature::Short => "short".to_string(),
+                    signature::TypeSignature::Byte => "byte".to_string(),
+                    signature::TypeSignature::Void => panic!("Field of type void?!"),
+                    signature::TypeSignature::Class(ref class_path) => class_path.clone(),
+                    signature::TypeSignature::Array(_) => signature_string.clone(),
+                };
+
+                let classfile = vm.load_and_clinit_class(&"java/lang/Class".to_string());
+                let mut class_instance = Instance::new(vm, classfile);
+
+                let rc_interned_type_name = StringPool::intern(vm, &type_name);
+                class_instance.fields.insert("name".to_string(), Primitive::Objectref(rc_interned_type_name));
+
+                // Finally, set created Class instance on the field instance
+                field_instance.fields.insert("type".to_string(), Primitive::Objectref(Rc::new(RefCell::new(class_instance))));
+            }
+
+            // TODO not implemented fields:
 //            private Class<?>            clazz;
 //            private int                 slot;
-//            private Class<?>            type;
-//            private int                 modifiers;
-//            // Generics and annotations support
-//            private transient String    signature;
 //            // generic info repository; lazily initialized
 //            private transient FieldRepository genericInfo;
 //            private byte[]              annotations;

@@ -26,7 +26,7 @@ pub fn parse_field(spec: &String) -> TypeSignature {
     parse_type(&mut spec.chars().peekable())
 }
 
-/// ( arg-types ) ret-type	method type
+/// ( arg-types ) ret-type	method-type
 pub fn parse_method(spec: &String) -> MethodSignature {
     let mut iterator = spec.chars().peekable();
     assert_eq!('(', iterator.next().unwrap());

@@ -31,7 +31,7 @@ pub fn invoke(vm: &mut Vm, class_path: &String, method_name: &String, method_sig
         "java/io/FileDescriptor" => java_io_filedescriptor::invoke(class_path, method_name, method_signature),
         "java/io/FileOutputStream" => java_io_fileoutputstream::invoke(class_path, method_name, method_signature),
         "java/util/concurrent/atomic/AtomicLong" => java_util_concurrent_atomic_atomiclong::invoke(vm, class_path, method_name, method_signature),
-        "sun/misc/Unsafe" => sun_misc_unsafe::invoke(class_path, method_name, method_signature),
+        "sun/misc/Unsafe" => sun_misc_unsafe::invoke(vm, class_path, method_name, method_signature),
         "sun/reflect/Reflection" => sun_reflect_reflection::invoke(vm, class_path, method_name, method_signature),
         _ => panic!("No native implementation available for class {}", class_path),
     }

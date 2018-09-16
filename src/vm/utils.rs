@@ -119,6 +119,13 @@ pub fn read_u16_code(code: &Vec<u8>, pc: u16) -> u16 {
     indexbyte1 + indexbyte2
 }
 
+pub fn read_i16_code(code: &Vec<u8>, pc: u16) -> i16 {
+    let indexbyte1: u16 = (*code.get((pc+1) as usize).unwrap() as u16) << 8;
+    let indexbyte2 = (*code.get((pc+2) as usize).unwrap()) as u16;
+
+    (indexbyte1 | indexbyte2) as i16
+}
+
 pub fn get_java_string_value(string_instance: &Instance) -> String {
     match string_instance.fields.get("value").unwrap() {
         &Primitive::Arrayref(ref rc_value_array) => {

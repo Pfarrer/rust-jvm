@@ -60,59 +60,6 @@ impl Classloader {
     pub fn get_class(vm: &mut Vm, class_path: &String) -> Rc<RefCell<Instance>> {
         let classfile = vm.classloader.get_classfile(&"java/lang/Class".to_string());
 
-        /*
-        thread 'main' panicked at 'Instance {
-    class_path: "java/lang/Class",
-    fields: {
-        "serialVersionUID": Long(
-            0
-        ),
-        "declaredConstructors": Null,
-        "newInstanceCallerCache": Nul
-        "initted": Boolean(
-            false
-        ),
-        "genericInfo": Null,
-        "allPermDomain": Null,
-        "cachedConstructor": Null,
-        "declaredAnnotations": Null,
-        "publicConstructors": Null,
-        "declaredMethods": Null,
-        "declaredPublicFields": Null,
-        "enumConstantDirectory": Null
-        "declaredFields": Null,
-        "annotationType": Null,
-        "enumConstants": Null,
-        "useCaches": Boolean(
-            false
-        ),
-        "ENUM": Int(
-            0
-        ),
-        "reflectionFactory": Null,
-        "declaredPublicMethods": Null
-        "ANNOTATION": Int(
-            0
-        ),
-        "SYNTHETIC": Int(
-            0
-        ),
-        "EMPTY_ANNOTATIONS_ARRAY": Nu
-        "annotations": Null,
-        "serialPersistentFields": Nul
-        "classRedefinedCount": Int(
-            0
-        ),
-        "publicFields": Null,
-        "lastRedefinedCount": Int(
-            0
-        ),
-        "name": Null,
-        "publicMethods": Null
-    }
-}', src/vm/classloader.rs:65:8
-        */
-
         // Create instance ...
         // THISISSHIT Should be located in the following lambda
         let mut instance = Instance::new(vm, classfile);
