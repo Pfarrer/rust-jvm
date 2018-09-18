@@ -10,6 +10,7 @@ pub fn invoke(vm: &mut Vm, class_path: &String, method_name: &String, method_sig
         "currentTimeMillis" => current_time_millis(vm, class_path, method_name, method_signature), // ()J
         "nanoTime" => nano_time(vm, class_path, method_name, method_signature), // ()J
         "initProperties" => init_properties(class_path, method_name, method_signature), // (Ljava/util/Properties;)Ljava/util/Properties;
+        "setIn0" => set_in0(vm, class_path, method_name, method_signature), // (Ljava/io/InputStream;)V
         "arraycopy" => arraycopy(vm, class_path, method_name, method_signature), // arraycopy(Ljava/lang/Object;ILjava/lang/Object;II)V
         _ => panic!("Native implementation of method {}.{}{} missing.", class_path, method_name, method_signature),
     }
@@ -92,4 +93,15 @@ fn arraycopy(vm: &mut Vm, class_path: &String, method_name: &String, method_sign
     for i in 0..length {
         dest_array.elements[dest_pos+i] = src_array.elements[src_pos+i].clone();
     }
+}
+
+// (Ljava/io/InputStream;)V
+fn set_in0(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
+    trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
+
+    let mut frame = vm.frame_stack.last_mut().unwrap();
+    let rc_stream = frame.stack_pop_objectref();
+
+    vm.class_statics.get_mut(class_path).unwrap()
+        .insert("in".to_string(), Primitive::Objectref(rc_stream));
 }

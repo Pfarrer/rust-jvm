@@ -26,6 +26,8 @@ pub fn get_class_path(classfile: &Classfile) -> String {
 }
 
 pub fn find_method(vm: &mut Vm, root_class_path: &String, name: &String, signature: &String) -> (Classfile, Method) {
+    warn!("root_class_path = {}", root_class_path);
+
     let class = vm.load_and_clinit_class(root_class_path);
     match find_method_in_classfile(&class, name, signature) {
         Some(method) => (class, method),
@@ -91,7 +93,8 @@ pub fn invoke_method(vm: &mut Vm, class_path: &String, method_name: &String, met
     let (class, method) = find_method(vm, class_path, method_name, method_signature);
 
     if method.access_flags & classfile::ACC_NATIVE > 0 {
-        native::invoke(vm, class_path, method_name, method_signature);
+        let resolved_class_path = get_class_path(&class);
+        native::invoke(vm, &resolved_class_path, method_name, method_signature);
     }
     else {
         let mut frame = Frame::new(class_path.clone(), method_name.clone(), method_signature.clone());

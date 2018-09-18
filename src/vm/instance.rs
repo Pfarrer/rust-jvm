@@ -16,7 +16,6 @@ pub struct Instance {
 impl Instance {
     pub fn new(vm: &mut Vm, class: Classfile) -> Instance {
         let class_path = utils::get_class_path(&class);
-        debug!("Create new instance of class {}", class_path);
 
         let mut fields = HashMap::new();
         initialize_instance_fields(&class, &mut fields);
