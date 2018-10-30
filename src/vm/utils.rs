@@ -26,28 +26,20 @@ pub fn get_class_path(classfile: &Classfile) -> String {
 }
 
 pub fn find_method(vm: &mut Vm, root_class_path: &String, name: &String, signature: &String) -> (Classfile, Method) {
-    warn!("root_class_path = {}", root_class_path);
-
-    let class = vm.load_and_clinit_class(root_class_path);
-    match find_method_in_classfile(&class, name, signature) {
-        Some(method) => (class, method),
-        None => {
-            // Loop through class hierarchy
-            let hierarchy_iter = ClassHierarchy::hierarchy_iter(vm, root_class_path);
-            for (parent_class, _, _) in hierarchy_iter {
-                match find_method_in_classfile(&parent_class, name, signature) {
-                    Some(method) => return (parent_class, method),
-                    None => (),
-                };
-            }
-
-            panic!("Method not found: {}.{}{}", root_class_path, name, signature);
-        }
+    // Loop through class hierarchy
+    let hierarchy_iter = ClassHierarchy::hierarchy_iter(vm, root_class_path);
+    for (class, _, _) in hierarchy_iter {
+        match find_method_in_classfile(&class, name, signature) {
+            Some(method) => return (class, method),
+            None => (),
+        };
     }
+
+    panic!("Method not found: {}.{}{}", root_class_path, name, signature);
 }
 
 pub fn find_method_in_classfile(classfile: &Classfile, name: &String, signature: &String) -> Option<Method> {
-    classfile.methods.iter().find(| &method | {
+    classfile.methods.iter().find(|&method| {
         let correct_name = match classfile.constants.get(method.name_index).unwrap() {
             &Constant::Utf8(ref val) => name.eq(val),
             _ => panic!("Invalid class file"),
@@ -83,7 +75,6 @@ pub fn find_code<'a>(method: &'a Method) -> Option<&'a attributes::CodeAttribute
 
 pub fn get_type_signature(classfile: &Classfile, index: usize) -> signature::TypeSignature {
     match classfile.constants.get(index).unwrap() {
-//        &Constant::Fieldref(_, _, ref type_descriptor) => signature::parse_field(type_descriptor),
         &Constant::Utf8(ref type_descriptor) => signature::parse_field(type_descriptor),
         it => panic!("Expected Utf8 but found: {:?}", it),
     }
@@ -95,8 +86,7 @@ pub fn invoke_method(vm: &mut Vm, class_path: &String, method_name: &String, met
     if method.access_flags & classfile::ACC_NATIVE > 0 {
         let resolved_class_path = get_class_path(&class);
         native::invoke(vm, &resolved_class_path, method_name, method_signature);
-    }
-    else {
+    } else {
         let mut frame = Frame::new(class_path.clone(), method_name.clone(), method_signature.clone());
 
         // Parse signature and move arguments from caller frame to callee frame
@@ -116,15 +106,15 @@ pub fn invoke_method(vm: &mut Vm, class_path: &String, method_name: &String, met
 }
 
 pub fn read_u16_code(code: &Vec<u8>, pc: u16) -> u16 {
-    let indexbyte1: u16 = (*code.get((pc+1) as usize).unwrap() as u16) << 8;
-    let indexbyte2 = (*code.get((pc+2) as usize).unwrap()) as u16;
+    let indexbyte1: u16 = (*code.get((pc + 1) as usize).unwrap() as u16) << 8;
+    let indexbyte2 = (*code.get((pc + 2) as usize).unwrap()) as u16;
 
     indexbyte1 + indexbyte2
 }
 
 pub fn read_i16_code(code: &Vec<u8>, pc: u16) -> i16 {
-    let indexbyte1: u16 = (*code.get((pc+1) as usize).unwrap() as u16) << 8;
-    let indexbyte2 = (*code.get((pc+2) as usize).unwrap()) as u16;
+    let indexbyte1: u16 = (*code.get((pc + 1) as usize).unwrap() as u16) << 8;
+    let indexbyte2 = (*code.get((pc + 2) as usize).unwrap()) as u16;
 
     (indexbyte1 | indexbyte2) as i16
 }
@@ -142,7 +132,7 @@ pub fn get_java_string_value(string_instance: &Instance) -> String {
                 .collect();
 
             String::from_utf16_lossy(element_values.as_slice())
-        },
+        }
         p => panic!("Unexpected primitive: {:?}", p),
     }
 }

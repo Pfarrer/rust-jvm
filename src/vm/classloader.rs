@@ -74,6 +74,10 @@ impl Classloader {
             Rc::new(RefCell::new(instance))
         }).clone()
     }
+
+    pub fn get_class_by_type_signature(vm: &mut Vm, type_signature: &TypeSignature) -> Rc<RefCell<Instance>> {
+
+    }
 }
 fn convert_fullpath_to_classpath(rel_path: &PathBuf, fullpath_buf: &PathBuf) -> String {
     // Make absolute path relative

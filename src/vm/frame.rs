@@ -73,6 +73,7 @@ impl Frame {
         match self.stack_pop() {
             Primitive::Int(v) => v,
             Primitive::Boolean(v) => if v { 1 } else { 0 },
+            Primitive::Char(v) => v as i32,
             p => panic!("Expected to pop Int from stack but found: {:?}", p),
         }
     }

@@ -10,6 +10,7 @@ use vm::string_pool::StringPool;
 use vm::utils;
 use vm::Vm;
 use vm::signature;
+use vm::classfile::ACC_INTERFACE;
 
 pub fn invoke(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
     match method_name.as_ref() {
@@ -18,9 +19,12 @@ pub fn invoke(vm: &mut Vm, class_path: &String, method_name: &String, method_sig
         "isArray" => is_array(vm, class_path, method_name, method_signature), // ()Z
         "getComponentType" => get_component_type(vm, class_path, method_name, method_signature), // ()Ljava/lang/Class;
         "isPrimitive" => is_primitive(vm, class_path, method_name, method_signature), // ()Z
+        "isInterface" => is_interface(vm, class_path, method_name, method_signature), // ()Z
         "getClassLoader0" => get_class_loader0(vm, class_path, method_name, method_signature), // ()Ljava/lang/ClassLoader;
         "desiredAssertionStatus0" => desired_assertion_status0(vm, class_path, method_name, method_signature), //(Ljava/lang/Class;)Z
         "getDeclaredFields0" => get_declared_fields0(vm, class_path, method_name, method_signature), // (Z)[Ljava/lang/reflect/Field;
+        "getDeclaredConstructors0" => get_declared_constructors0(vm, class_path, method_name, method_signature), // (Z)[Ljava/lang/reflect/Constructor;
+        "forName0" => for_name0(vm, class_path, method_name, method_signature), // (Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;
         _ => panic!("Native implementation of method {}.{}{} missing.", class_path, method_name, method_signature),
     }
 }
@@ -125,6 +129,35 @@ fn get_component_type(vm: &mut Vm, class_path: &String, method_name: &String, me
     frame.stack_push(Primitive::Objectref(rc_component_type));
 }
 
+/// (Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;
+fn for_name0(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
+    trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
+
+    let class_path = {
+        let mut frame = vm.frame_stack.last_mut().unwrap();
+
+        // Pop classloader instance
+        frame.stack_pop_reference();
+
+        let initialize = frame.stack_pop_boolean();
+        if !initialize {
+            panic!("Not implemented: initialize is set to false");
+        }
+
+        let rc_class_path_instance = frame.stack_pop_objectref();
+        let class_path_instance = rc_class_path_instance.borrow();
+
+        class_path_instance.class_path.clone()
+    };
+
+    let rc_class_instance = Classloader::get_class(vm, &class_path);
+
+    trace!("Push Class<{}> instance to stack", class_path);
+
+    let frame = vm.frame_stack.last_mut().unwrap();
+    frame.stack_push(Primitive::Objectref(rc_class_instance));
+}
+
 /// ()Z
 fn is_primitive(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
     trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
@@ -157,7 +190,35 @@ fn is_primitive(vm: &mut Vm, class_path: &String, method_name: &String, method_s
         p => panic!("Unexpected primitive: {:?}", p),
     };
 
-    frame.stack_push(Primitive::Int(if is_primi { 1 } else { 0 }));
+    frame.stack_push(Primitive::Boolean(is_primi));
+}
+
+/// ()Z
+fn is_interface(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
+    trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
+
+    let referenced_class_path = {
+        let frame = vm.frame_stack.last_mut().unwrap();
+
+        let rc_class_instance = frame.stack_pop_objectref();
+        let class_instance = rc_class_instance.borrow();
+
+        match class_instance.fields.get("name").unwrap() {
+            &Primitive::Objectref(ref rc_string_instance) => {
+                let string_instance = rc_string_instance.borrow();
+                utils::get_java_string_value(&*string_instance)
+            }
+            p => panic!("Unexpected primitive: {:?}", p),
+        }
+    };
+
+    let classfile = vm.load_and_clinit_class(&referenced_class_path);
+    let is_interface = classfile.class_info.access_flags & ACC_INTERFACE > 0;
+
+    trace!("{} is an interface? -> {}", referenced_class_path, is_interface);
+
+    let frame = vm.frame_stack.last_mut().unwrap();
+    frame.stack_push(Primitive::Boolean(is_interface));
 }
 
 /// (Z)[Ljava/lang/reflect/Field;
@@ -273,6 +334,85 @@ fn get_declared_fields0(vm: &mut Vm, class_path: &String, method_name: &String, 
     // Push the array to the stack and quit
     let frame = vm.frame_stack.last_mut().unwrap();
     frame.stack_push(Primitive::Arrayref(Rc::new(RefCell::new(fields_array))));
+    trace!("Pushed Arrayref to stack");
+}
+
+/// (Z)[Ljava/lang/reflect/Constructor;
+fn get_declared_constructors0(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
+    trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
+
+    // Get the last stack frame and pop the boolean value
+    let public_only = {
+        let mut frame = vm.frame_stack.last_mut().unwrap();
+        frame.stack_pop_boolean()
+    };
+
+    // Get class_path based on the "name" field of the Class instance of the
+    // last stack frame
+    let class_path = {
+        let frame = vm.frame_stack.last_mut().unwrap();
+        let rc_instance = frame.stack_pop_objectref();
+        let class_instance = rc_instance.borrow();
+
+        let name_instance = class_instance.fields.get("name").unwrap();
+        match name_instance {
+            &Primitive::Objectref(ref rc_name) => utils::get_java_string_value(&rc_name.borrow()),
+            _ => panic!("Unexpected instance found: {:?}", name_instance)
+        }
+    };
+
+    let method_classfile = vm.load_and_clinit_class(&"java/lang/reflect/Method".to_string());
+    let method_instance_template = Instance::new(vm, method_classfile.clone());
+
+    let classfile = vm.load_and_clinit_class(&class_path);
+    let method_instances: Vec<Primitive> = classfile.methods.iter()
+        .filter(|method| {
+            if public_only {
+                classfile::ACC_PUBLIC & method.access_flags > 0
+            } else { true }
+        })
+        .filter(|method| {
+            let name = utils::get_utf8_value(&classfile, method.name_index as usize);
+            name == "<init>"
+        })
+        .map(|method| {
+            let mut method_instance = method_instance_template.clone();
+
+            // This is guaranteed to be interned by the VM in the 1.4
+            // reflection implementation
+            let name = utils::get_utf8_value(&classfile, method.name_index as usize);
+            let rc_interned_name = StringPool::intern(vm, &name);
+
+            // name
+            method_instance.fields.insert("name".to_string(), Primitive::Objectref(rc_interned_name));
+
+            // modifiers
+            method_instance.fields.insert("modifiers".to_string(), Primitive::Int(method.access_flags as i32));
+
+            // signature
+            let signature_string = match classfile.constants.get(method.descriptor_index as usize).unwrap() {
+                &Constant::Utf8(ref signature_string) => signature_string.clone(),
+                it => panic!("Expected Utf8 but found: {:?}", it),
+            };
+            let rc_interned_signature = StringPool::intern(vm, &signature_string);
+            method_instance.fields.insert("signature".to_string(), Primitive::Objectref(rc_interned_signature));
+
+            // Determine parameterTypes
+            {
+                signature::parse_method(signature_string).parameters
+            }
+
+            Primitive::Objectref(Rc::new(RefCell::new(method_instance)))
+        })
+        .collect();
+
+    // Make a Java array with all these Method class instances as elements
+    let mut methods_array = Array::new_complex(method_instances.len(), "java/lang/reflect/Method".to_string());
+    methods_array.elements = method_instances;
+
+    // Push the array to the stack and quit
+    let frame = vm.frame_stack.last_mut().unwrap();
+    frame.stack_push(Primitive::Arrayref(Rc::new(RefCell::new(methods_array))));
     trace!("Pushed Arrayref to stack");
 }
 

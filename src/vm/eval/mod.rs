@@ -69,6 +69,8 @@ mod ixor;
 mod iushr;
 mod ior;
 mod imul;
+mod ishr;
+mod i2c;
 
 use classfile::Classfile;
 use vm::Vm;
@@ -125,6 +127,7 @@ pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16) -> Option<u
         106 => fmul::eval(vm, pc),
         112 => irem::eval(vm, pc),
         120 => ishl::eval(vm, pc),
+        122 => ishr::eval(vm, pc),
         124 => iushr::eval(vm, pc),
         126 => iand::eval(vm, pc),
         127 => land::eval(vm, pc),
@@ -135,6 +138,7 @@ pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16) -> Option<u
         133 => i2l::eval(vm, pc),
         134 => i2f::eval(vm, pc),
         139 => f2i::eval(vm, pc),
+        146 => i2c::eval(vm, pc),
         148 => lcmp::eval(vm, pc),
         149...150 => fcmp_x::eval(vm, code, pc),
         153...158 => if_x::eval(vm, code, pc),

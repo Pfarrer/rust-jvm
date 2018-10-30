@@ -9,6 +9,7 @@ public abstract class AbstractInvocation {
     testAbstract(impl);
 
     Impl.staticMethod();
+    impl.hashCode();
   }
 
   static void testDirect(Impl impl) {

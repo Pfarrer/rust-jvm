@@ -2,6 +2,7 @@ extern crate time;
 
 use vm::Vm;
 use vm::primitive::Primitive;
+use vm::string_pool::StringPool;
 use vm::utils;
 
 pub fn invoke(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
@@ -9,7 +10,7 @@ pub fn invoke(vm: &mut Vm, class_path: &String, method_name: &String, method_sig
         "registerNatives" => register_natives(vm, class_path, method_name, method_signature),
         "currentTimeMillis" => current_time_millis(vm, class_path, method_name, method_signature), // ()J
         "nanoTime" => nano_time(vm, class_path, method_name, method_signature), // ()J
-        "initProperties" => init_properties(class_path, method_name, method_signature), // (Ljava/util/Properties;)Ljava/util/Properties;
+        "initProperties" => init_properties(vm, class_path, method_name, method_signature), // (Ljava/util/Properties;)Ljava/util/Properties;
         "setIn0" => set_in0(vm, class_path, method_name, method_signature), // (Ljava/io/InputStream;)V
         "arraycopy" => arraycopy(vm, class_path, method_name, method_signature), // arraycopy(Ljava/lang/Object;ILjava/lang/Object;II)V
         _ => panic!("Native implementation of method {}.{}{} missing.", class_path, method_name, method_signature),
@@ -47,7 +48,7 @@ fn nano_time(vm: &mut Vm, class_path: &String, method_name: &String, method_sign
 }
 
 /// java/lang/System.initProperties(Ljava/util/Properties;)Ljava/util/Properties;
-fn init_properties(class_path: &String, method_name: &String, method_signature: &String) {
+fn init_properties(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
     // java.version         <dd>Java version number
 //    * <dt>java.vendor          <dd>Java vendor specific string
 //        * <dt>java.vendor.url      <dd>Java vendor URL
@@ -59,20 +60,47 @@ fn init_properties(class_path: &String, method_name: &String, method_signature: 
 //        * <dt>os.version           <dd>Operating System Version
 //        * <dt>file.separator       <dd>File separator ("/" on Unix)
 //    * <dt>path.separator       <dd>Path separator (":" on Unix)
-//    * <dt>line.separator       <dd>Line separator ("\n" on Unix)
 //    * <dt>user.name            <dd>User account name
 //        * <dt>user.home            <dd>User home directory
 //        * <dt>user.dir             <dd>User's current working directory
 
     trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
+    warn!("This method is only partially implemented!");
 
-    warn!("Skipping {}.{}{} -> this method is not implemented!", class_path, method_name, method_signature);
+    set_property(vm, "sun.stdout.encoding", "UTF-8");
+    set_property(vm, "sun.stderr.encoding", "UTF-8");
+    set_property(vm, "file.encoding", "UTF-8");
 
-//    let rc_instance = frame.stack_pop_objectref();
-//    let instance = rc_instance.borrow_mut();
-//
-//    trace!("getfield: Popping Objectref from stack and push value of field {}.{} on stack", class_path, field_name);
-//    let value = instance.fields.get(field_name).unwrap();
+    set_property(vm, "line.separator", "\n");
+
+    fn set_property(vm: &mut Vm, key: &'static str, value: &'static str) {
+        // Intern key and value first
+        let rc_interned_key = StringPool::intern(vm, &key.to_string());
+        let rc_interned_value = StringPool::intern(vm, &value.to_string());
+
+        {
+            let mut frame = vm.frame_stack.last_mut().unwrap();
+
+            // Clone instance first
+            let value = frame.stack_pop();
+            frame.stack_push(value.clone());
+            frame.stack_push(value);
+
+            // Push the key to the stack
+            frame.stack_push(Primitive::Objectref(rc_interned_key));
+
+            // Push the value to the stack
+            frame.stack_push(Primitive::Objectref(rc_interned_value));
+        }
+
+        // Invoke the setProperty method
+        utils::invoke_method(vm, &"java/util/Properties".to_string(), &"setProperty".to_string(),
+                             &"(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;".to_string(), true);
+
+        // Pop return value from stack
+        let mut frame = vm.frame_stack.last_mut().unwrap();
+        frame.stack_pop();
+    }
 }
 
 /// arraycopy(Ljava/lang/Object;ILjava/lang/Object;II)V
@@ -91,7 +119,7 @@ fn arraycopy(vm: &mut Vm, class_path: &String, method_name: &String, method_sign
     let src_array = rc_src_array.borrow();
 
     for i in 0..length {
-        dest_array.elements[dest_pos+i] = src_array.elements[src_pos+i].clone();
+        dest_array.elements[dest_pos + i] = src_array.elements[src_pos + i].clone();
     }
 }
 

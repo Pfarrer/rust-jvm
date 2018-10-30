@@ -9,29 +9,33 @@ pub type HierarchyClassInfo = (Classfile, String, Vec<String>);
 
 pub struct HierarchyIterator<'a> {
     vm: &'a mut Vm,
-    next_class_path: Option<String>,
+    current_class_path: Option<String>,
 }
 
 impl<'a> Iterator for HierarchyIterator<'a> {
     type Item = HierarchyClassInfo;
 
     fn next(&mut self) -> Option<HierarchyClassInfo> {
-        let next_class_path = self.next_class_path.clone();
-        match next_class_path {
-            Some(ref class_path) => {
-                let class = self.vm.load_and_clinit_class(class_path);
-                let hierarchy_info = self.vm.class_hierarchy.hierarchy_cache
-                    .entry(class_path.clone())
-                    .or_insert_with(|| make_hierarchy_class_info(class))
+        match self.current_class_path.clone() {
+            Some(ref current_class_path) => {
+                let current_class = self.vm.load_and_clinit_class(current_class_path);
+                let current_hierarchy_info = self.vm.class_hierarchy.hierarchy_cache
+                    .entry(current_class_path.clone())
+                    .or_insert_with(|| make_hierarchy_class_info(current_class))
                     .to_owned();
 
-                match &hierarchy_info {
-                    &Some((_, ref super_class_path, _)) => self.next_class_path = Some(super_class_path.clone()),
-                    &None => self.next_class_path = None,
+                match &current_hierarchy_info {
+                    &Some((_, ref super_class_path, _)) => self.current_class_path = Some(super_class_path.clone()),
+                    &None => self.current_class_path = None
                 }
 
-                hierarchy_info
-            },
+                if current_hierarchy_info.is_some() {
+                    return current_hierarchy_info
+                } else {
+                    let current_class = self.vm.load_and_clinit_class(current_class_path);
+                    Some((current_class, "".to_owned(), Vec::new()))
+                }
+            }
             None => None,
         }
     }
@@ -75,7 +79,7 @@ impl ClassHierarchy {
     pub fn hierarchy_iter<'a>(vm: &'a mut Vm, class_path: &String) -> HierarchyIterator<'a> {
         HierarchyIterator {
             vm,
-            next_class_path: Some(class_path.clone()),
+            current_class_path: Some(class_path.clone()),
         }
     }
 }
