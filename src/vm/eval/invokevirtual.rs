@@ -24,7 +24,8 @@ pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16) -> Option<u
         let frame = vm.frame_stack.last_mut().unwrap();
         let class_path = match frame.stack_peek_reverse(args_count) {
             &Primitive::Objectref(ref rc_object) => rc_object.borrow().class_path.clone(),
-            p => panic!("Expected to pop Objectref from stack but found: {:?}", p),
+            &Primitive::Arrayref(_) => "java/lang/Object".to_string(),
+            p => panic!("Expected to pop Objectref or Arrayref from stack but found: {:?}", p),
         };
 
         class_path

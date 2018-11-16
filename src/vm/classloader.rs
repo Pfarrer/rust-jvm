@@ -10,6 +10,7 @@ use vm::Vm;
 use vm::primitive::Primitive;
 use vm::instance::Instance;
 use vm::string_pool::StringPool;
+use vm::signature::TypeSignature;
 
 #[derive(Debug)]
 pub struct Classloader {
@@ -76,7 +77,19 @@ impl Classloader {
     }
 
     pub fn get_class_by_type_signature(vm: &mut Vm, type_signature: &TypeSignature) -> Rc<RefCell<Instance>> {
-
+        match type_signature {
+            TypeSignature::Class(class_path) => Classloader::get_class(vm, class_path),
+            TypeSignature::Array(_) => Classloader::get_class(vm, &type_signature.as_string()),
+            TypeSignature::Int => Classloader::get_class(vm, &"integer".to_string()),
+            TypeSignature::Char => Classloader::get_class(vm, &"character".to_string()),
+            TypeSignature::Boolean => Classloader::get_class(vm, &"boolean".to_string()),
+            TypeSignature::Long => Classloader::get_class(vm, &"long".to_string()),
+            TypeSignature::Double => Classloader::get_class(vm, &"double".to_string()),
+            TypeSignature::Float => Classloader::get_class(vm, &"float".to_string()),
+            TypeSignature::Short => Classloader::get_class(vm, &"short".to_string()),
+            TypeSignature::Byte => Classloader::get_class(vm, &"byte".to_string()),
+            TypeSignature::Void => Classloader::get_class(vm, &"void".to_string()),
+        }
     }
 }
 fn convert_fullpath_to_classpath(rel_path: &PathBuf, fullpath_buf: &PathBuf) -> String {

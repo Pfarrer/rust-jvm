@@ -79,7 +79,7 @@ fn init_properties(vm: &mut Vm, class_path: &String, method_name: &String, metho
         let rc_interned_value = StringPool::intern(vm, &value.to_string());
 
         {
-            let mut frame = vm.frame_stack.last_mut().unwrap();
+            let frame = vm.frame_stack.last_mut().unwrap();
 
             // Clone instance first
             let value = frame.stack_pop();
@@ -98,7 +98,7 @@ fn init_properties(vm: &mut Vm, class_path: &String, method_name: &String, metho
                              &"(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;".to_string(), true);
 
         // Pop return value from stack
-        let mut frame = vm.frame_stack.last_mut().unwrap();
+        let frame = vm.frame_stack.last_mut().unwrap();
         frame.stack_pop();
     }
 }
@@ -127,7 +127,7 @@ fn arraycopy(vm: &mut Vm, class_path: &String, method_name: &String, method_sign
 fn set_in0(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
     trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
 
-    let mut frame = vm.frame_stack.last_mut().unwrap();
+    let frame = vm.frame_stack.last_mut().unwrap();
     let rc_stream = frame.stack_pop_objectref();
 
     vm.class_statics.get_mut(class_path).unwrap()

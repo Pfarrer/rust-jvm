@@ -361,11 +361,11 @@ fn get_declared_constructors0(vm: &mut Vm, class_path: &String, method_name: &St
         }
     };
 
-    let method_classfile = vm.load_and_clinit_class(&"java/lang/reflect/Method".to_string());
-    let method_instance_template = Instance::new(vm, method_classfile.clone());
+    let constructor_classfile = vm.load_and_clinit_class(&"java/lang/reflect/Constructor".to_string());
+    let constructor_instance_template = Instance::new(vm, constructor_classfile.clone());
 
     let classfile = vm.load_and_clinit_class(&class_path);
-    let method_instances: Vec<Primitive> = classfile.methods.iter()
+    let constructor_instances: Vec<Primitive> = classfile.methods.iter()
         .filter(|method| {
             if public_only {
                 classfile::ACC_PUBLIC & method.access_flags > 0
@@ -376,15 +376,7 @@ fn get_declared_constructors0(vm: &mut Vm, class_path: &String, method_name: &St
             name == "<init>"
         })
         .map(|method| {
-            let mut method_instance = method_instance_template.clone();
-
-            // This is guaranteed to be interned by the VM in the 1.4
-            // reflection implementation
-            let name = utils::get_utf8_value(&classfile, method.name_index as usize);
-            let rc_interned_name = StringPool::intern(vm, &name);
-
-            // name
-            method_instance.fields.insert("name".to_string(), Primitive::Objectref(rc_interned_name));
+            let mut method_instance = constructor_instance_template.clone();
 
             // modifiers
             method_instance.fields.insert("modifiers".to_string(), Primitive::Int(method.access_flags as i32));
@@ -398,21 +390,24 @@ fn get_declared_constructors0(vm: &mut Vm, class_path: &String, method_name: &St
             method_instance.fields.insert("signature".to_string(), Primitive::Objectref(rc_interned_signature));
 
             // Determine parameterTypes
-            {
-                signature::parse_method(signature_string).parameters
-            }
+            let parameter_types: Vec<Primitive> = signature::parse_method(&signature_string).parameters.iter()
+                .map(|param| Classloader::get_class_by_type_signature(vm, param))
+                .map(|rc| Primitive::Objectref(rc))
+                .collect();
+            let parameter_types_array = Array::new_complex_of(parameter_types, "java/lang/Class".to_string());
+            method_instance.fields.insert("parameterTypes".to_string(), Primitive::Arrayref(Rc::new(RefCell::new(parameter_types_array))));
 
             Primitive::Objectref(Rc::new(RefCell::new(method_instance)))
         })
         .collect();
 
-    // Make a Java array with all these Method class instances as elements
-    let mut methods_array = Array::new_complex(method_instances.len(), "java/lang/reflect/Method".to_string());
-    methods_array.elements = method_instances;
+    // Make a Java array with all these Constructor class instances as elements
+    let mut constructors_array = Array::new_complex(constructor_instances.len(), "java/lang/reflect/Constructor".to_string());
+    constructors_array.elements = constructor_instances;
 
     // Push the array to the stack and quit
     let frame = vm.frame_stack.last_mut().unwrap();
-    frame.stack_push(Primitive::Arrayref(Rc::new(RefCell::new(methods_array))));
+    frame.stack_push(Primitive::Arrayref(Rc::new(RefCell::new(constructors_array))));
     trace!("Pushed Arrayref to stack");
 }
 

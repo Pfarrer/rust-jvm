@@ -10,7 +10,7 @@ pub fn eval(vm: &mut Vm, code: &Vec<u8>, pc: u16) -> Option<u16> {
     let equals = match (&value1, &value2) {
         (&Primitive::Objectref(ref rc_instance1), &Primitive::Objectref(ref rc_instance2)) => rc_instance1.eq(rc_instance2),
         (&Primitive::Objectref(_), &Primitive::Null) => false,
-//        _ => false,
+        (&Primitive::Null, &Primitive::Objectref(_)) => false,
         _ => panic!("Not implemented: {:?} -- {:?}", value1, value2),
     };
 

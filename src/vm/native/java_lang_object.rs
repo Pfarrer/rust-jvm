@@ -7,6 +7,7 @@ pub fn invoke(vm: &mut Vm, class_path: &String, method_name: &String, method_sig
         "registerNatives" => register_natives(class_path, method_name, method_signature),
         "hashCode" => hash_code(vm, class_path, method_name, method_signature), // ()I
         "getClass" => get_class(vm, class_path, method_name, method_signature), // ()Ljava/lang/Class;
+        "clone" => clone(vm, class_path, method_name, method_signature), // ()Ljava/lang/Object;
         _ => panic!("Native implementation of method {}.{}{} missing.", class_path, method_name, method_signature),
     }
 }
@@ -44,4 +45,14 @@ fn get_class(vm: &mut Vm, class_path: &String, method_name: &String, method_sign
 
     let frame = vm.frame_stack.last_mut().unwrap();
     frame.stack_push(Primitive::Objectref(rc_class_instance));
+}
+
+/// ()Ljava/lang/Object;
+fn clone(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
+    trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
+
+    let frame = vm.frame_stack.last_mut().unwrap();
+
+    let value = frame.stack_pop();
+    frame.stack_push(value.clone());
 }

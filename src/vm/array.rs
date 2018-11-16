@@ -47,4 +47,12 @@ impl Array {
             elements,
         }
     }
+
+    pub fn new_complex_of(elements: Vec<Primitive>, class_path: String) -> Array {
+        Array {
+            atype: None,
+            class_path: Some(class_path),
+            elements,
+        }
+    }
 }

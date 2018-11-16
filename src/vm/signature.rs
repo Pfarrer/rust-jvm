@@ -22,6 +22,26 @@ pub struct MethodSignature {
     pub return_type: TypeSignature,
 }
 
+impl TypeSignature {
+
+    pub fn as_string(&self) -> String {
+        match self {
+            TypeSignature::Void => "V".to_string(),
+            TypeSignature::Boolean => "Z".to_string(),
+            TypeSignature::Byte => "B".to_string(),
+            TypeSignature::Char => "C".to_string(),
+            TypeSignature::Short => "S".to_string(),
+            TypeSignature::Int => "I".to_string(),
+            TypeSignature::Long => "J".to_string(),
+            TypeSignature::Float => "F".to_string(),
+            TypeSignature::Double => "D".to_string(),
+            TypeSignature::Class(class_path) => "L".to_string() + class_path,
+            TypeSignature::Array(inner_type) => "[".to_string() + &*inner_type.as_string(),
+        }
+    }
+ 
+}
+
 pub fn parse_field(spec: &String) -> TypeSignature {
     parse_type(&mut spec.chars().peekable())
 }
