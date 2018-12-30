@@ -167,11 +167,11 @@ impl fmt::Display for Frame {
         fmt.write_str(&self.method_signature)?;
         fmt.write_str("\nStack:\n")?;
 
-        for primitive in self.stack.iter() {
+/*        for primitive in self.stack.iter() {
             let desc = format!("  - {}\n", primitive);
             fmt.write_str(&desc)?;
         }
-
+*/
         Ok(())
     }
 }

@@ -27,6 +27,8 @@ mod string_pool;
 const MAIN_METHOD_NAME: &str = "main";
 const MAIN_METHOD_SIGNATURE: &str = "([Ljava/lang/String;)V";
 
+// CONT: sun.nio.cs.FastCharsetProvider line 76
+
 pub struct Vm {
     classloader: Classloader,
     class_hierarchy: ClassHierarchy,

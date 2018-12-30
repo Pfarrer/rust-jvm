@@ -11,6 +11,7 @@ use vm::utils;
 use vm::Vm;
 use vm::signature;
 use vm::classfile::ACC_INTERFACE;
+use vm::class_hierarchy::ClassHierarchy;
 
 pub fn invoke(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
     match method_name.as_ref() {
@@ -25,6 +26,8 @@ pub fn invoke(vm: &mut Vm, class_path: &String, method_name: &String, method_sig
         "getDeclaredFields0" => get_declared_fields0(vm, class_path, method_name, method_signature), // (Z)[Ljava/lang/reflect/Field;
         "getDeclaredConstructors0" => get_declared_constructors0(vm, class_path, method_name, method_signature), // (Z)[Ljava/lang/reflect/Constructor;
         "forName0" => for_name0(vm, class_path, method_name, method_signature), // (Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;
+        "getModifiers" => get_modifiers(vm, class_path, method_name, method_signature), // ()I
+        "getSuperclass" => get_superclass(vm, class_path, method_name, method_signature), // ()Ljava/lang/Class;
         _ => panic!("Native implementation of method {}.{}{} missing.", class_path, method_name, method_signature),
     }
 }
@@ -147,7 +150,7 @@ fn for_name0(vm: &mut Vm, class_path: &String, method_name: &String, method_sign
         let rc_class_path_instance = frame.stack_pop_objectref();
         let class_path_instance = rc_class_path_instance.borrow();
 
-        class_path_instance.class_path.clone()
+        utils::get_java_string_value(&class_path_instance)
     };
 
     let rc_class_instance = Classloader::get_class(vm, &class_path);
@@ -361,6 +364,9 @@ fn get_declared_constructors0(vm: &mut Vm, class_path: &String, method_name: &St
         }
     };
 
+    // Prepare a Class instance to be later set as the value of the clazz field
+    let rc_clazz = Classloader::get_class(vm, &class_path);
+
     let constructor_classfile = vm.load_and_clinit_class(&"java/lang/reflect/Constructor".to_string());
     let constructor_instance_template = Instance::new(vm, constructor_classfile.clone());
 
@@ -372,14 +378,16 @@ fn get_declared_constructors0(vm: &mut Vm, class_path: &String, method_name: &St
             } else { true }
         })
         .filter(|method| {
-            let name = utils::get_utf8_value(&classfile, method.name_index as usize);
-            name == "<init>"
+            "<init>" == utils::get_utf8_value(&classfile, method.name_index as usize)
         })
         .map(|method| {
-            let mut method_instance = constructor_instance_template.clone();
+            let mut constructor_instance = constructor_instance_template.clone();
+
+            // clazz
+            constructor_instance.fields.insert("clazz".to_string(), Primitive::Objectref(rc_clazz.clone()));
 
             // modifiers
-            method_instance.fields.insert("modifiers".to_string(), Primitive::Int(method.access_flags as i32));
+            constructor_instance.fields.insert("modifiers".to_string(), Primitive::Int(method.access_flags as i32));
 
             // signature
             let signature_string = match classfile.constants.get(method.descriptor_index as usize).unwrap() {
@@ -387,7 +395,7 @@ fn get_declared_constructors0(vm: &mut Vm, class_path: &String, method_name: &St
                 it => panic!("Expected Utf8 but found: {:?}", it),
             };
             let rc_interned_signature = StringPool::intern(vm, &signature_string);
-            method_instance.fields.insert("signature".to_string(), Primitive::Objectref(rc_interned_signature));
+            constructor_instance.fields.insert("signature".to_string(), Primitive::Objectref(rc_interned_signature));
 
             // Determine parameterTypes
             let parameter_types: Vec<Primitive> = signature::parse_method(&signature_string).parameters.iter()
@@ -395,9 +403,9 @@ fn get_declared_constructors0(vm: &mut Vm, class_path: &String, method_name: &St
                 .map(|rc| Primitive::Objectref(rc))
                 .collect();
             let parameter_types_array = Array::new_complex_of(parameter_types, "java/lang/Class".to_string());
-            method_instance.fields.insert("parameterTypes".to_string(), Primitive::Arrayref(Rc::new(RefCell::new(parameter_types_array))));
+            constructor_instance.fields.insert("parameterTypes".to_string(), Primitive::Arrayref(Rc::new(RefCell::new(parameter_types_array))));
 
-            Primitive::Objectref(Rc::new(RefCell::new(method_instance)))
+            Primitive::Objectref(Rc::new(RefCell::new(constructor_instance)))
         })
         .collect();
 
@@ -431,7 +439,7 @@ fn get_class_loader0(vm: &mut Vm, class_path: &String, method_name: &String, met
     }
 }
 
-///(Ljava/lang/Class;)Z
+/// (Ljava/lang/Class;)Z
 fn desired_assertion_status0(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
     trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
 
@@ -439,4 +447,68 @@ fn desired_assertion_status0(vm: &mut Vm, class_path: &String, method_name: &Str
 
     frame.stack_pop();
     frame.stack_push(Primitive::Int(1));
+}
+
+/// ()I
+fn get_modifiers(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
+    trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
+
+    let class_path = {
+        let frame = vm.frame_stack.last_mut().unwrap();
+        let rc_class = frame.stack_pop_objectref();
+        let class = rc_class.borrow();
+
+        match class.fields.get("name").unwrap() {
+            &Primitive::Objectref(ref rc_name_instance) => utils::get_java_string_value(&*rc_name_instance.borrow()),
+            a => panic!("Not implemented for {:?}", a)
+        }
+    };
+
+    let classfile = vm.load_and_clinit_class(&class_path);
+    let access_flags = classfile.class_info.access_flags as i32;
+
+    trace!("Popped Objectref from stack and pushed Int {} to stack", access_flags);
+    vm.frame_stack.last_mut().unwrap().stack_push(Primitive::Int(access_flags));
+}
+
+/// If this {@code Class} represents either the
+/// {@code Object} class, an interface, a primitive type, or void, then
+/// null is returned.  If this object represents an array class then the
+/// {@code Class} object representing the {@code Object} class is
+/// returned.
+/// 
+/// ()Ljava/lang/Class;
+fn get_superclass(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
+    trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
+
+    let class_path = {
+        let frame = vm.frame_stack.last_mut().unwrap();
+        let rc_class = frame.stack_pop_objectref();
+        let class = rc_class.borrow();
+
+        match class.fields.get("name").unwrap() {
+            &Primitive::Objectref(ref rc_name_instance) => utils::get_java_string_value(&*rc_name_instance.borrow()),
+            a => panic!("Not implemented for {:?}", a)
+        }
+    };
+
+    if class_path == "java/lang/Object" {
+        vm.frame_stack.last_mut().unwrap().stack_push(Primitive::Null);
+        trace!("Pushed Null for parent class of {} to stack", class_path);
+        return;
+    }
+
+    // TODO if an interface, a primitive type, or void then return Null as well
+    // TODO If this object represents an array the Class object ... see real doc
+
+    let parent_class_path = {
+        let mut hierarchy_iter = ClassHierarchy::hierarchy_iter(vm, &class_path);
+        let (_, parent_class_path, _) = hierarchy_iter.next().unwrap();
+        parent_class_path.clone()
+    };
+
+    let rc_parent_class = Classloader::get_class(vm, &parent_class_path);
+    vm.frame_stack.last_mut().unwrap().stack_push(Primitive::Objectref(rc_parent_class));
+
+    trace!("Pushed Class Objectref for parent class {} of {} to stack", parent_class_path, class_path);
 }

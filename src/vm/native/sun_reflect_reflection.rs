@@ -1,10 +1,12 @@
 use vm::Vm;
 use vm::classloader::Classloader;
 use vm::primitive::Primitive;
+use vm::utils;
 
 pub fn invoke(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
     match method_name.as_ref() {
         "getCallerClass" => get_caller_class(vm, class_path, method_name, method_signature), // (I)Ljava/lang/Class;
+        "getClassAccessFlags" => get_class_access_flags(vm, class_path, method_name, method_signature), // (Ljava/lang/Class;)I
         _ => panic!("Native implementation of method {}.{}{} missing.", class_path, method_name, method_signature),
     }
 }
@@ -44,4 +46,26 @@ fn get_caller_class(vm: &mut Vm, class_path: &String, method_name: &String, meth
     vm.frame_stack.last_mut().unwrap().stack_push(Primitive::Objectref(return_value));
 
     trace!("Pushed Objectref for caller class {} to stack", class_path);
+}
+
+/// (Ljava/lang/Class;)I
+fn get_class_access_flags(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
+    trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
+    
+    let class_path = {
+        let frame = vm.frame_stack.last_mut().unwrap();
+        let rc_class = frame.stack_pop_objectref();
+        let class = rc_class.borrow();
+
+        match class.fields.get("name").unwrap() {
+            &Primitive::Objectref(ref rc_name_instance) => utils::get_java_string_value(&*rc_name_instance.borrow()),
+            a => panic!("Not implemented for {:?}", a)
+        }
+    };
+
+    let classfile = vm.load_and_clinit_class(&class_path);
+    let access_flags = classfile.class_info.access_flags as i32;
+
+    trace!("Popped Objectref from stack and pushed Int {} to stack", access_flags);
+    vm.frame_stack.last_mut().unwrap().stack_push(Primitive::Int(access_flags));
 }

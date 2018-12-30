@@ -71,6 +71,7 @@ mod ior;
 mod imul;
 mod ishr;
 mod i2c;
+mod bastore;
 
 use classfile::Classfile;
 use vm::Vm;
@@ -113,6 +114,7 @@ pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16) -> Option<u
         75...78 => astore_x::eval(vm, code, pc),
         79 => iastore::eval(vm, pc),
         83 => aastore::eval(vm, pc),
+        84 => bastore::eval(vm, pc),
         85 => castore::eval(vm, pc),
         87 => pop::eval(vm, pc),
         88 => pop2::eval(vm, pc),

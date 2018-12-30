@@ -13,6 +13,8 @@ mod java_io_fileoutputstream;
 mod java_util_concurrent_atomic_atomiclong;
 mod sun_misc_unsafe;
 mod sun_reflect_reflection;
+mod sun_reflect_native_constructor_accessor_impl;
+mod sun_misc_vm;
 
 use vm::Vm;
 
@@ -33,6 +35,8 @@ pub fn invoke(vm: &mut Vm, class_path: &String, method_name: &String, method_sig
         "java/util/concurrent/atomic/AtomicLong" => java_util_concurrent_atomic_atomiclong::invoke(vm, class_path, method_name, method_signature),
         "sun/misc/Unsafe" => sun_misc_unsafe::invoke(vm, class_path, method_name, method_signature),
         "sun/reflect/Reflection" => sun_reflect_reflection::invoke(vm, class_path, method_name, method_signature),
+        "sun/reflect/NativeConstructorAccessorImpl" => sun_reflect_native_constructor_accessor_impl::invoke(vm, class_path, method_name, method_signature),
+        "sun/misc/VM" => sun_misc_vm::invoke(vm, class_path, method_name, method_signature),
 
         _ => panic!("No native implementation available for class {}", class_path),
     }

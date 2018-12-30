@@ -9,7 +9,7 @@ pub fn eval(vm: &mut Vm, pc: u16) -> Option<u16> {
     assert_eq!(array.atype.unwrap(), 5);
 
     if let &Primitive::Char(ref value) = array.elements.get(index).unwrap() {
-        trace!("caload: Popped two values from stack, read array at index {} and  push Int '{}' to stack",
+        trace!("caload: Popped two values from stack, read array at index {} and push Int '{}' to stack",
                index, value);
 
         frame.stack_push(Primitive::Int(value.clone() as i32));

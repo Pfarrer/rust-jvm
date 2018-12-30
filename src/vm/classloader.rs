@@ -45,7 +45,7 @@ impl Classloader {
     }
 
     pub fn get_classfile(&mut self, class_path: &String) -> Classfile {
-        let filepath = self.filepath_cache.get(class_path)
+        let filepath = self.filepath_cache.get(&class_path.replace(".", "/"))
             .unwrap_or_else(|| panic!("Class not found: {}", class_path));
 
         self.cache.entry(class_path.clone()).or_insert_with(|| {

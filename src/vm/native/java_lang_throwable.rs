@@ -13,10 +13,6 @@ pub fn invoke(vm: &mut Vm, class_path: &String, method_name: &String, method_sig
 //}
 
 /// ()Ljava/lang/Throwable;
-fn fill_in_stack_trace(vm: &mut Vm) {
-    for frame in vm.frame_stack.iter().rev() {
-        debug!("{}", frame);
-    }
-
+fn fill_in_stack_trace(_vm: &mut Vm) {
     panic!("test");
 }

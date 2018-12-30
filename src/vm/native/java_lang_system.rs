@@ -67,8 +67,8 @@ fn init_properties(vm: &mut Vm, class_path: &String, method_name: &String, metho
     trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
     warn!("This method is only partially implemented!");
 
-    set_property(vm, "sun.stdout.encoding", "UTF-8");
-    set_property(vm, "sun.stderr.encoding", "UTF-8");
+//    set_property(vm, "sun.stdout.encoding", "UTF-8");
+//    set_property(vm, "sun.stderr.encoding", "UTF-8");
     set_property(vm, "file.encoding", "UTF-8");
 
     set_property(vm, "line.separator", "\n");
