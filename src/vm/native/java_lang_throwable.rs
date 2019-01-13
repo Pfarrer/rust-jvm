@@ -7,12 +7,11 @@ pub fn invoke(vm: &mut Vm, class_path: &String, method_name: &String, method_sig
     }
 }
 
-//fn noop(class_path: &String, method_name: &String, method_signature: &String) {
-    // Nothing to do
-//    trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
-//}
-
 /// ()Ljava/lang/Throwable;
-fn fill_in_stack_trace(_vm: &mut Vm) {
-    panic!("test");
+fn fill_in_stack_trace(vm: &mut Vm) {
+    for frame in vm.frame_stack.iter() {
+        println!("Frame of: {}.{}{}", frame.class_path, frame.method_name, frame.method_signature);
+    }
+
+    panic!("not implemented");
 }

@@ -11,6 +11,7 @@ use vm::classloader::Classloader;
 use vm::frame::Frame;
 use vm::primitive::Primitive;
 use vm::string_pool::StringPool;
+use vm::memory_pool::MemoryPool;
 
 mod classloader;
 mod class_hierarchy;
@@ -23,11 +24,10 @@ mod frame;
 mod eval;
 mod native;
 mod string_pool;
+mod memory_pool;
 
 const MAIN_METHOD_NAME: &str = "main";
 const MAIN_METHOD_SIGNATURE: &str = "([Ljava/lang/String;)V";
-
-// CONT: sun.nio.cs.FastCharsetProvider line 76
 
 pub struct Vm {
     classloader: Classloader,
@@ -35,6 +35,7 @@ pub struct Vm {
     frame_stack: Vec<Frame>,
     pub class_statics: HashMap<String, HashMap<String, Primitive>>,
     pub string_pool: StringPool,
+    pub memory_pool: MemoryPool,
 }
 
 impl Vm {
@@ -44,6 +45,7 @@ impl Vm {
         let frame_stack = Vec::new();
         let class_statics = HashMap::new();
         let string_pool = StringPool::new();
+        let memory_pool = MemoryPool::new();
 
         Vm {
             classloader,
@@ -51,6 +53,7 @@ impl Vm {
             frame_stack,
             class_statics,
             string_pool,
+            memory_pool,
         }
     }
 

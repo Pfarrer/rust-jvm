@@ -119,6 +119,15 @@ pub fn read_i16_code(code: &Vec<u8>, pc: u16) -> i16 {
     (indexbyte1 | indexbyte2) as i16
 }
 
+pub fn read_i32_code(code: &Vec<u8>, pc: u16, offset: u16) -> i32 {
+    let byte1 = *code.get((pc + offset) as usize).unwrap() as u32;
+    let byte2 = *code.get((pc + offset + 1) as usize).unwrap() as u32;
+    let byte3 = *code.get((pc + offset + 2) as usize).unwrap() as u32;
+    let byte4 = *code.get((pc + offset + 3) as usize).unwrap() as u32;
+
+    ((byte1 << 24) | (byte2 << 16) | (byte3 << 8) | byte4) as i32
+}
+
 pub fn get_java_string_value(string_instance: &Instance) -> String {
     match string_instance.fields.get("value").unwrap() {
         &Primitive::Arrayref(ref rc_value_array) => {

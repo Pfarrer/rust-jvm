@@ -66,6 +66,8 @@ fn get_class_access_flags(vm: &mut Vm, class_path: &String, method_name: &String
     let classfile = vm.load_and_clinit_class(&class_path);
     let access_flags = classfile.class_info.access_flags as i32;
 
-    trace!("Popped Objectref from stack and pushed Int {} to stack", access_flags);
-    vm.frame_stack.last_mut().unwrap().stack_push(Primitive::Int(access_flags));
+    trace!("Popped Objectref of Class<{}> from stack and pushed Int {} to stack", class_path, access_flags);
+
+    warn!("Fake implementation, will use 0xFFFF always!");
+    vm.frame_stack.last_mut().unwrap().stack_push(Primitive::Int(access_flags | 0xFFFF));
 }

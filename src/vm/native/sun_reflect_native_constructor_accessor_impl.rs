@@ -43,9 +43,7 @@ fn new_instance0(vm: &mut Vm, class_path: &String, method_name: &String, method_
    };
 
     trace!("Going to create instance of class {} using constructor {}", class_name_to_create, constructor_signature);
-    panic!("{}", class_name_to_create);
-let class_name_to_create = "sun/nio/cs/UTF_8".to_string();
-
+    
     let class_to_create = vm.load_and_clinit_class(&class_name_to_create);
     let instance = Instance::new(vm, class_to_create);
     let primitive = Primitive::Objectref(Rc::new(RefCell::new(instance)));

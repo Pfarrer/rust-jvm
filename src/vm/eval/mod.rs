@@ -72,6 +72,10 @@ mod imul;
 mod ishr;
 mod i2c;
 mod bastore;
+mod baload;
+mod lookupswitch;
+mod jsr;
+mod ret;
 
 use classfile::Classfile;
 use vm::Vm;
@@ -105,6 +109,7 @@ pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16) -> Option<u
         34...37 => fload_x::eval(vm, code, pc),
         42...45 => aload_x::eval(vm, code, pc),
         50 => aaload::eval(vm, pc),
+        51 => baload::eval(vm, pc),
         52 => caload::eval(vm, pc),
         54 => istore_x::eval(vm, code, pc),
         55 => lstore_x::eval(vm, code, pc),
@@ -147,6 +152,9 @@ pub fn eval(vm: &mut Vm, class: &Classfile, code: &Vec<u8>, pc: u16) -> Option<u
         159...164 => if_icmp_x::eval(vm, code, pc),
         156...166 => if_acmp_x::eval(vm, code, pc),
         167 => goto::eval(code, pc),
+        168 => jsr::eval(vm, code, pc),
+        169 => ret::eval(vm, code, pc),
+        171 => lookupswitch::eval(vm, pc, code),
         172 => ireturn::eval(vm),
         173 => lreturn::eval(vm),
         176 => areturn::eval(vm),

@@ -12,7 +12,7 @@ pub struct Frame {
     pub method_name: String,
     pub method_signature: String,
 
-    locals: Vec<Primitive>,
+    pub locals: Vec<Primitive>,
     stack: Vec<Primitive>,
 }
 
@@ -74,6 +74,7 @@ impl Frame {
             Primitive::Int(v) => v,
             Primitive::Boolean(v) => if v { 1 } else { 0 },
             Primitive::Char(v) => v as i32,
+            Primitive::Byte(v) => v as i32,
             p => panic!("Expected to pop Int from stack but found: {:?}", p),
         }
     }
@@ -111,6 +112,7 @@ impl Frame {
         match value {
             Primitive::Arrayref(_) => (),
             Primitive::Objectref(_) => (),
+            Primitive::ReturnAddress(_) => (),
             Primitive::Null => (),
             _ => panic!("Popped unexpected value from stack, found: {:?}", value),
         };
@@ -140,6 +142,13 @@ impl Frame {
         match self.locals.get(index).unwrap() {
             &Primitive::Long(ref value) => value.clone(),
             p => panic!("Expected to get Long from locals but found: {:?}", p),
+        }
+    }
+
+    pub fn locals_get_returnaddress(&mut self, index: usize) -> u16 {
+        match self.locals.get(index).unwrap() {
+            &Primitive::ReturnAddress(ref address) => address.clone(),
+            p => panic!("Expected to get ReturnAddress from locals but found: {:?}", p),
         }
     }
 

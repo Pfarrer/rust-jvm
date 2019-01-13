@@ -26,6 +26,7 @@ pub enum Primitive {
 
     Arrayref(Rc<RefCell<Array>>),
     Objectref(Rc<RefCell<Instance>>),
+    ReturnAddress(u16),
 
     Null,
 }
