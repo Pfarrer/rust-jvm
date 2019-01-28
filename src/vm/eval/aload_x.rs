@@ -13,6 +13,10 @@ pub fn eval(vm: &mut Vm, code: &Vec<u8>, pc: u16) -> Option<u16> {
 
     let frame = vm.frame_stack.last_mut().unwrap();
 
+if index==3&&pc==10 {
+    debug!("index={}", index);
+    debug!("locals={:?}", frame.locals);
+}
     let value = frame.locals_get_reference(index as usize).clone();
     frame.stack_push(value.clone());
 

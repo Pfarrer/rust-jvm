@@ -10,6 +10,8 @@ mod java_io_objectstreamclass;
 mod java_io_fileinputstream;
 mod java_io_filedescriptor;
 mod java_io_fileoutputstream;
+mod java_io_filesystem;
+mod java_io_unixfilesystem;
 mod java_util_concurrent_atomic_atomiclong;
 mod sun_misc_unsafe;
 mod sun_reflect_reflection;
@@ -32,6 +34,8 @@ pub fn invoke(vm: &mut Vm, class_path: &String, method_name: &String, method_sig
         "java/io/FileInputStream" => java_io_fileinputstream::invoke(class_path, method_name, method_signature),
         "java/io/FileDescriptor" => java_io_filedescriptor::invoke(class_path, method_name, method_signature),
         "java/io/FileOutputStream" => java_io_fileoutputstream::invoke(class_path, method_name, method_signature),
+        "java/io/FileSystem" => java_io_filesystem::invoke(vm, class_path, method_name, method_signature),
+        "java/io/UnixFileSystem" => java_io_unixfilesystem::invoke(vm, class_path, method_name, method_signature),
         "java/util/concurrent/atomic/AtomicLong" => java_util_concurrent_atomic_atomiclong::invoke(vm, class_path, method_name, method_signature),
         "sun/misc/Unsafe" => sun_misc_unsafe::invoke(vm, class_path, method_name, method_signature),
         "sun/reflect/Reflection" => sun_reflect_reflection::invoke(vm, class_path, method_name, method_signature),

@@ -10,6 +10,7 @@ use vm::class_hierarchy::ClassHierarchy;
 use vm::primitive::Primitive;
 use vm::instance::Instance;
 use vm::signature;
+use vm::utils;
 
 pub fn get_utf8_value(classfile: &Classfile, index: usize) -> String {
     match classfile.constants.get(index).unwrap() {
@@ -87,7 +88,8 @@ pub fn invoke_method(vm: &mut Vm, class_path: &String, method_name: &String, met
         let resolved_class_path = get_class_path(&class);
         native::invoke(vm, &resolved_class_path, method_name, method_signature);
     } else {
-        let mut frame = Frame::new(class_path.clone(), method_name.clone(), method_signature.clone());
+        let code_attr = utils::find_code(&method).unwrap();
+        let mut frame = Frame::new(code_attr.max_locals, class_path.clone(), method_name.clone(), method_signature.clone());
 
         // Parse signature and move arguments from caller frame to callee frame
         {
@@ -143,5 +145,14 @@ pub fn get_java_string_value(string_instance: &Instance) -> String {
             String::from_utf16_lossy(element_values.as_slice())
         }
         p => panic!("Unexpected primitive: {:?}", p),
+    }
+}
+
+pub fn get_instance_field_string_value(class_instance: &Instance, field_name: &str) -> String {
+    let rc_string = class_instance.fields.get(field_name).unwrap();
+    
+    match rc_string {
+        &Primitive::Objectref(ref rc_string_instance) => get_java_string_value(&*rc_string_instance.borrow()),
+        _ => panic!("Expected to find Instance but found {:?}", rc_string),
     }
 }

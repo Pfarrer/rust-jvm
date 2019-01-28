@@ -1,4 +1,7 @@
 extern crate time;
+extern crate dirs;
+
+use env;
 
 use vm::Vm;
 use vm::primitive::Primitive;
@@ -12,7 +15,10 @@ pub fn invoke(vm: &mut Vm, class_path: &String, method_name: &String, method_sig
         "nanoTime" => nano_time(vm, class_path, method_name, method_signature), // ()J
         "initProperties" => init_properties(vm, class_path, method_name, method_signature), // (Ljava/util/Properties;)Ljava/util/Properties;
         "setIn0" => set_in0(vm, class_path, method_name, method_signature), // (Ljava/io/InputStream;)V
-        "arraycopy" => arraycopy(vm, class_path, method_name, method_signature), // arraycopy(Ljava/lang/Object;ILjava/lang/Object;II)V
+        "setOut0" => set_out0(vm, class_path, method_name, method_signature), // (Ljava/io/PrintStream;)V
+        "setErr0" => set_err0(vm, class_path, method_name, method_signature), // (Ljava/io/PrintStream;)V
+        "arraycopy" => arraycopy(vm, class_path, method_name, method_signature), // (Ljava/lang/Object;ILjava/lang/Object;II)V
+        "mapLibraryName" => map_library_name(vm, class_path, method_name, method_signature), // (Ljava/lang/String;)Ljava/lang/String;
         _ => panic!("Native implementation of method {}.{}{} missing.", class_path, method_name, method_signature),
     }
 }
@@ -49,8 +55,8 @@ fn nano_time(vm: &mut Vm, class_path: &String, method_name: &String, method_sign
 
 /// java/lang/System.initProperties(Ljava/util/Properties;)Ljava/util/Properties;
 fn init_properties(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
-    // java.version         <dd>Java version number
-//    * <dt>java.vendor          <dd>Java vendor specific string
+//        * <dt>java.version         <dd>Java version number
+//        * <dt>java.vendor          <dd>Java vendor specific string
 //        * <dt>java.vendor.url      <dd>Java vendor URL
 //        * <dt>java.home            <dd>Java installation directory
 //        * <dt>java.class.version   <dd>Java class version number
@@ -59,8 +65,8 @@ fn init_properties(vm: &mut Vm, class_path: &String, method_name: &String, metho
 //        * <dt>os.arch              <dd>Operating System Architecture
 //        * <dt>os.version           <dd>Operating System Version
 //        * <dt>file.separator       <dd>File separator ("/" on Unix)
-//    * <dt>path.separator       <dd>Path separator (":" on Unix)
-//    * <dt>user.name            <dd>User account name
+//        * <dt>path.separator       <dd>Path separator (":" on Unix)
+//        * <dt>user.name            <dd>User account name
 //        * <dt>user.home            <dd>User home directory
 //        * <dt>user.dir             <dd>User's current working directory
 
@@ -72,8 +78,16 @@ fn init_properties(vm: &mut Vm, class_path: &String, method_name: &String, metho
     set_property(vm, "file.encoding", "UTF-8");
 
     set_property(vm, "line.separator", "\n");
+    set_property(vm, "file.separator", "/");
+    set_property(vm, "path.separator", ":");
 
-    fn set_property(vm: &mut Vm, key: &'static str, value: &'static str) {
+    let java_home_pathbuf = env::current_dir().unwrap();
+    set_property(vm, "java.home",  java_home_pathbuf.to_str().unwrap());
+
+    let user_dir_pathbuf = dirs::home_dir().unwrap();
+    set_property(vm, "user.dir",  user_dir_pathbuf.to_str().unwrap());
+
+    fn set_property(vm: &mut Vm, key: &str, value: &str) {
         // Intern key and value first
         let rc_interned_key = StringPool::intern(vm, &key.to_string());
         let rc_interned_value = StringPool::intern(vm, &value.to_string());
@@ -132,4 +146,50 @@ fn set_in0(vm: &mut Vm, class_path: &String, method_name: &String, method_signat
 
     vm.class_statics.get_mut(class_path).unwrap()
         .insert("in".to_string(), Primitive::Objectref(rc_stream));
+}
+
+// (Ljava/io/PrintStream;)V
+fn set_out0(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
+    trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
+
+    let frame = vm.frame_stack.last_mut().unwrap();
+    let rc_stream = frame.stack_pop_objectref();
+
+    vm.class_statics.get_mut(class_path).unwrap()
+        .insert("out".to_string(), Primitive::Objectref(rc_stream));
+}
+
+// (Ljava/io/PrintStream;)V
+fn set_err0(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
+    trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
+
+    let frame = vm.frame_stack.last_mut().unwrap();
+    let rc_stream = frame.stack_pop_objectref();
+
+    vm.class_statics.get_mut(class_path).unwrap()
+        .insert("err".to_string(), Primitive::Objectref(rc_stream));
+}
+
+
+/// (Ljava/lang/String;)Ljava/lang/String;
+fn map_library_name(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
+    trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
+
+    let libname =  {
+        let frame = vm.frame_stack.last_mut().unwrap();
+        let rc_string = frame.stack_pop_objectref();
+        let libname_string = rc_string.borrow();
+        
+        utils::get_java_string_value(&*libname_string)
+    };
+
+    assert_eq!("zip", libname);
+
+    let mapped_libname = "libzip.so".to_string();
+    let rc_mapped_libname = StringPool::intern(vm, &mapped_libname);
+
+    trace!("Popped an Objectref (String {}) from stack and push Objecref (String {}) back to the stack", libname, mapped_libname);
+
+    let frame = vm.frame_stack.last_mut().unwrap();
+    frame.stack_push(Primitive::Objectref(rc_mapped_libname));
 }

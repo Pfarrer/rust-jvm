@@ -13,17 +13,22 @@ pub struct Frame {
     pub method_signature: String,
 
     pub locals: Vec<Primitive>,
-    stack: Vec<Primitive>,
+    pub stack: Vec<Primitive>,
 }
 
 impl Frame {
-    pub fn new(class_path: String, method_name: String, method_signature: String) -> Frame {
+    pub fn new(max_locals: u16, class_path: String, method_name: String, method_signature: String) -> Frame {
+        let mut locals = Vec::with_capacity(max_locals as usize);
+        for _ in 0..max_locals {
+            locals.push(Primitive::Null)
+        }
+        
         Frame {
             class_path,
             method_name,
             method_signature,
 
-            locals: Vec::new(),
+            locals,
             stack: Vec::new(),
         }
     }

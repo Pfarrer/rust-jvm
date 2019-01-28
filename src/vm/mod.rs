@@ -62,7 +62,7 @@ impl Vm {
         let args = Array::new_complex(0, "java/lang/String".to_string());
         let rc_args = Rc::new(RefCell::new(args));
 
-        let mut frame = Frame::new("<root_frame>".to_string(), "<root_frame>".to_string(), "<root_frame>".to_string());
+        let mut frame = Frame::new(0, "<root_frame>".to_string(), "<root_frame>".to_string(), "<root_frame>".to_string());
         frame.stack_push(Primitive::Arrayref(rc_args));
         self.frame_stack.push(frame);
 
@@ -118,7 +118,8 @@ impl Vm {
             if let Some(method) = utils::find_method_in_classfile(&classfile, &"<clinit>".to_string(), &"()V".to_string()) {
                 debug!("Class {} not initialized and contains <clinit> -> executing now", class_path);
 
-                let frame = Frame::new(class_path.clone(), "<clinit>".to_string(), "()V".to_string());
+                let code_attr = utils::find_code(&method).unwrap();
+                let frame = Frame::new(code_attr.max_locals, class_path.clone(), "<clinit>".to_string(), "()V".to_string());
                 self.execute_method(&classfile, &method, frame);
 
                 debug!("{}.<clinit> done", class_path);
