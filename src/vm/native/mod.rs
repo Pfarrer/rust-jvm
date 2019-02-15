@@ -1,7 +1,8 @@
 mod java_lang_system;
 mod java_lang_object;
 mod java_lang_class;
-mod java_lang_classloader;
+mod java_lang_class_loader;
+mod java_lang_class_loader_native_library;
 mod java_lang_accesscontroller;
 mod java_lang_string;
 mod java_lang_thread;
@@ -25,7 +26,8 @@ pub fn invoke(vm: &mut Vm, class_path: &String, method_name: &String, method_sig
         "java/lang/System" => java_lang_system::invoke(vm, class_path, method_name, method_signature),
         "java/lang/Object" => java_lang_object::invoke(vm, class_path, method_name, method_signature),
         "java/lang/Class" => java_lang_class::invoke(vm, class_path, method_name, method_signature),
-        "java/lang/ClassLoader" => java_lang_classloader::invoke(class_path, method_name, method_signature),
+        "java/lang/ClassLoader" => java_lang_class_loader::invoke(class_path, method_name, method_signature),
+        "java/lang/ClassLoader$NativeLibrary" => java_lang_class_loader_native_library::invoke(vm, class_path, method_name, method_signature),
         "java/security/AccessController" => java_lang_accesscontroller::invoke(vm, class_path, method_name, method_signature),
         "java/lang/String" => java_lang_string::invoke(vm, class_path, method_name, method_signature),
         "java/lang/Thread" => java_lang_thread::invoke(vm, class_path, method_name, method_signature),
