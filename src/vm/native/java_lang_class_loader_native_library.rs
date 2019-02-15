@@ -22,7 +22,6 @@ fn load(vm: &mut Vm, class_path: &String, method_name: &String, method_signature
     };
 
     assert_eq!("/libzip.so", value);
-    warn!("Loading /libzip.so not implemented... will fake a handle value");
 
     let frame = vm.frame_stack.last_mut().unwrap();
     let rc_nativelib = frame.stack_pop_objectref();
@@ -30,6 +29,5 @@ fn load(vm: &mut Vm, class_path: &String, method_name: &String, method_signature
 
     nativelib.fields.insert("handle".to_owned(), Primitive::Long(1337));
 
-    // Create intanance of NativeLibrary
-    // Push to Vector Classloader.nativeLibraries
+    warn!("Loading /libzip.so not implemented... will fake a handle value");
 }

@@ -18,6 +18,7 @@ mod sun_misc_unsafe;
 mod sun_reflect_reflection;
 mod sun_reflect_native_constructor_accessor_impl;
 mod sun_misc_vm;
+mod sun_misc_signal;
 
 use vm::Vm;
 
@@ -43,7 +44,8 @@ pub fn invoke(vm: &mut Vm, class_path: &String, method_name: &String, method_sig
         "sun/reflect/Reflection" => sun_reflect_reflection::invoke(vm, class_path, method_name, method_signature),
         "sun/reflect/NativeConstructorAccessorImpl" => sun_reflect_native_constructor_accessor_impl::invoke(vm, class_path, method_name, method_signature),
         "sun/misc/VM" => sun_misc_vm::invoke(vm, class_path, method_name, method_signature),
-
+        "sun/misc/Signal" => sun_misc_signal::invoke(vm, class_path, method_name, method_signature),
+        
         _ => panic!("No native implementation available for class {}", class_path),
     }
 }
