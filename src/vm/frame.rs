@@ -84,6 +84,13 @@ impl Frame {
         }
     }
 
+    pub fn stack_pop_long(&mut self) -> i64 {
+        match self.stack_pop() {
+            Primitive::Long(v) => v,
+            p => panic!("Expected to pop Long from stack but found: {:?}", p),
+        }
+    }
+
     pub fn stack_pop_float(&mut self) -> f32 {
         match self.stack_pop() {
             Primitive::Float(v) => v,
@@ -91,10 +98,10 @@ impl Frame {
         }
     }
 
-    pub fn stack_pop_long(&mut self) -> i64 {
+    pub fn stack_pop_double(&mut self) -> f64 {
         match self.stack_pop() {
-            Primitive::Long(v) => v,
-            p => panic!("Expected to pop Long from stack but found: {:?}", p),
+            Primitive::Double(v) => v,
+            p => panic!("Expected to pop Double from stack but found: {:?}", p),
         }
     }
 

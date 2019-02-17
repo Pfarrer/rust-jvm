@@ -10,7 +10,7 @@ use vm::utils;
 
 pub fn invoke(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
     match method_name.as_ref() {
-        "registerNatives" => register_natives(vm, class_path, method_name, method_signature),
+        "registerNatives" => register_natives(class_path, method_name, method_signature),
         "currentTimeMillis" => current_time_millis(vm, class_path, method_name, method_signature), // ()J
         "nanoTime" => nano_time(vm, class_path, method_name, method_signature), // ()J
         "initProperties" => init_properties(vm, class_path, method_name, method_signature), // (Ljava/util/Properties;)Ljava/util/Properties;
@@ -23,20 +23,21 @@ pub fn invoke(vm: &mut Vm, class_path: &String, method_name: &String, method_sig
     }
 }
 
-fn register_natives(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
+fn register_natives(class_path: &String, method_name: &String, method_signature: &String) {
     trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
-
-    utils::invoke_method(vm, class_path, &"initializeSystemClass".to_string(), &"()V".to_string(), false);
 }
 
 fn current_time_millis(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
     trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
 
-    let time_spec = time::get_time();
+    let millis_int = if vm.initialized {
+        let time_spec = time::get_time();
 
-    // 1459440009.113178
-    let millis_float: f64 = time_spec.sec as f64 + (time_spec.nsec as f64 / 1000.0 / 1000.0 / 1000.0);
-    let millis_int = (millis_float * 1000.0) as i64;
+        // 1459440009.113178
+        let millis_float: f64 = time_spec.sec as f64 + (time_spec.nsec as f64 / 1000.0 / 1000.0 / 1000.0);
+        (millis_float * 1000.0) as i64
+    }
+    else { -1 };
 
     // Push result to stack
     let frame = vm.frame_stack.last_mut().unwrap();

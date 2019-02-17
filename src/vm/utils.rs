@@ -7,6 +7,7 @@ use vm::Vm;
 use vm::native;
 use vm::Frame;
 use vm::class_hierarchy::ClassHierarchy;
+use vm::array::Array;
 use vm::primitive::Primitive;
 use vm::instance::Instance;
 use vm::signature;
@@ -130,20 +131,20 @@ pub fn read_i32_code(code: &Vec<u8>, pc: u16, offset: u16) -> i32 {
     ((byte1 << 24) | (byte2 << 16) | (byte3 << 8) | byte4) as i32
 }
 
+pub fn get_java_byte_array_string_value(value_array: &Array) -> String {
+    let element_values: Vec<u16> = value_array.elements.iter()
+        .map(|p| match p {
+            &Primitive::Char(ref code) => *code,
+            p => panic!("Unexpected primitive: {:?}", p),
+        })
+        .collect();
+
+    String::from_utf16_lossy(element_values.as_slice())
+}
+
 pub fn get_java_string_value(string_instance: &Instance) -> String {
     match string_instance.fields.get("value").unwrap() {
-        &Primitive::Arrayref(ref rc_value_array) => {
-            let value_array = rc_value_array.borrow();
-
-            let element_values: Vec<u16> = value_array.elements.iter()
-                .map(|p| match p {
-                    &Primitive::Char(ref code) => *code,
-                    p => panic!("Unexpected primitive: {:?}", p),
-                })
-                .collect();
-
-            String::from_utf16_lossy(element_values.as_slice())
-        }
+        &Primitive::Arrayref(ref rc_value_array) => get_java_byte_array_string_value(&*rc_value_array.borrow()),
         p => panic!("Unexpected primitive: {:?}", p),
     }
 }

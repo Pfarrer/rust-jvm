@@ -30,6 +30,7 @@ const MAIN_METHOD_NAME: &str = "main";
 const MAIN_METHOD_SIGNATURE: &str = "([Ljava/lang/String;)V";
 
 pub struct Vm {
+    pub initialized: bool,
     classloader: Classloader,
     class_hierarchy: ClassHierarchy,
     frame_stack: Vec<Frame>,
@@ -47,25 +48,37 @@ impl Vm {
         let string_pool = StringPool::new();
         let memory_pool = MemoryPool::new();
 
-        Vm {
+        let mut vm = Vm {
+            initialized: false,
             classloader,
             class_hierarchy,
             frame_stack,
             class_statics,
             string_pool,
             memory_pool,
-        }
-    }
+        };
 
-    pub fn invoke_main(&mut self, class_path: &String) {
+        // Initialize VM by loading System class
+        let system_class_path = "java/lang/System".to_string();
+        vm.load_and_clinit_class(&system_class_path);
+        vm.initialized = true;
+
+        // Create root frame
         // Add args array
         let args = Array::new_complex(0, "java/lang/String".to_string());
         let rc_args = Rc::new(RefCell::new(args));
 
         let mut frame = Frame::new(0, "<root_frame>".to_string(), "<root_frame>".to_string(), "<root_frame>".to_string());
         frame.stack_push(Primitive::Arrayref(rc_args));
-        self.frame_stack.push(frame);
+        vm.frame_stack.push(frame);
+        
+        // Invoke System.initializeSystemClass
+        utils::invoke_method(&mut vm, &system_class_path, &"initializeSystemClass".to_string(), &"()V".to_string(), false);
 
+        vm
+    }
+
+    pub fn invoke_main(&mut self, class_path: &String) {
         utils::invoke_method(self, class_path, &MAIN_METHOD_NAME.to_string(), &MAIN_METHOD_SIGNATURE.to_string(), false);
     }
 

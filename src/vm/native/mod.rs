@@ -19,6 +19,8 @@ mod sun_reflect_reflection;
 mod sun_reflect_native_constructor_accessor_impl;
 mod sun_misc_vm;
 mod sun_misc_signal;
+mod java_lang_float;
+mod java_lang_double;
 
 use vm::Vm;
 
@@ -36,7 +38,7 @@ pub fn invoke(vm: &mut Vm, class_path: &String, method_name: &String, method_sig
         "java/io/ObjectStreamClass" => java_io_objectstreamclass::invoke(class_path, method_name, method_signature),
         "java/io/FileInputStream" => java_io_fileinputstream::invoke(class_path, method_name, method_signature),
         "java/io/FileDescriptor" => java_io_filedescriptor::invoke(class_path, method_name, method_signature),
-        "java/io/FileOutputStream" => java_io_fileoutputstream::invoke(class_path, method_name, method_signature),
+        "java/io/FileOutputStream" => java_io_fileoutputstream::invoke(vm, class_path, method_name, method_signature),
         "java/io/FileSystem" => java_io_filesystem::invoke(vm, class_path, method_name, method_signature),
         "java/io/UnixFileSystem" => java_io_unixfilesystem::invoke(vm, class_path, method_name, method_signature),
         "java/util/concurrent/atomic/AtomicLong" => java_util_concurrent_atomic_atomiclong::invoke(vm, class_path, method_name, method_signature),
@@ -45,6 +47,8 @@ pub fn invoke(vm: &mut Vm, class_path: &String, method_name: &String, method_sig
         "sun/reflect/NativeConstructorAccessorImpl" => sun_reflect_native_constructor_accessor_impl::invoke(vm, class_path, method_name, method_signature),
         "sun/misc/VM" => sun_misc_vm::invoke(vm, class_path, method_name, method_signature),
         "sun/misc/Signal" => sun_misc_signal::invoke(vm, class_path, method_name, method_signature),
+        "java/lang/Float" => java_lang_float::invoke(vm, class_path, method_name, method_signature),
+        "java/lang/Double" => java_lang_double::invoke(vm, class_path, method_name, method_signature),
         
         _ => panic!("No native implementation available for class {}", class_path),
     }
