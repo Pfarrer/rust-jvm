@@ -1,14 +1,8 @@
-[package]
-name = "rust-jvm"
-version = "0.1.0"
-authors = ["Brian Pfretzschner <brian.pfretzschner@gmail.com>"]
+[workspace]
 
-[dependencies]
-glob = "0.2"
-log = "0.3"
-pretty_env_logger = "0.1"
-time = "0.1.38"
-dirs = "1.0.4"
-
-[profile.dev]
-debug = true
+members = [
+    "model",
+    "loader",
+    "vm",
+    "app",
+]
