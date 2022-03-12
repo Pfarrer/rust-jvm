@@ -3,6 +3,7 @@
 members = [
     "model",
     "loader",
+    "parser",
     "vm",
-    "app",
+    "cli",
 ]
