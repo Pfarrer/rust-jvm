@@ -9,6 +9,8 @@ mod methods;
 mod util;
 mod version;
 
+pub use util::{parse_method_signature, parse_type_signature};
+
 pub struct ClassfileParser {}
 
 impl model::api::Parser for ClassfileParser {
@@ -20,14 +22,16 @@ impl model::api::Parser for ClassfileParser {
         let methods = methods::read(reader, &constants);
         let attributes = attributes::read(reader, &constants);
 
-        JvmClass {
+        let jvm_class = JvmClass {
             version,
             constants,
             class_info,
             fields,
             methods,
             attributes,
-        }
+        };
+
+        jvm_class
     }
 }
 

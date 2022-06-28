@@ -7,6 +7,7 @@ edition = "2021"
 model = { path = "../model" }
 parser = { path = "../parser" }
 loader = { path = "../loader" }
+vm = { path = "../vm" }
 
 clap = { version = "3.1.2", features = ["derive"] }
 prettytable-rs = "0.8.0"

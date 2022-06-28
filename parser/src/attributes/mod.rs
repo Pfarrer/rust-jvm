@@ -1,3 +1,4 @@
+mod bootstrap_methods;
 mod code;
 mod constant_value;
 mod exceptions;
@@ -32,6 +33,7 @@ pub fn read_attribute(reader: &mut impl Read, constants: &Vec<ClassConstant>) ->
             "Exceptions" => ClassAttribute::Exceptions(exceptions::read(reader)),
             "Signature" => ClassAttribute::Signature(signature::read(reader)),
             "ConstantValue" => ClassAttribute::ConstantValue(constant_value::read(reader)),
+            "BootstrapMethods" => ClassAttribute::BootstrapMethods(bootstrap_methods::read(reader)),
 
             "RuntimeVisibleAnnotations" => {
                 let attribute_length = util::read_u32(reader);
@@ -54,9 +56,27 @@ pub fn read_attribute(reader: &mut impl Read, constants: &Vec<ClassConstant>) ->
             }
 
             "Deprecated" => {
-                /*let attribute_length = */
-                util::read_u32(reader);
+                let attribute_length = util::read_u32(reader);
+                assert_eq!(0, attribute_length);
                 ClassAttribute::Deprecated
+            }
+
+            "LocalVariableTable" => {
+                let attribute_length = util::read_u32(reader);
+                util::read_raw(reader, attribute_length as usize);
+                ClassAttribute::NotImplemented
+            }
+
+            "LocalVariableTypeTable" => {
+                let attribute_length = util::read_u32(reader);
+                util::read_raw(reader, attribute_length as usize);
+                ClassAttribute::NotImplemented
+            }
+
+            "StackMapTable" => {
+                let attribute_length = util::read_u32(reader);
+                util::read_raw(reader, attribute_length as usize);
+                ClassAttribute::NotImplemented
             }
 
             name => panic!("Attribute not implemented: {}", name),

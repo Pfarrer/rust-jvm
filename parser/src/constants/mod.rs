@@ -1,7 +1,9 @@
 mod raw;
+pub mod accessor;
 
 use model::class::ClassConstant;
 use std::io::Read;
+use crate::util::{parse_method_signature, parse_type_signature};
 
 pub fn read(reader: &mut impl Read) -> Vec<ClassConstant> {
     let raw_constants = raw::read(reader);
@@ -24,22 +26,25 @@ fn process_raw_constants(raw_constants: Vec<raw::Constant>) -> Vec<ClassConstant
                 let class_name = unwrap_class(&raw_constants, class_index);
                 let (field_name, type_name) =
                     unwrap_name_and_type(&raw_constants, name_and_type_index);
+                let type_signature = parse_type_signature(&type_name);
 
-                ClassConstant::Fieldref(class_name, field_name, type_name)
+                ClassConstant::Fieldref(class_name, field_name, type_signature)
             }
             &raw::Constant::Methodref(class_index, name_and_type_index) => {
                 let class_name = unwrap_class(&raw_constants, class_index);
                 let (method_name, type_name) =
                     unwrap_name_and_type(&raw_constants, name_and_type_index);
+                let method_signature = parse_method_signature(&type_name);
 
-                ClassConstant::Methodref(class_name, method_name, type_name)
+                ClassConstant::Methodref(class_name, method_name, method_signature)
             }
             &raw::Constant::InterfaceMethodref(class_index, name_and_type_index) => {
                 let class_name = unwrap_class(&raw_constants, class_index);
                 let (method_name, type_name) =
                     unwrap_name_and_type(&raw_constants, name_and_type_index);
+                let method_signature = parse_method_signature(&type_name);
 
-                ClassConstant::InterfaceMethodref(class_name, method_name, type_name)
+                ClassConstant::InterfaceMethodref(class_name, method_name, method_signature)
             }
             &raw::Constant::String(value_index) => {
                 let value = unwrap_string(&raw_constants, value_index);
@@ -51,9 +56,21 @@ fn process_raw_constants(raw_constants: Vec<raw::Constant>) -> Vec<ClassConstant
             &raw::Constant::Long(value) => ClassConstant::Long(value),
             &raw::Constant::Double(value) => ClassConstant::Double(value),
             &raw::Constant::NameAndType(_, _) => {
-                let (name, type_val) = unwrap_name_and_type(&raw_constants, i as u16);
+                let (name, type_name) = unwrap_name_and_type(&raw_constants, i as u16);
+                let type_signature = parse_type_signature(&type_name);
 
-                ClassConstant::NameAndType(name, type_val)
+                ClassConstant::NameAndType(name, type_signature)
+            }
+            &raw::Constant::MethodHandle(reference_kind, reference_index) => {
+                ClassConstant::MethodHandle(reference_kind, reference_index)
+            }
+            &raw::Constant::MethodType(descriptor_index) => {
+                let value = unwrap_string(&raw_constants, descriptor_index);
+
+                ClassConstant::MethodType(value)
+            }
+            &raw::Constant::InvokeDynamic(bootstrap_method_attr_index, name_and_type_index) => {
+                ClassConstant::InvokeDynamic(bootstrap_method_attr_index, name_and_type_index)
             }
             &raw::Constant::Utf8(ref val) => ClassConstant::Utf8(val.to_string()),
         })

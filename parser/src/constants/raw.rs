@@ -39,14 +39,15 @@ pub enum Constant {
 
     // Value
     Utf8(String),
+
     // reference_kind, reference_index
-    //    MethodHandle(u8, u16),
+    MethodHandle(u8, u16),
 
     // descriptor_index
-    //    MethodType(u16),
+    MethodType(u16),
 
     // bootstrap_method_attr_index, name_and_type_index
-    //    InvokeDynamic(u16, u16),
+    InvokeDynamic(u16, u16),
 }
 
 pub fn read(reader: &mut impl Read) -> Vec<Constant> {
@@ -70,6 +71,9 @@ pub fn read(reader: &mut impl Read) -> Vec<Constant> {
             10 => read_methodref(reader),
             11 => read_interface_methodref(reader),
             12 => read_name_and_type(reader),
+            15 => read_method_handle(reader),
+            16 => read_method_type(reader),
+            18 => read_invoke_dynamic(reader),
             _ => panic!("Unexpected Constant Pool Tag: {}", tag_bin[0]),
         });
 
@@ -160,4 +164,24 @@ fn read_name_and_type(reader: &mut impl Read) -> Constant {
     let descriptor_index = util::read_u16(reader);
 
     Constant::NameAndType(name_index, descriptor_index)
+}
+
+fn read_method_handle(reader: &mut impl Read) -> Constant {
+    let reference_kind = util::read_raw(reader, 1)[0];
+    let reference_index = util::read_u16(reader);
+
+    Constant::MethodHandle(reference_kind, reference_index)
+}
+
+fn read_method_type(reader: &mut impl Read) -> Constant {
+    let descriptor_index = util::read_u16(reader);
+
+    Constant::MethodType(descriptor_index)
+}
+
+fn read_invoke_dynamic(reader: &mut impl Read) -> Constant {
+    let bootstrap_method_attr_index = util::read_u16(reader);
+    let name_and_type_index = util::read_u16(reader);
+
+    Constant::InvokeDynamic(bootstrap_method_attr_index, name_and_type_index)
 }

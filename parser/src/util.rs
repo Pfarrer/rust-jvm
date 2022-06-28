@@ -1,5 +1,8 @@
 use std;
 use std::io::Read;
+use std::iter::Peekable;
+use std::str::Chars;
+use model::class::{TypeSignature, MethodSignature};
 
 pub fn read_u16(reader: &mut impl Read) -> u16 {
     let mut bin = [0u8; 2];
@@ -64,4 +67,52 @@ pub fn to_f64(val: [u8; 8]) -> f64 {
     ];
 
     unsafe { std::mem::transmute::<[u8; 8], f64>(reversed) }
+}
+
+pub fn parse_type_signature(spec: &String) -> TypeSignature {
+    parse_type(&mut spec.chars().peekable())
+}
+
+/// ( arg-types ) ret-type	method-type
+pub fn parse_method_signature(spec: &String) -> MethodSignature {
+    let mut iterator = spec.chars().peekable();
+    assert_eq!('(', iterator.next().unwrap());
+
+    let mut parameters = Vec::new();
+    while *iterator.peek().unwrap() != ')' {
+        let parameter_type = parse_type(&mut iterator);
+        parameters.push(parameter_type);
+    }
+    assert_eq!(')', iterator.next().unwrap());
+
+    let return_type = parse_type(&mut iterator);
+    assert_eq!(None, iterator.next());
+
+    MethodSignature {
+        parameters,
+        return_type,
+    }
+}
+
+fn parse_type(iterator: &mut Peekable<Chars>) -> TypeSignature {
+    match iterator.next().unwrap() {
+        'V' => TypeSignature::Void,
+        'Z' => TypeSignature::Boolean,
+        'B' => TypeSignature::Byte,
+        'C' => TypeSignature::Char,
+        'S' => TypeSignature::Short,
+        'I' => TypeSignature::Int,
+        'J' => TypeSignature::Long,
+        'F' => TypeSignature::Float,
+        'D' => TypeSignature::Double,
+        'L' => TypeSignature::Class(read_class_path(iterator)),
+        '[' => TypeSignature::Array(Box::new(parse_type(iterator))),
+        c => panic!("Unexpected char of type signature: {}", c),
+    }
+}
+
+fn read_class_path(iterator: &mut Peekable<Chars>) -> String {
+    iterator
+        .take_while(|c| *c != ';')
+        .collect::<String>()
 }
