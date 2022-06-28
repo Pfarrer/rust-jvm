@@ -6,6 +6,7 @@ use std::path::PathBuf;
 use clap::{Parser, Subcommand};
 
 mod list_classes;
+mod execute;
 
 #[derive(Parser)]
 struct Args {
@@ -20,13 +21,22 @@ enum Command {
         #[clap(required = true, parse(from_os_str))]
         class_paths: Vec<PathBuf>,
     },
+
+    #[clap(arg_required_else_help = true)]
+    Execute {
+        #[clap(required = true)]
+        main_class: String,
+
+        #[clap(required = true, parse(from_os_str))]
+        class_paths: Vec<PathBuf>,
+    },
 }
 
 fn main() {
     let args = Args::parse();
 
-    // let classloader = Classloader::
     match args.command {
         Command::ListClasses { class_paths } => list_classes::run(class_paths),
+        Command::Execute { main_class, class_paths } => execute::run(main_class, class_paths),
     };
 }

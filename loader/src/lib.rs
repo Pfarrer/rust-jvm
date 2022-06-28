@@ -1,8 +1,6 @@
-#[macro_use]
-extern crate simple_error;
-
 use model::api::Parser;
 use model::class::JvmClass;
+use simple_error::simple_error;
 use std::error::Error;
 use std::ffi::OsStr;
 use std::path::Path;

@@ -1,6 +1,7 @@
 use glob::glob;
 use model::api::Parser;
 use model::class::JvmClass;
+use simple_error::simple_error;
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs::File;
