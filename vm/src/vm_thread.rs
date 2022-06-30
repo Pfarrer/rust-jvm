@@ -1,21 +1,28 @@
-use std::cell::RefCell;
-use crate::frame::Frame;
-use std::rc::Rc;
-use model::class::{ClassAttribute, ClassMethod, CodeAttribute, JvmClass};
-use parser::parse_method_signature;
 use crate::array::Array;
+use crate::eval::eval;
+use crate::frame::Frame;
 use crate::primitive::Primitive;
-use crate::Vm;
 use crate::utils;
+use crate::Vm;
+use model::class::{CodeAttribute, JvmClass};
+use parser::parse_method_signature;
+use std::cell::RefCell;
+use std::rc::Rc;
 
-pub struct VmThread {
-    frame_stack: Vec<Frame>,
+pub struct VmThread<'a> {
+    vm: &'a Vm,
+    pub(crate) frame_stack: Vec<Frame>,
 }
 
-impl VmThread {
-    pub fn new() -> VmThread {
+impl<'a> VmThread<'a> {
+    pub fn new(vm: &'a Vm) -> VmThread<'a> {
         // Create root frame
-        let mut frame = Frame::new(0, "<root_frame>".to_string(), "<root_frame>".to_string(), "<root_frame>".to_string());
+        let mut frame = Frame::new(
+            0,
+            "<root_frame>".to_string(),
+            "<root_frame>".to_string(),
+            "<root_frame>".to_string(),
+        );
 
         // Add args array
         let args = Array::new_complex(0, "java/lang/String".to_string());
@@ -23,12 +30,20 @@ impl VmThread {
         frame.stack_push(Primitive::Arrayref(rc_args));
 
         VmThread {
+            vm,
             frame_stack: vec![frame],
         }
     }
 
-    pub fn invoke_method(&mut self, vm: &Vm, class_path: &String, method_name: &String, method_signature: &String, is_instance: bool) {
-        let (class, method) = utils::find_method(vm, class_path, method_name, method_signature);
+    pub fn invoke_method(
+        &mut self,
+        class_path: &String,
+        method_name: &String,
+        method_signature: &String,
+        is_instance: bool,
+    ) {
+        let (class, method) =
+            utils::find_method(self.vm, class_path, method_name, method_signature);
 
         if method.access_flags & JvmClass::ACC_NATIVE > 0 {
             todo!()
@@ -41,7 +56,7 @@ impl VmThread {
                 method_name,
                 method_signature,
                 code_attr.max_locals,
-                is_instance
+                is_instance,
             );
 
             self.execute_method(&class, &code_attr, frame);
@@ -53,7 +68,7 @@ impl VmThread {
         let mut pc = 0;
 
         loop {
-            match eval::eval(self, class, &code_attribute.code, pc) {
+            match eval(self, class, &code_attribute.code, pc) {
                 Some(new_pc) => pc = new_pc,
                 None => break,
             }
@@ -68,13 +83,13 @@ impl VmThread {
         method_name: &String,
         method_signature: &String,
         max_locals: u16,
-        is_instance: bool
+        is_instance: bool,
     ) -> Frame {
         let mut frame = Frame::new(
             max_locals,
             class_path.clone(),
             method_name.clone(),
-            method_signature.clone()
+            method_signature.clone(),
         );
 
         // Parse signature and move arguments from caller frame to callee frame
