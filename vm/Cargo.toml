@@ -9,3 +9,4 @@ loader = { path = "../loader" }
 parser = { path = "../parser" }
 
 simple-error = "0.2"
+log = "0.4.17"

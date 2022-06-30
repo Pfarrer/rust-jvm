@@ -9,18 +9,35 @@ pub struct JvmClass {
 }
 
 impl JvmClass {
-    pub const ACC_PUBLIC: u16 = 0x0001; // Declared public; may be accessed from outside its package.
-//pub const ACC_PRIVATE: u16 = 0x0002; // Declared private; usable only within the defining class.
-//pub const ACC_PROTECTED: u16 = 0x0004; // Declared protected; may be accessed within subclasses.
-    pub const ACC_STATIC: u16 = 0x0008; // Declared static.
-//    final = 0x0010, // Declared final; no subclasses allowed.
-//    super = 0x0020, // Treat superclass methods specially when invoked by the invokespecial instruction.
-    pub const ACC_INTERFACE: u16 = 0x0200; // Is an interface, not a class.
-    pub const ACC_NATIVE: u16 = 0x0100; // Declared native; implemented in a language other than Java.
-    pub const ACC_ABSTRACT: u16 = 0x0400; // Declared abstract; must not be instantiated.
-//    ACC_SYNTHETIC = 0x1000, // Declared synthetic; not present in the source code.
-//    ACC_ANNOTATION = 0x2000, //	Declared as an annotation type.
-//    ACC_ENUM = 0x4000, // Declared as an enum type.
+    // Declared public; may be accessed from outside its package.
+    pub const ACC_PUBLIC: u16 = 0x0001;
+
+    // Declared private; usable only within the defining class.
+    pub const ACC_PRIVATE: u16 = 0x0002;
+
+    // Declared protected; may be accessed within subclasses.
+    pub const ACC_PROTECTED: u16 = 0x0004;
+
+    // Declared static.
+    pub const ACC_STATIC: u16 = 0x0008;
+
+    //    final = 0x0010, // Declared final; no subclasses allowed.
+
+    // Treat superclass methods specially when invoked by the invokespecial instruction.
+    pub const ACC_SUPER: u16 = 0x0020;
+
+    // Is an interface, not a class.
+    pub const ACC_INTERFACE: u16 = 0x0200;
+
+    // Declared native; implemented in a language other than Java.
+    pub const ACC_NATIVE: u16 = 0x0100;
+
+    // Declared abstract; must not be instantiated.
+    pub const ACC_ABSTRACT: u16 = 0x0400;
+
+    //    ACC_SYNTHETIC = 0x1000, // Declared synthetic; not present in the source code.
+    //    ACC_ANNOTATION = 0x2000, //	Declared as an annotation type.
+    //    ACC_ENUM = 0x4000, // Declared as an enum type.
 }
 
 #[derive(Default, Clone, Debug)]
@@ -66,7 +83,8 @@ pub enum ClassConstant {
     Double(f64),
 
     // name, descriptor
-    NameAndType(String, TypeSignature),
+    MethodNameAndType(String, MethodSignature),
+    FieldNameAndType(String, TypeSignature),
 
     // Value
     Utf8(String),
@@ -85,8 +103,8 @@ pub enum ClassConstant {
 #[derive(Default, Clone, Debug)]
 pub struct ClassInfo {
     pub access_flags: u16,
-    pub this_class: u16,
-    pub super_class: u16,
+    pub this_class: String,
+    pub super_class: String,
     pub interfaces: Vec<u16>,
 }
 
@@ -94,7 +112,7 @@ pub struct ClassInfo {
 pub struct ClassField {
     pub access_flags: u16,
     pub name: String,
-    pub descriptor_index: u16,
+    pub descriptor: TypeSignature,
     pub attributes: Vec<ClassAttribute>,
 }
 
@@ -148,7 +166,7 @@ pub struct BootstrapMethod {
     pub arguments: Vec<u16>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum TypeSignature {
     Void,
     Boolean,
@@ -161,6 +179,12 @@ pub enum TypeSignature {
     Double,
     Class(String),
     Array(Box<TypeSignature>),
+}
+
+impl Default for TypeSignature {
+    fn default() -> TypeSignature {
+        TypeSignature::Void
+    }
 }
 
 #[derive(Clone, Debug)]

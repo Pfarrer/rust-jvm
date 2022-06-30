@@ -1,9 +1,9 @@
-mod raw;
 pub mod accessor;
+mod raw;
 
+use crate::util::{parse_method_signature, parse_type_signature};
 use model::class::ClassConstant;
 use std::io::Read;
-use crate::util::{parse_method_signature, parse_type_signature};
 
 pub fn read(reader: &mut impl Read) -> Vec<ClassConstant> {
     let raw_constants = raw::read(reader);
@@ -15,7 +15,7 @@ fn process_raw_constants(raw_constants: Vec<raw::Constant>) -> Vec<ClassConstant
     raw_constants
         .iter()
         .enumerate()
-        .map(|(i, raw_constant)| match raw_constant {
+        .map(|(_, raw_constant)| match raw_constant {
             &raw::Constant::None() => ClassConstant::None(),
             &raw::Constant::Class(name_index) => {
                 let class_name = unwrap_string(&raw_constants, name_index);
@@ -55,11 +55,16 @@ fn process_raw_constants(raw_constants: Vec<raw::Constant>) -> Vec<ClassConstant
             &raw::Constant::Float(value) => ClassConstant::Float(value),
             &raw::Constant::Long(value) => ClassConstant::Long(value),
             &raw::Constant::Double(value) => ClassConstant::Double(value),
-            &raw::Constant::NameAndType(_, _) => {
-                let (name, type_name) = unwrap_name_and_type(&raw_constants, i as u16);
-                let type_signature = parse_type_signature(&type_name);
-
-                ClassConstant::NameAndType(name, type_signature)
+            &raw::Constant::NameAndType(name_index, type_index) => {
+                let name = unwrap_string(&raw_constants, name_index);
+                let type_name = unwrap_string(&raw_constants, type_index);
+                if type_name.chars().nth(0) == Some('(') {
+                    let method_signature = parse_method_signature(&type_name);
+                    ClassConstant::MethodNameAndType(name, method_signature)
+                } else {
+                    let type_signature = parse_type_signature(&type_name);
+                    ClassConstant::FieldNameAndType(name, type_signature)
+                }
             }
             &raw::Constant::MethodHandle(reference_kind, reference_index) => {
                 ClassConstant::MethodHandle(reference_kind, reference_index)

@@ -8,7 +8,11 @@ pub fn run(main_class: String, class_paths: Vec<PathBuf>) {
     let parser = parser::ClassfileParser {};
     let classloader = loader::classloader_for_paths(class_paths, &parser).unwrap();
 
-    let mut vm = Vm::new(classloader);
-    let mut thread = vm.spawn_thread();
-    thread.(main_class, MAIN_METHOD_NAME, MAIN_METHOD_SIGNATURE);
+    let vm = Vm::new(classloader);
+    vm.spawn_thread().invoke_method(
+        &main_class,
+        &MAIN_METHOD_NAME.to_string(),
+        &MAIN_METHOD_SIGNATURE.to_string(),
+        false,
+    );
 }
