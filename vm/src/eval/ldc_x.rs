@@ -1,13 +1,12 @@
 use classfile::constants::Constant;
-use classfile::Classfile;
+use model::class::*;
 use vm::classloader::Classloader;
-use vm::primitive::Primitive;
 use vm::string_pool::StringPool;
 use vm::utils;
-use vm::Vm;
+use crate::{Primitive, VmThread};
 
 /// Can handle instructions ldc (decimal 18) and ldc_2 (decimal 19).
-pub fn eval(vm: &Vm, class: &Classfile, code: &Vec<u8>, pc: u16) -> Option<u16> {
+pub fn eval(vm_thread: &mut VmThread, jvm_class: &JvmClass, code: &Vec<u8>, pc: u16) -> Option<u16> {
     // Check which instruction triggered this call, if it was ldc, then only one byte should be read,
     // when it was ldc_w, two bytes must be read
     let (index, pc_inc, instr_name) = match *code.get(pc as usize).unwrap() {

@@ -1,7 +1,7 @@
-use vm::primitive::Primitive;
-use vm::Vm;
+use crate::{Primitive, VmThread};
+use crate::{Primitive, VmThread};
 
-pub fn eval(vm: &Vm, pc: u16) -> Option<u16> {
+pub fn eval(vm_thread: &mut VmThread, pc: u16) -> Option<u16> {
     trace!("aconst_null: Pushing Null to stack");
     vm.frame_stack
         .last_mut()

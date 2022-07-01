@@ -1,7 +1,6 @@
-use vm::Vm;
-use vm::primitive::Primitive;
+use crate::{Primitive, VmThread};
 
-pub fn eval(vm: &Vm) -> Option<u16> {
+pub fn eval(vm_thread: &mut VmThread) -> Option<u16> {
     let mut frame = vm.frame_stack.pop().unwrap();
     let mut parent_frame = vm.frame_stack.pop().unwrap();
 

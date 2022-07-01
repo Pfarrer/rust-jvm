@@ -1,8 +1,8 @@
 use vm::utils;
-use vm::Vm;
+use crate::{Primitive, VmThread};
 
-pub fn eval(vm: &Vm, code: &Vec<u8>, pc: u16) -> Option<u16> {
-    let frame = vm.frame_stack.last_mut().unwrap();
+pub fn eval(vm_thread: &mut VmThread, code: &Vec<u8>, pc: u16) -> Option<u16> {
+    let frame = vm_thread.frame_stack.last_mut().unwrap();
     let value2 = frame.stack_pop_int();
     let value1 = frame.stack_pop_int();
 

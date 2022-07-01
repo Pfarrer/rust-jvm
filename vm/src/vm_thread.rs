@@ -12,12 +12,13 @@ use std::sync::RwLockWriteGuard;
 use log::{debug, trace};
 
 pub struct VmThread<'a> {
-    vm: &'a Vm,
+    pub(crate) vm: &'a Vm,
+    pub(crate) thread_name: String,
     pub(crate) frame_stack: Vec<Frame>,
 }
 
 impl<'a> VmThread<'a> {
-    pub fn new(vm: &'a Vm) -> VmThread<'a> {
+    pub fn new(vm: &'a Vm, thread_name: String) -> VmThread<'a> {
         // Create root frame
         let mut frame = Frame::new(
             0,
@@ -33,6 +34,7 @@ impl<'a> VmThread<'a> {
 
         VmThread {
             vm,
+            thread_name,
             frame_stack: vec![frame],
         }
     }
@@ -66,6 +68,14 @@ impl<'a> VmThread<'a> {
     }
 
     fn execute_method(&mut self, class: &JvmClass, code_attribute: &CodeAttribute, frame: Frame) {
+        trace!(
+            "Executing {}.{}{}s in thread {} now...",
+            frame.class_path,
+            frame.method_name,
+            frame.method_signature,
+            self.thread_name,
+        );
+
         self.frame_stack.push(frame);
         let mut pc = 0;
 
@@ -84,8 +94,7 @@ impl<'a> VmThread<'a> {
             .vm
             .classloader
             .get_class(&class_path)
-            .unwrap();
-
+            .expect(&format!("Class not found: {}", class_path));
 
         trace!("Acquiring vm.mem write lock...");
         let mut mem = self.vm.mem.write().unwrap();

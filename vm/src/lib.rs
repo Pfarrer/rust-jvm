@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate log;
+
 mod array;
 mod class_hierarchy;
 mod eval;
@@ -11,7 +14,6 @@ mod vm_thread;
 use crate::primitive::Primitive;
 use crate::vm_thread::VmThread;
 use loader::Classloader;
-use log::trace;
 use mem::VmMem;
 use std::sync::RwLock;
 
@@ -28,7 +30,7 @@ impl Vm {
         }
     }
 
-    pub fn spawn_thread(&self) -> VmThread {
-        VmThread::new(self)
+    pub fn spawn_thread(&self, thread_name: String) -> VmThread {
+        VmThread::new(self, thread_name)
     }
 }

@@ -34,4 +34,15 @@ impl VmMem {
             .unwrap()
             .insert(field_name, value);
     }
+    pub fn static_pool_get_class_field(
+        &self,
+        class_path: &String,
+        field_name: &String,
+    ) -> Option<&Primitive> {
+        self.static_pool
+            .get(class_path)
+            .and_then(|fields_map|
+                fields_map.get(field_name)
+            )
+    }
 }

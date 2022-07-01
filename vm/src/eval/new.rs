@@ -1,13 +1,12 @@
 use classfile::constants::Constant;
-use classfile::Classfile;
+use model::class::*;
 use std::cell::RefCell;
 use std::rc::Rc;
 use vm::instance::Instance;
-use vm::primitive::Primitive;
 use vm::utils;
-use vm::Vm;
+use crate::{Primitive, VmThread};
 
-pub fn eval(vm: &Vm, class: &Classfile, code: &Vec<u8>, pc: u16) -> Option<u16> {
+pub fn eval(vm_thread: &mut VmThread, jvm_class: &JvmClass, code: &Vec<u8>, pc: u16) -> Option<u16> {
     let index = utils::read_u16_code(code, pc);
 
     match class.constants.get(index as usize).unwrap() {
@@ -16,7 +15,7 @@ pub fn eval(vm: &Vm, class: &Classfile, code: &Vec<u8>, pc: u16) -> Option<u16> 
             let instance = Instance::new(vm, class);
 
             trace!("new: {} -> Pushing reference to stack", class_path);
-            let frame = vm.frame_stack.last_mut().unwrap();
+            let frame = vm_thread.frame_stack.last_mut().unwrap();
             frame.stack_push(Primitive::Objectref(Rc::new(RefCell::new(instance))));
         }
         it => panic!("Unexpected constant ref: {:?}", it),

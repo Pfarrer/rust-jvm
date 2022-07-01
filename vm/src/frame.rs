@@ -31,13 +31,6 @@ impl Frame {
         }
     }
 
-//    pub fn new(max_locals: usize, max_stack: usize) -> Frame {
-//        Frame {
-//            locals: Vec::with_capacity(max_locals),
-//            stack: Vec::with_capacity(max_stack),
-//        }
-//    }
-
     pub fn locals_write(&mut self, index: usize, val: Primitive) {
         while self.locals.len() <= index {
             self.locals.push(Primitive::Null);
