@@ -1,11 +1,10 @@
-use classfile::Classfile;
+use model::class::*;
 use classfile::constants::Constant;
-use vm::Vm;
-use vm::primitive::Primitive;
+use crate::{Primitive, VmThread};
 use vm::utils;
 use vm::class_hierarchy::ClassHierarchy;
 
-pub fn eval(vm: &Vm, class: &Classfile, code: &Vec<u8>, pc: u16) -> Option<u16> {
+pub fn eval(vm_thread: &mut VmThread, jvm_class: &JvmClass, code: &Vec<u8>, pc: u16) -> Option<u16> {
     let index = utils::read_u16_code(code, pc);
     let constant = class.constants.get(index as usize).unwrap();
     let checkfor_class_name = match constant {
@@ -21,14 +20,14 @@ pub fn eval(vm: &Vm, class: &Classfile, code: &Vec<u8>, pc: u16) -> Option<u16> 
 
     trace!("instanceof: Checking if {} is instance of {} -> {}", checkfor_class_name, instance_class_name.unwrap_or("null".to_owned()), value);
 
-    let frame = vm.frame_stack.last_mut().unwrap();
+    let frame = vm_thread.frame_stack.last_mut().unwrap();
     frame.stack_push(Primitive::Int(value));
 
     Some(pc + 3)
 }
 
 fn pop_instance_and_get_class_name(vm: &Vm) -> Option<String> {
-    let frame = vm.frame_stack.last_mut().unwrap();
+    let frame = vm_thread.frame_stack.last_mut().unwrap();
     let reference = frame.stack_pop();
     match reference {
         Primitive::Objectref(ref rc_instance) => Some(rc_instance.borrow().class_path.clone()),

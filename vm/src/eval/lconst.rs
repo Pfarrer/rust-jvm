@@ -1,5 +1,4 @@
-use vm::primitive::Primitive;
-use vm::Vm;
+use crate::{Primitive, VmThread};
 
 pub fn eval(val: i64, vm: &Vm, pc: u16) -> Option<u16> {
     trace!("lconst_{}: Pushing {}L to stack", val, val);

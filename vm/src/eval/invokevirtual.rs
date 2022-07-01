@@ -1,11 +1,10 @@
 use classfile::constants::Constant;
-use classfile::Classfile;
-use vm::primitive::Primitive;
+use model::class::*;
 use vm::signature;
 use vm::utils;
-use vm::Vm;
+use crate::{Primitive, VmThread};
 
-pub fn eval(vm: &Vm, class: &Classfile, code: &Vec<u8>, pc: u16) -> Option<u16> {
+pub fn eval(vm_thread: &mut VmThread, jvm_class: &JvmClass, code: &Vec<u8>, pc: u16) -> Option<u16> {
     let index = utils::read_u16_code(code, pc);
 
     // First, find Methodref and extract values
@@ -25,7 +24,7 @@ pub fn eval(vm: &Vm, class: &Classfile, code: &Vec<u8>, pc: u16) -> Option<u16> 
     let args_count = signature::parse_method(&method_signature).parameters.len();
 
     let root_class_path = {
-        let frame = vm.frame_stack.last_mut().unwrap();
+        let frame = vm_thread.frame_stack.last_mut().unwrap();
         let class_path = match frame.stack_peek_reverse(args_count) {
             &Primitive::Objectref(ref rc_object) => rc_object.borrow().class_path.clone(),
             &Primitive::Arrayref(_) => "java/lang/Object".to_string(),

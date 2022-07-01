@@ -1,17 +1,15 @@
-use classfile::constants::Constant;
-use classfile::Classfile;
-use vm::utils;
-use vm::Vm;
+use model::class::*;
+use crate::{utils, VmThread};
 
-pub fn eval(vm: &Vm, class: &Classfile, code: &Vec<u8>, pc: u16) -> Option<u16> {
+pub fn eval(vm_thread: &mut VmThread, jvm_class: &JvmClass, code: &Vec<u8>, pc: u16) -> Option<u16> {
     let index = utils::read_u16_code(code, pc);
-    match class.constants.get(index as usize).unwrap() {
-        &Constant::Fieldref(ref class_path, ref field_name, _) => {
+    match jvm_class.constants.get(index as usize).unwrap() {
+        &ClassConstant::Fieldref(ref class_path, ref field_name, _) => {
             // Initialize class
-            vm.load_and_clinit_class(class_path);
+            vm_thread.load_and_clinit_class(class_path);
 
             // Pop value and push to statics
-            let frame = vm.frame_stack.last_mut().unwrap();
+            let frame = vm_thread.frame_stack.last_mut().unwrap();
             let value = frame.stack_pop();
             trace!(
                 "putstatic: Popped value from stack and store it in {}.{}",
@@ -19,10 +17,8 @@ pub fn eval(vm: &Vm, class: &Classfile, code: &Vec<u8>, pc: u16) -> Option<u16> 
                 field_name
             );
 
-            vm.class_statics
-                .get_mut(class_path)
-                .unwrap()
-                .insert(field_name.clone(), value);
+            let mut mem = vm_thread.vm.mem.write().unwrap();
+            mem.static_pool_set_class_field(class_path, field_name.clone(), value);
         }
         it => panic!("Unexpected constant ref: {:?}", it),
     };

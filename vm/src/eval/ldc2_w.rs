@@ -1,23 +1,20 @@
-use classfile::constants::Constant;
-use classfile::Classfile;
-use vm::primitive::Primitive;
-use vm::utils;
-use vm::Vm;
+use model::class::*;
+use crate::{Primitive, utils, VmThread};
 
-pub fn eval(vm: &Vm, class: &Classfile, code: &Vec<u8>, pc: u16) -> Option<u16> {
-    let frame = vm.frame_stack.last_mut().unwrap();
+pub fn eval(vm_thread: &mut VmThread, jvm_class: &JvmClass, code: &Vec<u8>, pc: u16) -> Option<u16> {
+    let frame = vm_thread.frame_stack.last_mut().unwrap();
 
     let index = utils::read_u16_code(code, pc);
-    match class.constants.get(index as usize).unwrap() {
-        &Constant::Long(ref value) => {
+    match jvm_class.constants.get(index as usize).unwrap() {
+        &ClassConstant::Long(ref value) => {
             trace!("ldc2_w: Pushing Long {} to stack", value);
             frame.stack_push(Primitive::Long(value.clone()));
         }
-        &Constant::Double(ref value) => {
+        &ClassConstant::Double(ref value) => {
             trace!("ldc2_w: Pushing Double {} to stack", value);
             frame.stack_push(Primitive::Double(value.clone()));
         }
-        it => panic!("Unexpected constant ref: {:?}", it),
+        it => panic!("Unexpected ClassConstant: {:?}", it),
     };
 
     Some(pc + 3)

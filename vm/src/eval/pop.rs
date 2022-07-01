@@ -1,8 +1,8 @@
-use vm::Vm;
+use crate::{Primitive, VmThread};
 
-pub fn eval(vm: &Vm, pc: u16) -> Option<u16> {
+pub fn eval(vm_thread: &mut VmThread, pc: u16) -> Option<u16> {
     trace!("pop: Popped value from stack");
-    vm.frame_stack.last_mut().unwrap().stack_pop();
+    vm_thread.frame_stack.last_mut().unwrap().stack_pop();
 
     Some(pc + 1)
 }

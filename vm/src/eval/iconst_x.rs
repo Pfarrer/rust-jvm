@@ -1,7 +1,6 @@
-use vm::primitive::Primitive;
-use vm::Vm;
+use crate::{Primitive, VmThread};
 
-pub fn eval(vm: &Vm, code: &Vec<u8>, pc: u16) -> Option<u16> {
+pub fn eval(vm_thread: &mut VmThread, code: &Vec<u8>, pc: u16) -> Option<u16> {
     let index = (*code.get(pc as usize).unwrap() as i32) - 3;
     trace!("iconst_{}: Pushing constant Int {} to stack", index, index);
 

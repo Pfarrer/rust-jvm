@@ -77,7 +77,7 @@ mod tests {
     struct MockParser {
         jvm_class: JvmClass,
     }
-    impl model::api::Parser for MockParser {
+    impl Parser for MockParser {
         fn parse<T: Read>(&self, _: &mut T) -> JvmClass {
             self.jvm_class.clone()
         }

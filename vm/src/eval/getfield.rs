@@ -1,14 +1,14 @@
 use classfile::constants::Constant;
-use classfile::Classfile;
+use model::class::*;
 use vm::utils;
-use vm::Vm;
+use crate::{Primitive, VmThread};
 
-pub fn eval(vm: &Vm, class: &Classfile, code: &Vec<u8>, pc: u16) -> Option<u16> {
+pub fn eval(vm_thread: &mut VmThread, jvm_class: &JvmClass, code: &Vec<u8>, pc: u16) -> Option<u16> {
     let index = utils::read_u16_code(code, pc);
     match class.constants.get(index as usize).unwrap() {
         &Constant::Fieldref(ref class_path, ref field_name, _) => {
             // Pop Objectref from stack
-            let frame = vm.frame_stack.last_mut().unwrap();
+            let frame = vm_thread.frame_stack.last_mut().unwrap();
             let rc_instance = frame.stack_pop_objectref();
             let instance = rc_instance.borrow();
 

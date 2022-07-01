@@ -2,14 +2,14 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use classfile::constants::Constant;
-use classfile::Classfile;
+use model::class::*;
 use vm::array::Array;
-use vm::primitive::Primitive;
+use crate::{Primitive, VmThread};
 use vm::utils;
-use vm::Vm;
+use crate::{Primitive, VmThread};
 
-pub fn eval(vm: &Vm, class: &Classfile, code: &Vec<u8>, pc: u16) -> Option<u16> {
-    let frame = vm.frame_stack.last_mut().unwrap();
+pub fn eval(vm_thread: &mut VmThread, jvm_class: &JvmClass, code: &Vec<u8>, pc: u16) -> Option<u16> {
+    let frame = vm_thread.frame_stack.last_mut().unwrap();
     let count = frame.stack_pop_int();
     let index = utils::read_u16_code(code, pc);
 

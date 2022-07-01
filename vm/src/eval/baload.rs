@@ -1,8 +1,8 @@
-use vm::Vm;
+use crate::{Primitive, VmThread};
 
-pub fn eval(vm: &Vm, pc: u16) -> Option<u16> {
+pub fn eval(vm_thread: &mut VmThread, pc: u16) -> Option<u16> {
     let (value, index) = {
-        let frame = vm.frame_stack.last_mut().unwrap();
+        let frame = vm_thread.frame_stack.last_mut().unwrap();
         let index = frame.stack_pop_int() as usize;
         let rc_array = frame.stack_pop_arrayref();
         let mut array = rc_array.borrow_mut();
@@ -18,7 +18,7 @@ pub fn eval(vm: &Vm, pc: u16) -> Option<u16> {
         value,
         index
     );
-    vm.frame_stack.last_mut().unwrap().stack_push(value);
+    vm_thread.frame_stack.last_mut().unwrap().stack_push(value);
 
     Some(pc + 1)
 }
