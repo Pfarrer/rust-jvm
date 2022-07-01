@@ -12,7 +12,7 @@ pub fn read(reader: &mut impl Read, constants: &Vec<ClassConstant>) -> ClassInfo
     let interfaces_count = util::read_u16(reader);
     let interfaces = (0..interfaces_count).map(|_| util::read_u16(reader)).collect();
 
-    let this_class = unwrap_class(constants, this_class_index);
+    let this_class = unwrap_class(constants, this_class_index).unwrap();
     let super_class = unwrap_class(constants, super_class_index);
 
     ClassInfo {

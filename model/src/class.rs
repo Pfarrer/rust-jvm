@@ -104,7 +104,7 @@ pub enum ClassConstant {
 pub struct ClassInfo {
     pub access_flags: u16,
     pub this_class: String,
-    pub super_class: String,
+    pub super_class: Option<String>,
     pub interfaces: Vec<u16>,
 }
 

@@ -1,7 +1,8 @@
 use crate::array::Array;
 use crate::instance::Instance;
-use crate::{ClassHierarchy, Primitive, Vm};
+use crate::{Primitive, VmThread};
 use model::class::{ClassAttribute, ClassConstant, ClassMethod, CodeAttribute, JvmClass};
+use crate::class_hierarchy::HierarchyIterator;
 
 pub fn get_utf8_value(classfile: &JvmClass, index: usize) -> String {
     match classfile.constants.get(index).unwrap() {
@@ -10,25 +11,14 @@ pub fn get_utf8_value(classfile: &JvmClass, index: usize) -> String {
     }
 }
 
-pub fn get_class_path(classfile: &JvmClass) -> String {
-    match classfile
-        .constants
-        .get(classfile.class_info.this_class as usize)
-        .unwrap()
-    {
-        &ClassConstant::Class(ref path) => path.clone(),
-        it => panic!("Expected Class but found: {:?}", it),
-    }
-}
-
 pub fn find_method(
-    vm: &Vm,
+    vm_thread: &mut VmThread,
     root_class_path: &String,
     name: &String,
     signature: &String,
 ) -> (JvmClass, ClassMethod) {
     // Loop through class hierarchy
-    let hierarchy_iter = ClassHierarchy::hierarchy_iter(vm, root_class_path);
+    let hierarchy_iter = HierarchyIterator::hierarchy_iter(vm_thread, root_class_path);
     for (class, _, _) in hierarchy_iter {
         match find_method_in_classfile(&class, name, signature) {
             Some(method) => return (class, method),
@@ -44,8 +34,8 @@ pub fn find_method(
 
 pub fn find_method_in_classfile(
     jvm_class: &JvmClass,
-    name: &String,
-    signature: &String,
+    name: &str,
+    signature: &str,
 ) -> Option<ClassMethod> {
     jvm_class
         .methods
