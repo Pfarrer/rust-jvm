@@ -44,7 +44,7 @@ mod if_x;
 // mod invokeinterface;
 // mod invokespecial;
 // mod invokestatic;
-// mod invokevirtual;
+mod invokevirtual;
 // mod ior;
 // mod irem;
 // mod ireturn;
@@ -72,7 +72,7 @@ mod lstore_x;
 // mod newarray;
 // mod pop;
 // mod pop2;
-// mod putfield;
+mod putfield;
 mod putstatic;
 // mod ret;
 mod return_;
@@ -176,8 +176,8 @@ pub fn eval(
         178 => getstatic::eval(vm_thread, jvm_class, code, pc),
         179 => putstatic::eval(vm_thread, jvm_class, code, pc),
         // 180 => getfield::eval(vm_thread, jvm_class, code, pc),
-        // 181 => putfield::eval(vm_thread, jvm_class, code, pc),
-        // 182 => invokevirtual::eval(vm_thread, jvm_class, code, pc),
+        181 => putfield::eval(vm_thread, jvm_class, code, pc),
+        182 => invokevirtual::eval(vm_thread, jvm_class, code, pc),
         // 183 => invokespecial::eval(vm_thread, jvm_class, code, pc),
         // 184 => invokestatic::eval(vm_thread, jvm_class, code, pc),
         // 185 => invokeinterface::eval(vm_thread, jvm_class, code, pc),
