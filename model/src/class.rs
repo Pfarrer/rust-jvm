@@ -211,3 +211,15 @@ impl std::fmt::Display for TypeSignature {
         write!(f, "{}", text)
     }
 }
+
+impl std::fmt::Display for MethodSignature {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let params = self
+            .parameters
+            .iter()
+            .map(|p| format!("{}", p))
+            .collect::<Vec<_>>()
+            .join(",");
+        write!(f, "({}){}", params, self.return_type)
+    }
+}
