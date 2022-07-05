@@ -4,7 +4,7 @@ use crate::frame::Frame;
 use crate::instance::Instance;
 use crate::primitive::Primitive;
 use crate::Vm;
-use crate::{utils, VmMem};
+use crate::{utils};
 use lazy_static::lazy_static;
 use log::{debug, trace};
 use model::class::{ClassAttribute, CodeAttribute, JvmClass};

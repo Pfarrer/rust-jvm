@@ -4,7 +4,7 @@ use crate::{Primitive, VmThread};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
-use std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
+use std::sync::{RwLock, RwLockWriteGuard};
 
 pub struct VmMem {
     pub static_pool: StaticPool,
