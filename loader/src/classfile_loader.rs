@@ -8,7 +8,7 @@ use std::fs::File;
 use std::io::BufReader;
 use std::path::{Path, PathBuf};
 
-use crate::Classloader;
+use model::api::Classloader;
 
 pub struct ClassfileLoader {
     class_cache: HashMap<String, JvmClass>,

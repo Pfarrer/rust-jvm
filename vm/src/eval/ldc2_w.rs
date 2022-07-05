@@ -1,7 +1,12 @@
+use crate::{utils, Primitive, VmThread};
 use model::class::*;
-use crate::{Primitive, utils, VmThread};
 
-pub fn eval(vm_thread: &mut VmThread, jvm_class: &JvmClass, code: &Vec<u8>, pc: u16) -> Option<u16> {
+pub fn eval(
+    vm_thread: &mut VmThread,
+    jvm_class: &JvmClass,
+    code: &Vec<u8>,
+    pc: u16,
+) -> Option<u16> {
     let frame = vm_thread.frame_stack.last_mut().unwrap();
 
     let index = utils::read_u16_code(code, pc);

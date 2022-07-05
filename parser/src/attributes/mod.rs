@@ -13,7 +13,9 @@ use model::class::{ClassAttribute, ClassConstant};
 
 pub fn read(reader: &mut impl Read, constants: &Vec<ClassConstant>) -> Vec<ClassAttribute> {
     let attributes_count = util::read_u16(reader);
-    (0..attributes_count).map(|_| read_attribute(reader, constants)).collect()
+    (0..attributes_count)
+        .map(|_| read_attribute(reader, constants))
+        .collect()
 }
 
 pub fn read_attribute(reader: &mut impl Read, constants: &Vec<ClassConstant>) -> ClassAttribute {

@@ -1,8 +1,8 @@
 use crate::array::Array;
+use crate::class_hierarchy::HierarchyIterator;
 use crate::instance::Instance;
 use crate::{Primitive, VmThread};
 use model::class::{ClassAttribute, ClassConstant, ClassMethod, CodeAttribute, JvmClass};
-use crate::class_hierarchy::HierarchyIterator;
 
 pub fn get_utf8_value(classfile: &JvmClass, index: usize) -> String {
     match classfile.constants.get(index).unwrap() {

@@ -14,7 +14,10 @@ fn validate_against_javap() {
     assert_eq!(0, class.version.minor);
 
     //   flags: (0x0021) ACC_PUBLIC, ACC_SUPER
-    assert_eq!(JvmClass::ACC_PUBLIC | JvmClass::ACC_SUPER, class.class_info.access_flags);
+    assert_eq!(
+        JvmClass::ACC_PUBLIC | JvmClass::ACC_SUPER,
+        class.class_info.access_flags
+    );
 
     //   this_class: #10                         // ClassOnlyWithFields
     assert_eq!("ClassOnlyWithFields", class.class_info.this_class);
@@ -85,7 +88,10 @@ fn validate_against_javap() {
     //     descriptor: Ljava/lang/String;
     //     flags: (0x0000)
     assert_eq!(0x0, class.fields[2].access_flags);
-    assert_eq!(TypeSignature::Class("java/lang/String".to_string()), class.fields[2].descriptor);
+    assert_eq!(
+        TypeSignature::Class("java/lang/String".to_string()),
+        class.fields[2].descriptor
+    );
     assert_eq!("packageString", class.fields[2].name);
     assert_eq!(0, class.fields[2].attributes.len());
 
@@ -141,5 +147,4 @@ fn validate_against_javap() {
     //         line 2: 0
     // }
     // SourceFile: "ClassOnlyWithFields.java"
-
 }

@@ -6,7 +6,9 @@ use model::class::{ClassConstant, ClassField};
 
 pub fn read(reader: &mut impl Read, constants: &Vec<ClassConstant>) -> Vec<ClassField> {
     let fields_count = util::read_u16(reader);
-    (0..fields_count).map(|_| read_field(reader, constants)).collect()
+    (0..fields_count)
+        .map(|_| read_field(reader, constants))
+        .collect()
 }
 
 fn read_field(reader: &mut impl Read, constants: &Vec<ClassConstant>) -> ClassField {

@@ -1,8 +1,8 @@
+use model::class::{MethodSignature, TypeSignature};
 use std;
 use std::io::Read;
 use std::iter::Peekable;
 use std::str::Chars;
-use model::class::{TypeSignature, MethodSignature};
 
 pub fn read_u16(reader: &mut impl Read) -> u16 {
     let mut bin = [0u8; 2];
@@ -112,7 +112,5 @@ fn parse_type(iterator: &mut Peekable<Chars>) -> TypeSignature {
 }
 
 fn read_class_path(iterator: &mut Peekable<Chars>) -> String {
-    iterator
-        .take_while(|c| *c != ';')
-        .collect::<String>()
+    iterator.take_while(|c| *c != ';').collect::<String>()
 }

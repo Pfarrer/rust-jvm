@@ -1,5 +1,4 @@
-use model::api::Parser;
-use model::class::JvmClass;
+use model::api::{Classloader, Parser};
 use simple_error::simple_error;
 use std::error::Error;
 use std::ffi::OsStr;
@@ -9,15 +8,12 @@ mod classfile_loader;
 mod composite_loader;
 mod jarfile_loader;
 
-pub trait Classloader {
-    fn list_classes(&self) -> Vec<&str>;
-    fn get_class(&self, classpath: &str) -> Option<&JvmClass>;
-}
+pub use composite_loader::CompositeLoader;
 
 pub fn classloader_for_paths(
     paths: Vec<impl AsRef<Path>>,
     parser: &impl Parser,
-) -> Result<impl Classloader, Box<dyn Error>> {
+) -> Result<CompositeLoader, Box<dyn Error>> {
     let composite_results: Vec<Result<_, _>> = paths
         .iter()
         .map(|path| classloader_for_path(path, parser))
@@ -27,7 +23,7 @@ pub fn classloader_for_paths(
         .into_iter()
         .collect::<Result<Vec<_>, _>>()?;
 
-    Ok(composite_loader::CompositeLoader::open(composites))
+    Ok(CompositeLoader::open(composites))
 }
 
 pub fn classloader_for_path(
@@ -53,11 +49,11 @@ pub fn classloader_for_path(
 pub fn classloader_for_directory(
     path: impl AsRef<Path>,
     parser: &impl Parser,
-) -> Result<composite_loader::CompositeLoader, Box<dyn Error>> {
+) -> Result<CompositeLoader, Box<dyn Error>> {
     let classfile_loader = classfile_loader::ClassfileLoader::open(path, parser)?;
 
     let composites: Vec<Box<dyn Classloader>> = vec![Box::new(classfile_loader)];
-    Ok(composite_loader::CompositeLoader::open(composites))
+    Ok(CompositeLoader::open(composites))
 }
 
 pub fn classloader_for_jar_file(

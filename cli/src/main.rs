@@ -1,12 +1,12 @@
 #[macro_use]
 extern crate prettytable;
 
+use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
-use clap::{Parser, Subcommand};
-
-mod list_classes;
 mod execute;
+mod list_classes;
+mod runtime_options;
 
 #[derive(Parser)]
 struct Args {
@@ -27,6 +27,9 @@ enum Command {
         #[clap(required = true)]
         main_class: String,
 
+        #[clap(required = false, long)]
+        runtime: Option<runtime_options::RuntimeOptions>,
+
         #[clap(required = true, parse(from_os_str))]
         class_paths: Vec<PathBuf>,
     },
@@ -39,6 +42,10 @@ fn main() {
 
     match args.command {
         Command::ListClasses { class_paths } => list_classes::run(class_paths),
-        Command::Execute { main_class, class_paths } => execute::run(main_class, class_paths),
+        Command::Execute {
+            main_class,
+            class_paths,
+            runtime,
+        } => execute::run(main_class, class_paths, runtime),
     };
 }

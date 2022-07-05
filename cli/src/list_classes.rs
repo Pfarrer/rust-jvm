@@ -1,4 +1,4 @@
-use loader::Classloader;
+use model::api::Classloader;
 use prettytable::{format, Table};
 use std::path::PathBuf;
 

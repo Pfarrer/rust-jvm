@@ -1,8 +1,8 @@
-use std::cell::RefCell;
-use std::rc::Rc;
 use crate::array::Array;
 use crate::instance::Instance;
 use crate::primitive::Primitive;
+use std::cell::RefCell;
+use std::rc::Rc;
 
 #[derive(Debug)]
 pub struct Frame {
@@ -15,7 +15,12 @@ pub struct Frame {
 }
 
 impl Frame {
-    pub fn new(max_locals: u16, class_path: String, method_name: String, method_signature: String) -> Frame {
+    pub fn new(
+        max_locals: u16,
+        class_path: String,
+        method_name: String,
+        method_signature: String,
+    ) -> Frame {
         let mut locals = Vec::with_capacity(max_locals as usize);
         for _ in 0..max_locals {
             locals.push(Primitive::Null)
@@ -47,15 +52,15 @@ impl Frame {
     }
 
     pub fn stack_peek_reverse(&mut self, n: usize) -> &Primitive {
-        &self.stack[self.stack.len()-1-n]
+        &self.stack[self.stack.len() - 1 - n]
     }
 
-//    pub fn stack_pop_byte(&mut self) -> u8 {
-//        match self.stack_pop() {
-//            Primitive::Byte(v) => v,
-//            p => panic!("Expected to pop Byte from stack but found: {:?}", p),
-//        }
-//    }
+    //    pub fn stack_pop_byte(&mut self) -> u8 {
+    //        match self.stack_pop() {
+    //            Primitive::Byte(v) => v,
+    //            p => panic!("Expected to pop Byte from stack but found: {:?}", p),
+    //        }
+    //    }
 
     pub fn stack_pop_boolean(&mut self) -> bool {
         match self.stack_pop() {
@@ -68,7 +73,13 @@ impl Frame {
     pub fn stack_pop_int(&mut self) -> i32 {
         match self.stack_pop() {
             Primitive::Int(v) => v,
-            Primitive::Boolean(v) => if v { 1 } else { 0 },
+            Primitive::Boolean(v) => {
+                if v {
+                    1
+                } else {
+                    0
+                }
+            }
             Primitive::Char(v) => v as i32,
             Primitive::Byte(v) => v as i32,
             p => panic!("Expected to pop Int from stack but found: {:?}", p),
@@ -123,9 +134,9 @@ impl Frame {
         value
     }
 
-//    pub fn locals_get(&mut self, index: usize) -> &Primitive {
-//        self.locals.get(index).unwrap()
-//    }
+    //    pub fn locals_get(&mut self, index: usize) -> &Primitive {
+    //        self.locals.get(index).unwrap()
+    //    }
 
     pub fn locals_get_int(&mut self, index: usize) -> i32 {
         match self.locals.get(index).unwrap() {
@@ -151,7 +162,10 @@ impl Frame {
     pub fn locals_get_returnaddress(&mut self, index: usize) -> u16 {
         match self.locals.get(index).unwrap() {
             &Primitive::ReturnAddress(ref address) => address.clone(),
-            p => panic!("Expected to get ReturnAddress from locals but found: {:?}", p),
+            p => panic!(
+                "Expected to get ReturnAddress from locals but found: {:?}",
+                p
+            ),
         }
     }
 
@@ -161,12 +175,14 @@ impl Frame {
             &Primitive::Arrayref(_) => (),
             &Primitive::Objectref(_) => (),
             &Primitive::Null => (),
-            _ => panic!("Expected to get reference from locals but found: {:?}", value),
+            _ => panic!(
+                "Expected to get reference from locals but found: {:?}",
+                value
+            ),
         };
 
         value
     }
-
 }
 
 impl std::fmt::Display for Frame {

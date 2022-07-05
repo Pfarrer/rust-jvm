@@ -1,4 +1,4 @@
-use crate::Classloader;
+use model::api::Classloader;
 use model::class::JvmClass;
 
 pub struct CompositeLoader {
