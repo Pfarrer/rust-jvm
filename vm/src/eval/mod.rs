@@ -1,5 +1,3 @@
-use log::trace;
-
 // mod aaload;
 // mod aastore;
 // mod aconst_null;
@@ -62,7 +60,7 @@ mod if_x;
 mod lcmp;
 // mod lconst;
 mod ldc2_w;
-// mod ldc_x;
+mod ldc_x;
 mod lload_x;
 // mod lookupswitch;
 // mod lreturn;
@@ -112,7 +110,7 @@ pub fn eval(
         // 11..=13 => fconst_x::eval(vm_thread, code, pc),
         // 16 => bipush::eval(vm_thread, code, pc),
         // 17 => sipush::eval(vm_thread, code, pc),
-        // 18 => ldc_x::eval(vm_thread, jvm_class, code, pc),
+        18 => ldc_x::eval(vm_thread, jvm_class, code, pc),
         // 19 => ldc_x::eval(vm_thread, jvm_class, code, pc),
         20 => ldc2_w::eval(vm_thread, jvm_class, code, pc),
         // 21 => iload_x::eval(vm_thread, code, pc),

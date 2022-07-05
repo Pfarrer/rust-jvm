@@ -1,3 +1,4 @@
+use model::api::Classloader;
 use model::api::Parser;
 use model::class::JvmClass;
 use std::collections::HashMap;
@@ -6,8 +7,6 @@ use std::fs::File;
 use std::io::BufReader;
 use std::path::{Path, PathBuf};
 use zip::ZipArchive;
-
-use crate::Classloader;
 
 pub struct JarfileLoader {
     class_cache: HashMap<String, JvmClass>,

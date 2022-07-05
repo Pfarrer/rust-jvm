@@ -1,4 +1,4 @@
-use crate::{Primitive, utils, VmThread};
+use crate::{utils, Primitive, VmThread};
 
 pub fn eval(vm_thread: &mut VmThread, code: &Vec<u8>, pc: u16) -> Option<u16> {
     let frame = vm_thread.frame_stack.last_mut().unwrap();
@@ -6,7 +6,9 @@ pub fn eval(vm_thread: &mut VmThread, code: &Vec<u8>, pc: u16) -> Option<u16> {
     let value1 = frame.stack_pop();
 
     let equals = match (&value1, &value2) {
-        (&Primitive::Objectref(ref rc_instance1), &Primitive::Objectref(ref rc_instance2)) => rc_instance1.eq(rc_instance2),
+        (&Primitive::Objectref(ref rc_instance1), &Primitive::Objectref(ref rc_instance2)) => {
+            rc_instance1.eq(rc_instance2)
+        }
         (&Primitive::Objectref(_), &Primitive::Null) => false,
         (&Primitive::Null, &Primitive::Objectref(_)) => false,
         (&Primitive::Null, &Primitive::Null) => true,
@@ -19,7 +21,12 @@ pub fn eval(vm_thread: &mut VmThread, code: &Vec<u8>, pc: u16) -> Option<u16> {
         _ => panic!("if_acmp_x::eval was called on a non if_acmp_x instruction."),
     };
 
-    trace!("if_acmp{}: Popped two references from stack, compare result: {}? -> {}", instr_name, instr_name, cmp_result);
+    trace!(
+        "if_acmp{}: Popped two references from stack, compare result: {}? -> {}",
+        instr_name,
+        instr_name,
+        cmp_result
+    );
 
     if cmp_result {
         let branch_offset = utils::read_i16_code(code, pc);

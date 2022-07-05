@@ -1,10 +1,10 @@
-use std::rc::Rc;
 use std::cell::RefCell;
+use std::rc::Rc;
 
-use model::class::{ClassConstant, TypeSignature};
 use crate::array::Array;
 use crate::instance::Instance;
 use crate::Vm;
+use model::class::{ClassConstant, TypeSignature};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Primitive {

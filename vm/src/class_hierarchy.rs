@@ -1,7 +1,7 @@
 use std::iter::Iterator;
 
-use model::class::{ClassConstant, JvmClass};
 use crate::VmThread;
+use model::class::{ClassConstant, JvmClass};
 
 pub type HierarchyClassInfo = (JvmClass, String, Vec<String>);
 
@@ -11,7 +11,10 @@ pub struct HierarchyIterator<'a, 'b> {
 }
 
 impl<'a, 'b> HierarchyIterator<'a, 'b> {
-    pub fn hierarchy_iter(vm_thread: &'a mut VmThread<'b>, class_path: &String) -> HierarchyIterator<'a, 'b> {
+    pub fn hierarchy_iter(
+        vm_thread: &'a mut VmThread<'b>,
+        class_path: &String,
+    ) -> HierarchyIterator<'a, 'b> {
         HierarchyIterator {
             vm_thread,
             current_class_path: Some(class_path.clone()),
@@ -29,8 +32,10 @@ impl<'a, 'b> Iterator for HierarchyIterator<'a, 'b> {
                 let current_hierarchy_info = make_hierarchy_class_info(&current_class);
 
                 match &current_hierarchy_info {
-                    &Some((_, ref super_class_path, _)) => self.current_class_path = Some(super_class_path.clone()),
-                    &None => self.current_class_path = None
+                    &Some((_, ref super_class_path, _)) => {
+                        self.current_class_path = Some(super_class_path.clone())
+                    }
+                    &None => self.current_class_path = None,
                 }
 
                 current_hierarchy_info.or(Some((current_class, "".to_owned(), Vec::new())))
@@ -48,12 +53,17 @@ fn make_hierarchy_class_info(class: &JvmClass) -> Option<HierarchyClassInfo> {
     };
 
     // Also get all interfaces
-    let interface_paths = class.class_info.interfaces.iter().map(|interface_index| {
-        match class.constants.get(*interface_index as usize).unwrap() {
-            &ClassConstant::Class(ref path) => path.clone(),
-            it => panic!("Unexpected constant value: {:?}", it),
-        }
-    }).collect();
+    let interface_paths = class
+        .class_info
+        .interfaces
+        .iter()
+        .map(
+            |interface_index| match class.constants.get(*interface_index as usize).unwrap() {
+                &ClassConstant::Class(ref path) => path.clone(),
+                it => panic!("Unexpected constant value: {:?}", it),
+            },
+        )
+        .collect();
 
     Some((class.clone(), super_class_path, interface_paths))
 }
