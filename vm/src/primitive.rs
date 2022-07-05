@@ -45,13 +45,13 @@ impl Primitive {
         }
     }
 
-    pub fn from_constant(vm: &Vm, constant: &ClassConstant) -> Primitive {
+    pub fn from_constant(_vm: &Vm, constant: &ClassConstant) -> Primitive {
         match constant {
             &ClassConstant::Integer(value) => Primitive::Int(value),
             &ClassConstant::Float(value) => Primitive::Float(value),
             &ClassConstant::Long(value) => Primitive::Long(value),
             &ClassConstant::Double(value) => Primitive::Double(value),
-            &ClassConstant::String(ref value) => todo!(), //Primitive::Objectref(StringPool::intern(vm, value)),
+            &ClassConstant::String(ref _value) => todo!(), //Primitive::Objectref(StringPool::intern(vm, value)),
             c => panic!("Unexpected constant found: {:?}", c),
         }
     }

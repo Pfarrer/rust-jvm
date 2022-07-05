@@ -23,7 +23,7 @@ fn validate_against_javap() {
     assert_eq!("ClassOnlyWithFields", class.class_info.this_class);
 
     //   super_class: #11                        // java/lang/Object
-    assert_eq!("java/lang/Object", class.class_info.super_class);
+    assert_eq!(Some("java/lang/Object".to_string()), class.class_info.super_class);
 
     //   interfaces: 0, fields: 5, methods: 2, attributes: 1
     assert_eq!(0, class.class_info.interfaces.len());
