@@ -9,6 +9,7 @@ mod composite_loader;
 mod jarfile_loader;
 
 pub use composite_loader::CompositeLoader;
+pub use classfile_loader::ClassfileLoader;
 
 pub fn classloader_for_paths(
     paths: Vec<impl AsRef<Path>>,

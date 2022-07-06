@@ -1,6 +1,7 @@
 use crate::runtime_options::RuntimeOptions;
 use loader::CompositeLoader;
 use std::path::PathBuf;
+use model::api::Classloader;
 use vm::Vm;
 
 const MAIN_METHOD_NAME: &str = "main";
@@ -10,10 +11,11 @@ pub fn run(main_class: String, class_paths: Vec<PathBuf>, runtime_option: Option
     let parser = parser::ClassfileParser {};
     let classloader = loader::classloader_for_paths(class_paths, &parser).unwrap();
     let classloader: CompositeLoader = if let Some(runtime) = runtime_option {
-        let runtime_classloader = match runtime {
-            RuntimeOptions::Native => rt::NativeRuntimeLoader::new(),
+        let runtime_classloader: Box<dyn Classloader> = match runtime {
+            RuntimeOptions::Native => Box::new(native_rt::make_classloader()),
+            RuntimeOptions::Java => Box::new(java_rt::make_classloader(&parser)),
         };
-        CompositeLoader::open(vec![Box::new(runtime_classloader), Box::new(classloader)])
+        CompositeLoader::open(vec![runtime_classloader, Box::new(classloader)])
     } else {
         classloader
     };
