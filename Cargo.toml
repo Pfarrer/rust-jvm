@@ -5,6 +5,7 @@ members = [
     "loader",
     "parser",
     "vm",
-    "rt",
+    "native_rt",
+    "java_rt",
     "cli",
 ]

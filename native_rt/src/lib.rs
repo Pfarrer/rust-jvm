@@ -7,20 +7,19 @@ use model::api::Classloader;
 use model::class::JvmClass;
 use std::collections::HashMap;
 
-pub struct NativeRuntimeLoader {
-    classes: HashMap<String, JvmClass>,
+pub fn make_classloader() -> impl Classloader {
+    NativeRuntimeLoader {
+        classes: HashMap::from([
+            java_lang_object::tuple(),
+            java_lang_system::tuple(),
+            java_lang_string::tuple(),
+        ]),
+    }
 }
 
-impl NativeRuntimeLoader {
-    pub fn new() -> NativeRuntimeLoader {
-        NativeRuntimeLoader {
-            classes: HashMap::from([
-                java_lang_object::tuple(),
-                java_lang_system::tuple(),
-                java_lang_string::tuple(),
-            ]),
-        }
-    }
+
+pub struct NativeRuntimeLoader {
+    classes: HashMap<String, JvmClass>,
 }
 
 impl Classloader for NativeRuntimeLoader {
