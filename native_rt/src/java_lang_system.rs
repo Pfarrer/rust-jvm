@@ -1,5 +1,8 @@
 use crate::defaults::VERSION;
-use model::class::{ClassField, ClassInfo, JvmClass, TypeSignature};
+use model::api::NativeMethod;
+use model::class::{
+    ClassConstant, ClassField, ClassInfo, ClassMethod, JvmClass, MethodSignature, TypeSignature,
+};
 
 pub fn tuple() -> (String, JvmClass) {
     let jvm_class = make_jvm_class();
@@ -9,7 +12,7 @@ pub fn tuple() -> (String, JvmClass) {
 fn make_jvm_class() -> JvmClass {
     JvmClass {
         version: VERSION,
-        constants: vec![],
+        constants: vec![ClassConstant::None()],
         class_info: ClassInfo {
             access_flags: 0,
             this_class: "java/lang/System".to_string(),
@@ -22,7 +25,30 @@ fn make_jvm_class() -> JvmClass {
             descriptor: TypeSignature::Class("java/io/PrintStream".to_string()),
             attributes: vec![],
         }],
-        methods: vec![],
+        methods: vec![ClassMethod {
+            access_flags: JvmClass::ACC_STATIC | JvmClass::ACC_NATIVE,
+            name: "<clinit>".to_string(),
+            descriptor: MethodSignature {
+                parameters: vec![],
+                return_type: TypeSignature::Void,
+            },
+            attributes: vec![],
+        }],
         attributes: vec![],
     }
+}
+
+pub fn get_native_method(class_method: &ClassMethod) -> Option<NativeMethod> {
+    match (
+        class_method.name.as_ref(),
+        class_method.descriptor.to_string().as_ref(),
+    ) {
+        ("<clinit>", "()V") => Some(native_clinit),
+        _ => None,
+    }
+}
+
+fn native_clinit() {
+    // Initialize static member variables
+    panic!()
 }

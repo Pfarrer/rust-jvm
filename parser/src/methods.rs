@@ -1,7 +1,7 @@
 use std::io::Read;
 
-use crate::attributes;
 use crate::util;
+use crate::{attributes, constants};
 use model::class::{ClassConstant, ClassMethod};
 
 pub fn read(reader: &mut impl Read, constants: &Vec<ClassConstant>) -> Vec<ClassMethod> {
@@ -17,14 +17,19 @@ pub fn read(reader: &mut impl Read, constants: &Vec<ClassConstant>) -> Vec<Class
 
 fn read_method(reader: &mut impl Read, constants: &Vec<ClassConstant>) -> ClassMethod {
     let access_flags = util::read_u16(reader);
-    let name_index = util::read_u16(reader) as usize;
-    let descriptor_index = util::read_u16(reader) as usize;
+    let name_index = util::read_u16(reader);
+    let descriptor_index = util::read_u16(reader);
     let attributes = attributes::read(reader, constants);
+
+    let name = constants::accessor::unwrap_string(constants, name_index);
+
+    let descriptor_string = constants::accessor::unwrap_string(constants, descriptor_index);
+    let descriptor = util::parse_method_signature(&descriptor_string);
 
     ClassMethod {
         access_flags,
-        name_index,
-        descriptor_index,
+        name,
+        descriptor,
         attributes,
     }
 }

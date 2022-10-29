@@ -119,8 +119,8 @@ pub struct ClassField {
 #[derive(Default, Clone, Debug)]
 pub struct ClassMethod {
     pub access_flags: u16,
-    pub name_index: usize,
-    pub descriptor_index: usize,
+    pub name: String,
+    pub descriptor: MethodSignature,
     pub attributes: Vec<ClassAttribute>,
 }
 
@@ -187,7 +187,7 @@ impl Default for TypeSignature {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Default, Clone, Debug)]
 pub struct MethodSignature {
     pub parameters: Vec<TypeSignature>,
     pub return_type: TypeSignature,
@@ -205,8 +205,8 @@ impl std::fmt::Display for TypeSignature {
             TypeSignature::Long => "J".to_string(),
             TypeSignature::Float => "F".to_string(),
             TypeSignature::Double => "D".to_string(),
-            TypeSignature::Class(class_path) => format!("{}{}", "L", class_path),
-            TypeSignature::Array(inner_type) => format!("{}{}", "[", inner_type),
+            TypeSignature::Class(class_path) => format!("L{};", class_path),
+            TypeSignature::Array(inner_type) => format!("[{}", inner_type),
         };
         write!(f, "{}", text)
     }
@@ -219,7 +219,7 @@ impl std::fmt::Display for MethodSignature {
             .iter()
             .map(|p| format!("{}", p))
             .collect::<Vec<_>>()
-            .join(",");
+            .join("");
         write!(f, "({}){}", params, self.return_type)
     }
 }

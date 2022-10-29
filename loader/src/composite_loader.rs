@@ -1,5 +1,5 @@
-use model::api::Classloader;
-use model::class::JvmClass;
+use model::api::{Classloader, NativeMethod};
+use model::class::{ClassMethod, JvmClass};
 
 pub struct CompositeLoader {
     composites: Vec<Box<dyn Classloader>>,
@@ -22,6 +22,20 @@ impl Classloader for CompositeLoader {
     fn get_class(&self, classpath: &str) -> Option<&JvmClass> {
         for loader in self.composites.iter() {
             let result = loader.get_class(classpath);
+            if result.is_some() {
+                return result;
+            }
+        }
+        return None;
+    }
+
+    fn get_native_method(
+        &self,
+        jvm_class: &JvmClass,
+        class_method: &ClassMethod,
+    ) -> Option<NativeMethod> {
+        for loader in self.composites.iter() {
+            let result = loader.get_native_method(jvm_class, class_method);
             if result.is_some() {
                 return result;
             }
