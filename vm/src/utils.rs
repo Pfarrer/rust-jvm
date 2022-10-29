@@ -2,14 +2,7 @@ use crate::array::Array;
 use crate::class_hierarchy::HierarchyIterator;
 use crate::instance::Instance;
 use crate::{Primitive, VmThread};
-use model::class::{ClassAttribute, ClassConstant, ClassMethod, CodeAttribute, JvmClass};
-
-pub fn get_utf8_value(classfile: &JvmClass, index: usize) -> String {
-    match classfile.constants.get(index).unwrap() {
-        &ClassConstant::Utf8(ref val) => val.clone(),
-        it => panic!("Expected Utf8 but found: {:?}", it),
-    }
-}
+use model::class::{ClassAttribute, ClassMethod, CodeAttribute, JvmClass};
 
 pub fn find_method(
     vm_thread: &mut VmThread,
@@ -35,28 +28,13 @@ pub fn find_method(
 pub fn find_method_in_classfile(
     jvm_class: &JvmClass,
     name: &str,
-    signature: &str,
+    signature_str: &str,
 ) -> Option<ClassMethod> {
     jvm_class
         .methods
         .iter()
         .find(|&method| {
-            let correct_name = match jvm_class.constants.get(method.name_index).unwrap() {
-                &ClassConstant::Utf8(ref val) => name.eq(val),
-                _ => panic!("Invalid class file"),
-            };
-
-            if !correct_name {
-                return false;
-            }
-
-            let correct_signature = match jvm_class.constants.get(method.descriptor_index).unwrap()
-            {
-                &ClassConstant::Utf8(ref val) => signature.eq(val),
-                _ => panic!("Invalid class file"),
-            };
-
-            if !correct_signature {
+            if name != method.name || signature_str != format!("{}", method.descriptor) {
                 return false;
             }
 

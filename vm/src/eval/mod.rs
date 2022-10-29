@@ -1,6 +1,6 @@
 // mod aaload;
 // mod aastore;
-// mod aconst_null;
+mod aconst_null;
 // mod aload_x;
 // mod anewarray;
 // mod areturn;
@@ -103,7 +103,7 @@ pub fn eval(
 
     match instr {
         0 => Some(pc + 1),
-        // 1 => aconst_null::eval(vm_thread, pc),
+        1 => aconst_null::eval(vm_thread, pc),
         // 2..=8 => iconst_x::eval(vm_thread, code, pc),
         // 9 => lconst::eval(0, vm_thread, pc),
         // 10 => lconst::eval(1, vm_thread, pc),

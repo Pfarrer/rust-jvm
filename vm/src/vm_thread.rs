@@ -55,9 +55,18 @@ impl<'a> VmThread<'a> {
         let (class, method) = utils::find_method(self, class_path, method_name, method_signature);
 
         if method.access_flags & JvmClass::ACC_NATIVE > 0 {
-            todo!()
-            // let resolved_class_path = get_class_path(&class);
-            // native::invoke(vm, &resolved_class_path, method_name, method_signature);
+            let native_method = self
+                .vm
+                .classloader
+                .get_native_method(&class, &method)
+                .expect(
+                    format!(
+                        "No native method implementation found for {}.{}{}",
+                        class.class_info.this_class, method.name, method.descriptor
+                    )
+                    .as_str(),
+                );
+            native_method();
         } else {
             let code_attr = utils::find_code(&method).unwrap();
             let frame = self.create_method_frame(
@@ -128,7 +137,7 @@ impl<'a> VmThread<'a> {
             .get_class(&class_path)
             .expect(&format!("Class not found: {}", class_path));
 
-        let _lock = LOAD_AND_CLINIT_CLASS_MUTEX.lock().unwrap();
+        let _ = LOAD_AND_CLINIT_CLASS_MUTEX.lock().unwrap();
         if !self.vm.mem.static_pool.has_class(class_path) {
             self.vm.mem.static_pool.insert_class(class_path.clone());
             self.clinit_class(jvm_class);
@@ -168,20 +177,18 @@ impl<'a> VmThread<'a> {
         }
 
         // Call <clinit> if it exists
-        if let Some(class_method) = utils::find_method_in_classfile(&jvm_class, "<clinit>", "()V") {
+        if let Some(_) = utils::find_method_in_classfile(&jvm_class, "<clinit>", "()V") {
             debug!(
                 "Class {} not initialized and contains <clinit> -> executing now",
                 jvm_class.class_info.this_class
             );
 
-            let code_attribute = utils::find_code(&class_method).unwrap();
-            let frame = Frame::new(
-                code_attribute.max_locals,
-                jvm_class.class_info.this_class.clone(),
-                "<clinit>".to_string(),
-                "()V".to_string(),
+            self.invoke_method(
+                &jvm_class.class_info.this_class,
+                &"<clinit>".to_string(),
+                &"()V".to_string(),
+                false,
             );
-            self.execute_method(&jvm_class, &code_attribute, frame);
 
             debug!("{}.<clinit> done", jvm_class.class_info.this_class);
         }

@@ -1,7 +1,7 @@
 use crate::runtime_options::RuntimeOptions;
 use loader::CompositeLoader;
-use std::path::PathBuf;
 use model::api::Classloader;
+use std::path::PathBuf;
 use vm::Vm;
 
 const MAIN_METHOD_NAME: &str = "main";

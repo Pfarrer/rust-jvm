@@ -1,6 +1,5 @@
-use crate::{utils, vm_thread, Primitive, VmThread};
+use crate::{utils, Primitive, VmThread};
 use model::class::*;
-use std::fmt::format;
 
 pub fn eval(
     vm_thread: &mut VmThread,

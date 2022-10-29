@@ -74,8 +74,8 @@ pub fn parse_type_signature(spec: &String) -> TypeSignature {
 }
 
 /// ( arg-types ) ret-type	method-type
-pub fn parse_method_signature(spec: &String) -> MethodSignature {
-    let mut iterator = spec.chars().peekable();
+pub fn parse_method_signature(spec: impl AsRef<str>) -> MethodSignature {
+    let mut iterator = spec.as_ref().chars().peekable();
     assert_eq!('(', iterator.next().unwrap());
 
     let mut parameters = Vec::new();
