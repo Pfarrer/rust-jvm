@@ -1,31 +1,50 @@
-use std::io::Read;
+use anyhow::{bail, Result};
+use classfile_parser::{field_info::FieldAccessFlags, types::ClassFile};
+use enumset::EnumSet;
+use model::class::{ClassConstants, ClassField, ClassFields, FieldAccessFlag};
 
-use crate::util;
-use crate::{attributes, constants};
-use model::class::{ClassConstant, ClassField};
+use crate::type_signature::parse_type_signature;
 
-pub fn read(reader: &mut impl Read, constants: &Vec<ClassConstant>) -> Vec<ClassField> {
-    let fields_count = util::read_u16(reader);
-    (0..fields_count)
-        .map(|_| read_field(reader, constants))
+pub fn map(classfile: &ClassFile, constants: &ClassConstants) -> Result<ClassFields> {
+    classfile
+        .fields
+        .iter()
+        .map(|field| {
+            Ok(ClassField {
+                access_flags: Wrap(field.access_flags).try_into()?,
+                name: constants.get_string(field.name_index)?.into(),
+                descriptor: parse_type_signature(constants.get_string(field.descriptor_index)?)?,
+                attributes: vec![],
+            })
+        })
         .collect()
 }
 
-fn read_field(reader: &mut impl Read, constants: &Vec<ClassConstant>) -> ClassField {
-    let access_flags = util::read_u16(reader);
-    let name_index = util::read_u16(reader);
-    let descriptor_index = util::read_u16(reader);
-    let attributes = attributes::read(reader, constants);
+struct Wrap<T>(T);
 
-    let name = constants::accessor::unwrap_string(constants, name_index);
+impl TryFrom<Wrap<FieldAccessFlags>> for EnumSet<FieldAccessFlag> {
+    type Error = anyhow::Error;
 
-    let descriptor_string = constants::accessor::unwrap_string(constants, descriptor_index);
-    let descriptor = util::parse_type_signature(&descriptor_string);
+    fn try_from(value: Wrap<FieldAccessFlags>) -> std::result::Result<Self, Self::Error> {
+        fn map_flag(flag: FieldAccessFlags) -> Result<FieldAccessFlag> {
+            match flag {
+                FieldAccessFlags::PUBLIC => Ok(FieldAccessFlag::Public),
+                FieldAccessFlags::PRIVATE => Ok(FieldAccessFlag::Private),
+                FieldAccessFlags::PROTECTED => Ok(FieldAccessFlag::Protected),
+                FieldAccessFlags::STATIC => Ok(FieldAccessFlag::Static),
+                FieldAccessFlags::FINAL => Ok(FieldAccessFlag::Final),
+                FieldAccessFlags::VOLATILE => Ok(FieldAccessFlag::Volatile),
+                FieldAccessFlags::TRANSIENT => Ok(FieldAccessFlag::Transient),
+                FieldAccessFlags::SYNTHETIC => Ok(FieldAccessFlag::Synthetic),
+                FieldAccessFlags::ANNOTATION => Ok(FieldAccessFlag::Annotation),
+                FieldAccessFlags::ENUM => Ok(FieldAccessFlag::Enum),
+                it => bail!("Unexpected FieldAccessFlag: {:?}", it),
+            }
+        }
 
-    ClassField {
-        access_flags,
-        name,
-        descriptor,
-        attributes,
+        value
+            .0
+            .iter()
+            .try_fold(EnumSet::new(), |acc, flag| Ok(map_flag(flag)? | acc))
     }
 }

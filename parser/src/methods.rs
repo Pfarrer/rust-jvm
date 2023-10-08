@@ -1,35 +1,52 @@
-use std::io::Read;
+use anyhow::{Result, bail};
+use enumset::EnumSet;
+use model::class::{ClassConstants, ClassMethods, ClassMethod, MethodAccessFlag};
+use classfile_parser::{types::ClassFile, method_info::MethodAccessFlags};
 
-use crate::util;
-use crate::{attributes, constants};
-use model::class::{ClassConstant, ClassMethod};
+use crate::method_signature::parse_method_signature;
 
-pub fn read(reader: &mut impl Read, constants: &Vec<ClassConstant>) -> Vec<ClassMethod> {
-    let fields_count = util::read_u16(reader);
-    let mut methods = Vec::with_capacity(fields_count as usize);
-
-    for _ in 0..fields_count {
-        methods.push(read_method(reader, constants));
-    }
-
-    methods
+pub fn map(classfile: &ClassFile, constants: &ClassConstants) -> Result<ClassMethods> {
+    classfile
+        .methods
+        .iter()
+        .map(|method| {
+            Ok(ClassMethod {
+                access_flags: Wrap(method.access_flags).try_into()?,
+                name: constants.get_string(method.name_index)?.into(),
+                descriptor: parse_method_signature(constants.get_string(method.descriptor_index)?)?,
+                attributes: vec![],
+            })
+        })
+        .collect()
 }
 
-fn read_method(reader: &mut impl Read, constants: &Vec<ClassConstant>) -> ClassMethod {
-    let access_flags = util::read_u16(reader);
-    let name_index = util::read_u16(reader);
-    let descriptor_index = util::read_u16(reader);
-    let attributes = attributes::read(reader, constants);
+struct Wrap<T>(T);
 
-    let name = constants::accessor::unwrap_string(constants, name_index);
+impl TryFrom<Wrap<MethodAccessFlags>> for EnumSet<MethodAccessFlag> {
+    type Error = anyhow::Error;
 
-    let descriptor_string = constants::accessor::unwrap_string(constants, descriptor_index);
-    let descriptor = util::parse_method_signature(&descriptor_string);
+    fn try_from(value: Wrap<MethodAccessFlags>) -> std::result::Result<Self, Self::Error> {
+        fn map_flag(flag: MethodAccessFlags) -> Result<MethodAccessFlag> {
+            match flag {
+                MethodAccessFlags::PUBLIC => Ok(MethodAccessFlag::Public),
+                MethodAccessFlags::PRIVATE => Ok(MethodAccessFlag::Private),
+                MethodAccessFlags::PROTECTED => Ok(MethodAccessFlag::Protected),
+                MethodAccessFlags::STATIC => Ok(MethodAccessFlag::Static),
+                MethodAccessFlags::FINAL => Ok(MethodAccessFlag::Final),
+                MethodAccessFlags::SYNCHRONIZED => Ok(MethodAccessFlag::Synchronized),
+                MethodAccessFlags::BRIDGE => Ok(MethodAccessFlag::Bridge),
+                MethodAccessFlags::VARARGS => Ok(MethodAccessFlag::Varargs),
+                MethodAccessFlags::NATIVE => Ok(MethodAccessFlag::Native),
+                MethodAccessFlags::ABSTRACT => Ok(MethodAccessFlag::Abstract),
+                MethodAccessFlags::STRICT => Ok(MethodAccessFlag::Strict),
+                MethodAccessFlags::SYNTHETIC => Ok(MethodAccessFlag::Synthetic),
+                it => bail!("Unexpected MethodAccessFlag: {:?}", it),
+            }
+        }
 
-    ClassMethod {
-        access_flags,
-        name,
-        descriptor,
-        attributes,
+        value
+            .0
+            .iter()
+            .try_fold(EnumSet::new(), |acc, flag| Ok(map_flag(flag)? | acc))
     }
 }

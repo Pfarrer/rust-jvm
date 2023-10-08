@@ -8,7 +8,7 @@ pub fn run(class_paths: Vec<PathBuf>) {
 
     let mut table = Table::new();
     table.set_format(*format::consts::FORMAT_NO_LINESEP_WITH_TITLE);
-    table.set_titles(row!["Class", "Major.Minor"]);
+    table.set_titles(row!["Class", "Version"]);
 
     for classname in classloader.list_classes() {
         let class = classloader.get_class(classname).unwrap();

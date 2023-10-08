@@ -1,36 +1,46 @@
-use model::class::JvmClass;
+use anyhow::{bail, Result};
+use model::class::{ClassVersion, JvmClass};
 use std::io::Read;
 
-mod attributes;
+mod type_signature;
+mod method_signature;
+
 mod class_info;
 mod constants;
 mod fields;
 mod methods;
-mod util;
-mod version;
-
-pub use util::{parse_method_signature, parse_type_signature};
+mod attributes;
 
 pub struct ClassfileParser {}
 
 impl model::api::Parser for ClassfileParser {
-    fn parse<T: Read>(&self, reader: &mut T) -> JvmClass {
-        let version = version::read(reader);
-        let constants = constants::read(reader);
-        let class_info = class_info::read(reader, &constants);
-        let fields = fields::read(reader, &constants);
-        let methods = methods::read(reader, &constants);
-        let attributes = attributes::read(reader, &constants);
+    fn parse<T: Read>(&self, reader: &mut T) -> Result<JvmClass> {
+        let classfile =
+            classfile_parser::parse_class_from_reader(reader, "unknown_path".to_string())
+                .or_else(|err| bail!(err))?;
 
-        let jvm_class = JvmClass {
+        let version = ClassVersion {
+            major: classfile.major_version,
+            minor: classfile.minor_version,
+        };
+        let constants = constants::map(&classfile)?;
+
+        let (access_flags, this_class, super_class, interfaces) =
+            class_info::map(&classfile, &constants)?;
+        let fields = fields::map(&classfile, &constants)?;
+        let methods = methods::map(&classfile, &constants)?;
+        let attributes = attributes::map(&classfile, &constants)?;
+
+        Ok(JvmClass {
             version,
             constants,
-            class_info,
+            access_flags,
+            this_class,
+            super_class,
+            interfaces,
             fields,
             methods,
             attributes,
-        };
-
-        jvm_class
+        })
     }
 }

@@ -1,11 +1,12 @@
 [workspace]
+resolver = "2"
 
 members = [
     "model",
     "loader",
     "parser",
-    "vm",
-    "native_rt",
-    "java_rt",
+    # "vm",
+    # "native_rt",
+    # "java_rt",
     "cli",
 ]

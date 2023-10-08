@@ -1,26 +1,42 @@
-use std::io::Read;
+use anyhow::{bail, Result};
+use classfile_parser::{types::ClassFile, ClassAccessFlags};
+use enumset::EnumSet;
+use model::class::{ClassConstants, ClassAccessFlag};
 
-use crate::constants::accessor::unwrap_class;
-use crate::util;
-use model::class::{ClassConstant, ClassInfo};
+pub fn map(classfile: &ClassFile, constants: &ClassConstants) -> Result<(EnumSet<ClassAccessFlag>, String, Option<String>, Vec<String>)> {
+    let access_flags = Wrap(classfile.access_flags).try_into()?;
+    let this_class = constants.get_class(classfile.this_class)?.into();
+    let super_class = constants.get_class_opt(classfile.super_class)?.map(|s| s.to_owned());
+    let interfaces: Vec<_> = classfile.interfaces.iter().map(|index|
+        constants.get_class(*index).map(|s| s.to_owned())
+    ).collect::<Result<_>>()?;
 
-pub fn read(reader: &mut impl Read, constants: &Vec<ClassConstant>) -> ClassInfo {
-    let access_flags = util::read_u16(reader);
-    let this_class_index = util::read_u16(reader);
-    let super_class_index = util::read_u16(reader);
+    Ok((access_flags, this_class, super_class, interfaces))
+}
 
-    let interfaces_count = util::read_u16(reader);
-    let interfaces = (0..interfaces_count)
-        .map(|_| util::read_u16(reader))
-        .collect();
+struct Wrap<T>(T);
 
-    let this_class = unwrap_class(constants, this_class_index).unwrap();
-    let super_class = unwrap_class(constants, super_class_index);
+impl TryFrom<Wrap<ClassAccessFlags>> for EnumSet<ClassAccessFlag> {
+    type Error = anyhow::Error;
 
-    ClassInfo {
-        access_flags,
-        this_class,
-        super_class,
-        interfaces,
+    fn try_from(value: Wrap<ClassAccessFlags>) -> std::result::Result<Self, Self::Error> {
+        fn map_flag(flag: ClassAccessFlags) -> Result<ClassAccessFlag> {
+            match flag {
+                ClassAccessFlags::PUBLIC => Ok(ClassAccessFlag::Public),
+                ClassAccessFlags::FINAL => Ok(ClassAccessFlag::Final),
+                ClassAccessFlags::SUPER => Ok(ClassAccessFlag::Super),
+                ClassAccessFlags::INTERFACE => Ok(ClassAccessFlag::Interface),
+                ClassAccessFlags::ABSTRACT => Ok(ClassAccessFlag::Abstract),
+                ClassAccessFlags::SYNTHETIC => Ok(ClassAccessFlag::Synthetic),
+                ClassAccessFlags::ANNOTATION => Ok(ClassAccessFlag::Annotation),
+                ClassAccessFlags::ENUM => Ok(ClassAccessFlag::Enum),
+                it => bail!("Unexpected ClassAccessFlag: {:?}", it),
+            }
+        }
+
+        value
+            .0
+            .iter()
+            .try_fold(EnumSet::new(), |acc, flag| Ok(map_flag(flag)? | acc))
     }
 }

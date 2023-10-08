@@ -48,6 +48,7 @@ impl Classloader for CompositeLoader {
 mod tests {
     use super::*;
     use model::class::JvmClass;
+
     struct MockLoader {
         pub value: Option<JvmClass>,
     }

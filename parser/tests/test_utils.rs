@@ -15,5 +15,5 @@ pub fn parse_class_in_testdata(file_name: &str) -> JvmClass {
     let file = File::open(pathbuf).unwrap();
     let mut reader = BufReader::new(file);
 
-    ClassfileParser {}.parse(&mut reader)
+    ClassfileParser {}.parse(&mut reader).unwrap()
 }
