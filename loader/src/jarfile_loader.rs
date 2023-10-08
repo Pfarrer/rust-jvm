@@ -1,8 +1,9 @@
+use anyhow::Result;
+use anyhow::anyhow;
 use model::api::Classloader;
 use model::api::Parser;
 use model::class::JvmClass;
 use std::collections::HashMap;
-use std::error::Error;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::{Path, PathBuf};
@@ -13,11 +14,8 @@ pub struct JarfileLoader {
 }
 
 impl JarfileLoader {
-    pub fn open(
-        path: impl AsRef<Path>,
-        parser: &impl Parser,
-    ) -> Result<JarfileLoader, Box<dyn Error>> {
-        let file = File::open(&path).unwrap();
+    pub fn open(path: impl AsRef<Path>, parser: &impl Parser) -> Result<JarfileLoader> {
+        let file = File::open(&path)?;
         let reader = BufReader::new(file);
         let mut archive = zip::ZipArchive::new(reader)?;
 
@@ -48,8 +46,8 @@ impl Classloader for JarfileLoader {
 fn parse_classfiles(
     archive: &mut ZipArchive<BufReader<File>>,
     parser: &impl Parser,
-) -> Result<Vec<(PathBuf, JvmClass)>, Box<dyn Error>> {
-    let result = (0..archive.len())
+) -> Result<Vec<(PathBuf, JvmClass)>> {
+    (0..archive.len())
         .filter_map(|i| {
             let mut file = archive.by_index(i).unwrap();
             let path = file.enclosed_name()?.to_path_buf();
@@ -58,13 +56,12 @@ fn parse_classfiles(
             if path_extension.is_none() || path_extension.unwrap() != "class" {
                 return None;
             }
-
-            let class = parser.parse(&mut file);
-            Some((path, class))
+            Some((path, parser.parse(&mut file)))
         })
-        .collect();
-
-    Ok(result)
+        .map(|(path, class_result)| {
+            class_result.map(|class| (path, class)).map_err(|err| anyhow!(err))
+        })
+        .collect()
 }
 
 #[cfg(test)]
@@ -77,8 +74,8 @@ mod tests {
         jvm_class: JvmClass,
     }
     impl Parser for MockParser {
-        fn parse<T: Read>(&self, _: &mut T) -> JvmClass {
-            self.jvm_class.clone()
+        fn parse<T: Read>(&self, _: &mut T) -> Result<JvmClass> {
+            Ok(self.jvm_class.clone())
         }
     }
 

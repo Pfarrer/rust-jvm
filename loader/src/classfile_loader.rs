@@ -1,9 +1,8 @@
+use anyhow::{anyhow, Result};
 use glob::glob;
 use model::api::Parser;
 use model::class::JvmClass;
-use simple_error::simple_error;
 use std::collections::HashMap;
-use std::error::Error;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::{Path, PathBuf};
@@ -15,10 +14,7 @@ pub struct ClassfileLoader {
 }
 
 impl ClassfileLoader {
-    pub fn open(
-        path: impl AsRef<Path>,
-        parser: &impl Parser,
-    ) -> Result<ClassfileLoader, Box<dyn Error>> {
+    pub fn open(path: impl AsRef<Path>, parser: &impl Parser) -> Result<ClassfileLoader> {
         let class_cache = find_all_classfile_paths(path.as_ref())?
             .iter()
             .map(|file_path| {
@@ -28,9 +24,9 @@ impl ClassfileLoader {
                 let file_path_no_ext = file_path.with_extension("");
                 let classpath = abs_to_rel_path(path.as_ref(), &file_path_no_ext);
 
-                (classpath, parser.parse(&mut reader))
+                parser.parse(&mut reader).map(|class| (classpath, class)).map_err(|err| anyhow!(err))
             })
-            .collect();
+            .collect::<Result<_>>()?;
 
         Ok(ClassfileLoader { class_cache })
     }
@@ -46,11 +42,11 @@ impl Classloader for ClassfileLoader {
     }
 }
 
-fn find_all_classfile_paths(path: &Path) -> Result<Vec<PathBuf>, Box<dyn Error>> {
+fn find_all_classfile_paths(path: &Path) -> Result<Vec<PathBuf>> {
     let fullpath = [
         path.as_os_str()
             .to_str()
-            .ok_or(simple_error!("Invalid path given: {:?}", path))?,
+            .ok_or(anyhow!("Invalid path given: {:?}", path))?,
         "**/*.class",
     ]
     .join(&format!("{}", std::path::MAIN_SEPARATOR));
@@ -78,8 +74,8 @@ mod tests {
         jvm_class: JvmClass,
     }
     impl model::api::Parser for MockParser {
-        fn parse<T: Read>(&self, _: &mut T) -> JvmClass {
-            self.jvm_class.clone()
+        fn parse<T: Read>(&self, _: &mut T) -> Result<JvmClass> {
+            Ok(self.jvm_class.clone())
         }
     }
 

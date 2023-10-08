@@ -1,4 +1,5 @@
-use model::class::{JvmClass, TypeSignature};
+use enumset::EnumSet;
+use model::class::{TypeSignature, ClassAccessFlag, FieldAccessFlag};
 
 mod test_utils;
 
@@ -7,29 +8,29 @@ fn validate_against_javap() {
     let class = test_utils::parse_class_in_testdata("ClassOnlyWithFields.class");
 
     // # javap -v ClassOnlyWithFields
-    // public class ClassOnlyWithFields
+    // public class testdata.ClassOnlyWithFields
     //   minor version: 0
-    //   major version: 55
-    assert_eq!(55, class.version.major);
+    //   major version: 61
+    assert_eq!(61, class.version.major);
     assert_eq!(0, class.version.minor);
 
     //   flags: (0x0021) ACC_PUBLIC, ACC_SUPER
     assert_eq!(
-        JvmClass::ACC_PUBLIC | JvmClass::ACC_SUPER,
-        class.class_info.access_flags
+        ClassAccessFlag::Public | ClassAccessFlag::Super,
+        class.access_flags
     );
 
-    //   this_class: #10                         // ClassOnlyWithFields
-    assert_eq!("ClassOnlyWithFields", class.class_info.this_class);
+    //   this_class: #10                         // testdata/ClassOnlyWithFields
+    assert_eq!("testdata/ClassOnlyWithFields", class.this_class);
 
     //   super_class: #11                        // java/lang/Object
     assert_eq!(
         Some("java/lang/Object".to_string()),
-        class.class_info.super_class
+        class.super_class
     );
 
     //   interfaces: 0, fields: 5, methods: 2, attributes: 1
-    assert_eq!(0, class.class_info.interfaces.len());
+    assert_eq!(0, class.interfaces.len());
     assert_eq!(5, class.fields.len());
     assert_eq!(2, class.methods.len());
     assert_eq!(1, class.attributes.len());
@@ -74,7 +75,7 @@ fn validate_against_javap() {
     //   static boolean staticBoolean;
     //     descriptor: Z
     //     flags: (0x0008) ACC_STATIC
-    assert_eq!(JvmClass::ACC_STATIC, class.fields[0].access_flags);
+    assert_eq!(FieldAccessFlag::Static, class.fields[0].access_flags);
     assert_eq!(TypeSignature::Boolean, class.fields[0].descriptor);
     assert_eq!("staticBoolean", class.fields[0].name);
     assert_eq!(0, class.fields[0].attributes.len());
@@ -82,7 +83,7 @@ fn validate_against_javap() {
     //   public int publicInt;
     //     descriptor: I
     //     flags: (0x0001) ACC_PUBLIC
-    assert_eq!(JvmClass::ACC_PUBLIC, class.fields[1].access_flags);
+    assert_eq!(FieldAccessFlag::Public, class.fields[1].access_flags);
     assert_eq!(TypeSignature::Int, class.fields[1].descriptor);
     assert_eq!("publicInt", class.fields[1].name);
     assert_eq!(0, class.fields[1].attributes.len());
@@ -90,7 +91,7 @@ fn validate_against_javap() {
     //   java.lang.String packageString;
     //     descriptor: Ljava/lang/String;
     //     flags: (0x0000)
-    assert_eq!(0x0, class.fields[2].access_flags);
+    assert_eq!(EnumSet::EMPTY, class.fields[2].access_flags);
     assert_eq!(
         TypeSignature::Class("java/lang/String".to_string()),
         class.fields[2].descriptor
@@ -101,12 +102,12 @@ fn validate_against_javap() {
     //   protected double protectedDouble;
     //     descriptor: D
     //     flags: (0x0004) ACC_PROTECTED
-    assert_eq!(JvmClass::ACC_PROTECTED, class.fields[3].access_flags);
+    assert_eq!(FieldAccessFlag::Protected, class.fields[3].access_flags);
     assert_eq!(TypeSignature::Double, class.fields[3].descriptor);
     assert_eq!("protectedDouble", class.fields[3].name);
     assert_eq!(0, class.fields[3].attributes.len());
 
-    assert_eq!(JvmClass::ACC_PRIVATE, class.fields[4].access_flags);
+    assert_eq!(FieldAccessFlag::Private, class.fields[4].access_flags);
     assert_eq!(TypeSignature::Boolean, class.fields[4].descriptor);
     assert_eq!("privateBoolean", class.fields[4].name);
     assert_eq!(0, class.fields[4].attributes.len());

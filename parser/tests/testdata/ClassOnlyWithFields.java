@@ -1,3 +1,5 @@
+package testdata;
+
 public class ClassOnlyWithFields {
     static boolean staticBoolean = true;
 
