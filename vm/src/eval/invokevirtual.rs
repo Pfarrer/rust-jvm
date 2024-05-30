@@ -11,7 +11,7 @@ pub fn eval(
 
     // First, find Methodref and extract values
     let (class_path, method_name, method_signature) =
-        match jvm_class.constants.get(index as usize).unwrap() {
+        match jvm_class.constants.0.get(index as usize).unwrap() {
             &ClassConstant::Methodref(ref class_path, ref method_name, ref method_signature) => (
                 class_path.clone(),
                 method_name.clone(),

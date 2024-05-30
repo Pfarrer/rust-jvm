@@ -1,7 +1,7 @@
 use std::iter::Iterator;
 
 use crate::VmThread;
-use model::class::{ClassConstant, JvmClass};
+use model::class::JvmClass;
 
 pub type HierarchyClassInfo = (JvmClass, String, Vec<String>);
 
@@ -47,25 +47,12 @@ impl<'a, 'b> Iterator for HierarchyIterator<'a, 'b> {
 
 fn make_hierarchy_class_info(class: &JvmClass) -> Option<HierarchyClassInfo> {
     // Find super class
-    let super_class_path = match class.class_info.super_class {
+    let super_class_path = match class.super_class {
         Some(ref path) => path.clone(),
         None => return None,
     };
 
-    // Also get all interfaces
-    let interface_paths = class
-        .class_info
-        .interfaces
-        .iter()
-        .map(
-            |interface_index| match class.constants.get(*interface_index as usize).unwrap() {
-                &ClassConstant::Class(ref path) => path.clone(),
-                it => panic!("Unexpected constant value: {:?}", it),
-            },
-        )
-        .collect();
-
-    Some((class.clone(), super_class_path, interface_paths))
+    Some((class.clone(), super_class_path, class.interfaces.clone()))
 }
 
 // #[derive(Debug)]

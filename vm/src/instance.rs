@@ -12,7 +12,7 @@ pub struct Instance {
 
 impl Instance {
     pub fn new(vm_thread: &mut VmThread, jvm_class: &JvmClass) -> Instance {
-        let class_path = jvm_class.class_info.this_class.clone();
+        let class_path = jvm_class.this_class.clone();
 
         let mut fields = HashMap::new();
         initialize_instance_fields(&jvm_class, &mut fields);

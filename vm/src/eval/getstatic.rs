@@ -9,7 +9,7 @@ pub fn eval(
     pc: u16,
 ) -> Option<u16> {
     let index = utils::read_u16_code(code, pc);
-    match jvm_class.constants.get(index as usize).unwrap() {
+    match jvm_class.constants.0.get(index as usize).unwrap() {
         &ClassConstant::Fieldref(ref class_path, ref field_name, ref type_name) => {
             let value = find_static_value(vm_thread, class_path, field_name);
             trace!(
@@ -36,7 +36,7 @@ fn find_static_value(
     let class_paths: Vec<String> = {
         let hierarchy_iter = HierarchyIterator::hierarchy_iter(vm_thread, root_class_path);
         hierarchy_iter
-            .map(|(jvm_class, _, _)| jvm_class.class_info.this_class)
+            .map(|(jvm_class, _, _)| jvm_class.this_class)
             .collect()
     };
 

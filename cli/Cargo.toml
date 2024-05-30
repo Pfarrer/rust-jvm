@@ -7,7 +7,7 @@ edition = "2021"
 model = { path = "../model" }
 parser = { path = "../parser" }
 loader = { path = "../loader" }
-# vm = { path = "../vm" }
+vm = { path = "../vm" }
 rt = { path = "../rt" }
 
 clap = { version = "3.1.2", features = ["derive"] }

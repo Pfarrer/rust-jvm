@@ -8,7 +8,7 @@ pub fn eval(
     pc: u16,
 ) -> Option<u16> {
     let index = utils::read_u16_code(code, pc);
-    match jvm_class.constants.get(index as usize).unwrap() {
+    match jvm_class.constants.0.get(index as usize).unwrap() {
         &ClassConstant::Fieldref(ref class_path, ref field_name, _) => {
             // Initialize class
             vm_thread.load_and_clinit_class(class_path);

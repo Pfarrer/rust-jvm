@@ -7,8 +7,10 @@ use crate::utils;
 use crate::Vm;
 use lazy_static::lazy_static;
 use log::{debug, trace};
+use model::class::FieldAccessFlag;
+use model::class::MethodAccessFlag;
 use model::class::{ClassAttribute, CodeAttribute, JvmClass};
-use parser::parse_method_signature;
+use parser::method_signature::parse_method_signature;
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::Mutex;
@@ -54,7 +56,7 @@ impl<'a> VmThread<'a> {
     ) {
         let (class, method) = utils::find_method(self, class_path, method_name, method_signature);
 
-        if method.access_flags & JvmClass::ACC_NATIVE > 0 {
+        if method.access_flags.contains(MethodAccessFlag::Native) {
             let native_method = self
                 .vm
                 .classloader
@@ -62,7 +64,7 @@ impl<'a> VmThread<'a> {
                 .expect(
                     format!(
                         "No native method implementation found for {}.{}{}",
-                        class.class_info.this_class, method.name, method.descriptor
+                        class.this_class, method.name, method.descriptor
                     )
                     .as_str(),
                 );
@@ -149,10 +151,10 @@ impl<'a> VmThread<'a> {
     fn clinit_class(&mut self, jvm_class: &JvmClass) {
         // Search for static fields with a ConstantValue attribute and initialize accordingly
         for field in jvm_class.fields.iter() {
-            if field.access_flags & JvmClass::ACC_STATIC > 0 {
+            if field.access_flags.contains(FieldAccessFlag::Static) {
                 // Static field found -> Set the types default value
                 self.vm.mem.static_pool.set_class_field(
-                    &jvm_class.class_info.this_class,
+                    &jvm_class.this_class,
                     field.name.clone(),
                     Primitive::get_default_value(&field.descriptor),
                 );
@@ -162,12 +164,12 @@ impl<'a> VmThread<'a> {
                     if let &ClassAttribute::ConstantValue(ref index) = attr {
                         let value = Primitive::from_constant(
                             self.vm,
-                            jvm_class.constants.get(*index as usize).unwrap(),
+                            jvm_class.constants.0.get(*index as usize).unwrap(),
                         );
 
                         // Set value
                         self.vm.mem.static_pool.set_class_field(
-                            &jvm_class.class_info.this_class,
+                            &jvm_class.this_class,
                             field.name.clone(),
                             value,
                         );
@@ -180,17 +182,17 @@ impl<'a> VmThread<'a> {
         if let Some(_) = utils::find_method_in_classfile(&jvm_class, "<clinit>", "()V") {
             debug!(
                 "Class {} not initialized and contains <clinit> -> executing now",
-                jvm_class.class_info.this_class
+                jvm_class.this_class
             );
 
             self.invoke_method(
-                &jvm_class.class_info.this_class,
+                &jvm_class.this_class,
                 &"<clinit>".to_string(),
                 &"()V".to_string(),
                 false,
             );
 
-            debug!("{}.<clinit> done", jvm_class.class_info.this_class);
+            debug!("{}.<clinit> done", jvm_class.this_class);
         }
     }
 
@@ -213,7 +215,7 @@ impl<'a> VmThread<'a> {
         {
             let parent_frame = self.frame_stack.last_mut().unwrap();
 
-            let sig = parse_method_signature(method_signature);
+            let sig = parse_method_signature(method_signature).unwrap();
             let number_of_locals = sig.parameters.len() + if is_instance { 1 } else { 0 };
             for i in (0..number_of_locals).rev() {
                 let arg = parent_frame.stack_pop();

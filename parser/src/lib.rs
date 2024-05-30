@@ -2,8 +2,8 @@ use anyhow::{bail, Result};
 use model::class::{ClassVersion, JvmClass};
 use std::io::Read;
 
-mod method_signature;
-mod type_signature;
+pub mod method_signature;
+pub mod type_signature;
 
 mod attributes;
 mod class_info;
