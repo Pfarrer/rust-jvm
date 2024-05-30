@@ -6,7 +6,6 @@ use std::path::PathBuf;
 
 mod execute;
 mod list_classes;
-mod runtime_options;
 
 #[derive(Parser)]
 struct Args {
@@ -27,9 +26,6 @@ enum Command {
         #[clap(required = true)]
         main_class: String,
 
-        #[clap(required = false, long)]
-        runtime: Option<runtime_options::RuntimeOptions>,
-
         #[clap(required = true, parse(from_os_str))]
         class_paths: Vec<PathBuf>,
     },
@@ -45,7 +41,6 @@ fn main() {
         Command::Execute {
             main_class,
             class_paths,
-            runtime,
-        } => execute::run(main_class, class_paths, runtime),
+        } => execute::run(main_class, class_paths),
     };
 }

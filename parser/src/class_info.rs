@@ -6,7 +6,13 @@ use model::class::{ClassConstants, ClassAccessFlag};
 pub fn map(classfile: &ClassFile, constants: &ClassConstants) -> Result<(EnumSet<ClassAccessFlag>, String, Option<String>, Vec<String>)> {
     let access_flags = Wrap(classfile.access_flags).try_into()?;
     let this_class = constants.get_class(classfile.this_class)?.into();
-    let super_class = constants.get_class_opt(classfile.super_class)?.map(|s| s.to_owned());
+
+    let super_class = if classfile.super_class > 0 {
+        Some(constants.get_class(classfile.super_class)?.to_owned())
+    } else {
+        None
+    };
+
     let interfaces: Vec<_> = classfile.interfaces.iter().map(|index|
         constants.get_class(*index).map(|s| s.to_owned())
     ).collect::<Result<_>>()?;

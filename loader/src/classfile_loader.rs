@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::{Path, PathBuf};
+use log::debug;
 
 use model::api::Classloader;
 
@@ -17,14 +18,18 @@ impl ClassfileLoader {
     pub fn open(path: impl AsRef<Path>, parser: &impl Parser) -> Result<ClassfileLoader> {
         let class_cache = find_all_classfile_paths(path.as_ref())?
             .iter()
+            .filter(|file_path| !file_path.ends_with("module-info.class"))
             .map(|file_path| {
-                let file = File::open(file_path).unwrap();
+                let file = File::open(file_path)?;
                 let mut reader = BufReader::new(file);
 
                 let file_path_no_ext = file_path.with_extension("");
                 let classpath = abs_to_rel_path(path.as_ref(), &file_path_no_ext);
 
-                parser.parse(&mut reader).map(|class| (classpath, class)).map_err(|err| anyhow!(err))
+                debug!("Parsing classfile {}", file_path.display());
+
+                parser.parse(&mut reader).map(|class| (classpath, class))
+                    .map_err(|err| anyhow!("Failed to parse classfile {}: {}", file_path.display(), err))
             })
             .collect::<Result<_>>()?;
 

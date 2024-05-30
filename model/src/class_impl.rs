@@ -15,27 +15,20 @@ impl ClassConstants {
         }
     }
 
-    pub fn get_class_opt(&self, index: u16) -> Result<Option<&String>> {
+    pub fn get_class(&self, index: u16) -> Result<&String> {
+        assert!(index > 0);
         let constant = self.0.get((index - 1) as usize).ok_or(anyhow!(
             "Cannot get constant {}, constant pool has size {}",
             index - 1,
             self.0.len()
         ))?;
         match constant {
-            &ClassConstant::Class(ref string) => Ok(Some(string)),
-            &ClassConstant::Unused() => Ok(None),
+            &ClassConstant::Class(ref string) => Ok(string),
             it => bail!(
-                "Expected Class or Unused but found {:?} at index {}",
+                "Expected Class but found {:?} at index {}",
                 it,
                 index
             ),
         }
-    }
-
-    pub fn get_class(&self, index: u16) -> Result<&String> {
-        self.get_class_opt(index)?.ok_or(anyhow!(
-            "Class entry with index {} not found in constant pool",
-            index
-        ))
     }
 }
