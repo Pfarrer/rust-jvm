@@ -1,12 +1,12 @@
 use anyhow::{anyhow, Result};
 use glob::glob;
+use log::debug;
 use model::api::Parser;
 use model::class::JvmClass;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::{Path, PathBuf};
-use log::debug;
 
 use model::api::Classloader;
 
@@ -28,8 +28,12 @@ impl ClassfileLoader {
 
                 debug!("Parsing classfile {}", file_path.display());
 
-                parser.parse(&mut reader).map(|class| (classpath, class))
-                    .map_err(|err| anyhow!("Failed to parse classfile {}: {}", file_path.display(), err))
+                parser
+                    .parse(&mut reader)
+                    .map(|class| (classpath, class))
+                    .map_err(|err| {
+                        anyhow!("Failed to parse classfile {}: {}", file_path.display(), err)
+                    })
             })
             .collect::<Result<_>>()?;
 

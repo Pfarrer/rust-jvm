@@ -1,5 +1,5 @@
-use anyhow::Result;
 use anyhow::anyhow;
+use anyhow::Result;
 use model::api::Classloader;
 use model::api::Parser;
 use model::class::JvmClass;
@@ -59,7 +59,9 @@ fn parse_classfiles(
             Some((path, parser.parse(&mut file)))
         })
         .map(|(path, class_result)| {
-            class_result.map(|class| (path, class)).map_err(|err| anyhow!(err))
+            class_result
+                .map(|class| (path, class))
+                .map_err(|err| anyhow!(err))
         })
         .collect()
 }

@@ -2,14 +2,14 @@ use anyhow::{bail, Result};
 use model::class::{ClassVersion, JvmClass};
 use std::io::Read;
 
-mod type_signature;
 mod method_signature;
+mod type_signature;
 
+mod attributes;
 mod class_info;
 mod constants;
 mod fields;
 mod methods;
-mod attributes;
 
 pub struct ClassfileParser {}
 

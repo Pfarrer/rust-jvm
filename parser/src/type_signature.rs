@@ -1,7 +1,7 @@
-use std::str::Chars;
 use std::iter::Peekable;
+use std::str::Chars;
 
-use anyhow::{Result, anyhow, bail};
+use anyhow::{anyhow, bail, Result};
 use model::class::TypeSignature;
 
 pub fn parse_type_signature(spec: &String) -> Result<TypeSignature> {

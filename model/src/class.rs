@@ -96,33 +96,33 @@ pub enum ClassConstant {
 pub enum FieldAccessFlag {
     /// Declared public; may be accesse from outside its package.
     Public,
-    
+
     /// Declared private; usable only within the defining class.
-    Private,   
+    Private,
 
     /// Declared protected; may be accessed within subclasses.
-    Protected, 
+    Protected,
 
     /// Declared static.
-    Static,    
+    Static,
 
     /// Declared final; never directly assigned to after object construction.
-    Final,     
+    Final,
 
     /// Declared volatile; cannot be cached.
-    Volatile,  
+    Volatile,
 
     /// Declared transient; not written or read by a persistent object manager.
-    Transient, 
+    Transient,
 
     /// Declared synthetic; not present in the source code.
-    Synthetic, 
+    Synthetic,
 
     /// Declared as an annotation type.
     Annotation,
 
     /// Declared as an element of an enum.
-    Enum,       
+    Enum,
 }
 
 pub type ClassFields = Vec<ClassField>;

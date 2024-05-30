@@ -1,9 +1,17 @@
 use anyhow::{bail, Result};
 use classfile_parser::{types::ClassFile, ClassAccessFlags};
 use enumset::EnumSet;
-use model::class::{ClassConstants, ClassAccessFlag};
+use model::class::{ClassAccessFlag, ClassConstants};
 
-pub fn map(classfile: &ClassFile, constants: &ClassConstants) -> Result<(EnumSet<ClassAccessFlag>, String, Option<String>, Vec<String>)> {
+pub fn map(
+    classfile: &ClassFile,
+    constants: &ClassConstants,
+) -> Result<(
+    EnumSet<ClassAccessFlag>,
+    String,
+    Option<String>,
+    Vec<String>,
+)> {
     let access_flags = Wrap(classfile.access_flags).try_into()?;
     let this_class = constants.get_class(classfile.this_class)?.into();
 
@@ -13,9 +21,11 @@ pub fn map(classfile: &ClassFile, constants: &ClassConstants) -> Result<(EnumSet
         None
     };
 
-    let interfaces: Vec<_> = classfile.interfaces.iter().map(|index|
-        constants.get_class(*index).map(|s| s.to_owned())
-    ).collect::<Result<_>>()?;
+    let interfaces: Vec<_> = classfile
+        .interfaces
+        .iter()
+        .map(|index| constants.get_class(*index).map(|s| s.to_owned()))
+        .collect::<Result<_>>()?;
 
     Ok((access_flags, this_class, super_class, interfaces))
 }

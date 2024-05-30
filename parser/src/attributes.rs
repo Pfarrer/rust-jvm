@@ -6,8 +6,6 @@ pub fn map(classfile: &ClassFile, _constants: &ClassConstants) -> Result<ClassAt
     classfile
         .attributes
         .iter()
-        .map(|attribute| {
-            Ok(ClassAttribute::NotImplemented)
-        })
+        .map(|attribute| Ok(ClassAttribute::NotImplemented))
         .collect()
 }

@@ -1,5 +1,5 @@
 use enumset::EnumSet;
-use model::class::{TypeSignature, ClassAccessFlag, FieldAccessFlag};
+use model::class::{ClassAccessFlag, FieldAccessFlag, TypeSignature};
 
 mod test_utils;
 
@@ -24,10 +24,7 @@ fn validate_against_javap() {
     assert_eq!("testdata/ClassOnlyWithFields", class.this_class);
 
     //   super_class: #11                        // java/lang/Object
-    assert_eq!(
-        Some("java/lang/Object".to_string()),
-        class.super_class
-    );
+    assert_eq!(Some("java/lang/Object".to_string()), class.super_class);
 
     //   interfaces: 0, fields: 5, methods: 2, attributes: 1
     assert_eq!(0, class.interfaces.len());

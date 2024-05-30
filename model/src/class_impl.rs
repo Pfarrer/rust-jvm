@@ -24,11 +24,7 @@ impl ClassConstants {
         ))?;
         match constant {
             &ClassConstant::Class(ref string) => Ok(string),
-            it => bail!(
-                "Expected Class but found {:?} at index {}",
-                it,
-                index
-            ),
+            it => bail!("Expected Class but found {:?} at index {}", it, index),
         }
     }
 }

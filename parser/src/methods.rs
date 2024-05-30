@@ -1,7 +1,7 @@
-use anyhow::{Result, bail};
+use anyhow::{bail, Result};
+use classfile_parser::{method_info::MethodAccessFlags, types::ClassFile};
 use enumset::EnumSet;
-use model::class::{ClassConstants, ClassMethods, ClassMethod, MethodAccessFlag};
-use classfile_parser::{types::ClassFile, method_info::MethodAccessFlags};
+use model::class::{ClassConstants, ClassMethod, ClassMethods, MethodAccessFlag};
 
 use crate::method_signature::parse_method_signature;
 
