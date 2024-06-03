@@ -12,11 +12,12 @@ mod constants;
 mod class_info;
 mod fields;
 mod methods;
+mod attributes;
 
 pub struct ClassfileParser {}
 
 impl model::api::Parser for ClassfileParser {
-    fn parse<T: Read>(&self, reader: &mut T) -> Result<JvmClass> {
+    fn parse<T: Read>(&self, mut reader: &mut T) -> Result<JvmClass> {
         let version = version::parse(&mut reader)?;
         let constants = constants::parse(&mut reader)?;
 

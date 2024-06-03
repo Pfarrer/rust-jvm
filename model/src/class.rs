@@ -1,12 +1,12 @@
 use enumset::{EnumSet, EnumSetType};
 
-#[derive(Clone, Debug)]
-pub struct JvmClass<'a> {
+#[derive(Default, Clone, Debug)]
+pub struct JvmClass {
     pub version: ClassVersion,
     pub constants: ClassConstants,
 
     pub access_flags: EnumSet<ClassAccessFlag>,
-    pub this_class: &'a String,
+    pub this_class: String,
     pub super_class: Option<String>,
     pub interfaces: Vec<String>,
 

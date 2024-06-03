@@ -1,10 +1,10 @@
 use std::io::Read;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use enumset::EnumSet;
 use model::prelude::*;
 
-use crate::util;
+use crate::{attributes, method_signature::parse_method_signature, util};
 
 pub fn parse<T: Read>(reader: &mut T, constants: &ClassConstants) -> Result<ClassMethods> {
     let fields_count = util::read_u16(reader)?;
@@ -19,14 +19,26 @@ pub fn parse<T: Read>(reader: &mut T, constants: &ClassConstants) -> Result<Clas
 
 fn parse_method<T: Read>(reader: &mut T, constants: &ClassConstants) -> Result<ClassMethod> {
     let access_flags = parse_access_flags(reader)?;
+
     let name_index = util::read_u16(reader)? as usize;
+    let name = constants
+        .get(name_index)
+        .context(format!("get constant with index {}", name_index))?
+        .expect_utf8()?.clone();
+    
     let descriptor_index = util::read_u16(reader)? as usize;
+    let descriptor_string = constants
+        .get(descriptor_index)
+        .context(format!("get constant with index {}", descriptor_index))?
+        .expect_utf8()?;
+    let descriptor = parse_method_signature(descriptor_string)?;
+    
     let attributes = attributes::parse(reader, constants)?;
 
     Ok(ClassMethod {
         access_flags,
-        name_index,
-        descriptor_index,
+        name,
+        descriptor,
         attributes
     })
 }

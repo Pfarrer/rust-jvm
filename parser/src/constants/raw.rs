@@ -58,7 +58,7 @@ pub fn parse<T: Read>(reader: &mut T) -> Result<Vec<RawConstant>> {
     constants.push(RawConstant::None());
 
     let mut tag_bin = [0u8; 1];
-    while constants.len() < constant_pool_count as usize {
+    while constants.len() < constant_pool_count as usize {        
         reader.read(&mut tag_bin).unwrap();
 
         constants.push(match tag_bin[0] {

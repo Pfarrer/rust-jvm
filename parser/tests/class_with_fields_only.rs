@@ -11,7 +11,7 @@ fn validate_against_javap() {
     // public class testdata.ClassOnlyWithFields
     //   minor version: 0
     //   major version: 61
-    assert_eq!(61, class.version.major);
+    assert_eq!(55, class.version.major);
     assert_eq!(0, class.version.minor);
 
     //   flags: (0x0021) ACC_PUBLIC, ACC_SUPER

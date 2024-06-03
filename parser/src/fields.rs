@@ -1,10 +1,10 @@
 use std::io::Read;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use enumset::EnumSet;
 use model::prelude::*;
 
-use crate::util;
+use crate::{attributes, type_signature::parse_type_signature, util};
 
 pub fn parse<T: Read>(reader: &mut T, constants: &ClassConstants) -> Result<ClassFields> {
     let fields_count = util::read_u16(reader)? as usize;
@@ -19,14 +19,26 @@ pub fn parse<T: Read>(reader: &mut T, constants: &ClassConstants) -> Result<Clas
 
 fn parse_field<T: Read>(reader: &mut T, constants: &ClassConstants) -> Result<ClassField> {
     let access_flags = parse_access_flags(reader)?;
+    
     let name_index = util::read_u16(reader)? as usize;
-    let descriptor_index = util::read_u16(reader)?  as usize;
-    let attributes = attributes::parse(reader, constants);
+    let name = constants
+        .get(name_index)
+        .context(format!("get constant with index {}", name_index))?
+        .expect_utf8()?.clone();
+    
+    let descriptor_index = util::read_u16(reader)? as usize;
+    let descriptor_string = constants
+        .get(descriptor_index)
+        .context(format!("get constant with index {}", descriptor_index))?
+        .expect_utf8()?;
+    let descriptor = parse_type_signature(descriptor_string)?;
+
+    let attributes = attributes::parse(reader, constants)?;
 
     Ok(ClassField {
         access_flags,
-        name_index,
-        descriptor_index,
+        name,
+        descriptor,
         attributes,
     })
 }

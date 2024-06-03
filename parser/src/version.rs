@@ -16,7 +16,7 @@ pub fn parse<T: Read>(reader: &mut T) -> Result<ClassVersion> {
     let minor = util::read_u16(reader)?;
     let major = util::read_u16(reader)?;
 
-    if major > 51 {
+    if major > 55 {
         panic!("Unsupported Classfile version: {}.{} > 51.0.", major, minor);
     }
 

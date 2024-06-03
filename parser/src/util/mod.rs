@@ -21,7 +21,8 @@ pub fn read_u32<T: Read>(reader: &mut T) -> Result<u32> {
 pub fn read_raw<T: Read>(reader: &mut T, length: usize) -> Result<Vec<u8>> {
     let mut bytes = Vec::with_capacity(length);
     reader
-        .read_exact(&mut bytes)
+        .take(length as u64)
+        .read_to_end(&mut bytes)
         .map_err(|err| anyhow!("Unexpected end of input: {}", err))?;
 
     Ok(bytes)

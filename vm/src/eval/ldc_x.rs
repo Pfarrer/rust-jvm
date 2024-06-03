@@ -16,7 +16,7 @@ pub fn eval(
         i => panic!("Unexpected invocation of this instruction, found: {}", i),
     };
 
-    match jvm_class.constants.0.get(index as usize).unwrap() {
+    match jvm_class.constants.get(index as usize).unwrap() {
         &ClassConstant::String(ref value) => {
             trace!("{}: Pushing String \"{}\" to stack", instr_name, value);
 

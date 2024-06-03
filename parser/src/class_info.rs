@@ -42,14 +42,14 @@ pub fn parse_access_flags<T: Read>(reader: &mut T) -> Result<EnumSet<ClassAccess
     Ok(enumset)
 }
 
-pub fn parse_this_class<'a, T: Read>(reader: &mut T, constants: &'a ClassConstants) -> Result<&'a String> {
+pub fn parse_this_class<T: Read>(reader: &mut T, constants: &ClassConstants) -> Result<String> {
     let this_class_index = util::read_u16(reader)? as usize;
     let class_name = constants
         .get(this_class_index)
         .context(format!("get constant with index {}", this_class_index))?
         .expect_class()?;
 
-    Ok(class_name)
+    Ok(class_name.clone())
 }
 
 pub fn parse_super_class<T: Read>(reader: &mut T, constants: &ClassConstants) -> Result<Option<String>> {
