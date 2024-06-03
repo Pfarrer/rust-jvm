@@ -6,6 +6,5 @@ edition = "2021"
 [dependencies]
 model = { path = "../model" }
 
-classfile-parser = { git = "https://github.com/Pfarrer/classfile-parser.git" }
 enumset = "1.1"
 anyhow = "1.0"
