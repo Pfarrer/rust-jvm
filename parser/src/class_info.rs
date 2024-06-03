@@ -1,8 +1,8 @@
 use std::io::Read;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use enumset::EnumSet;
-use model::{class::{ClassAccessFlag, ClassConstant, ClassConstants}, constant_value};
+use model::prelude::*;
 
 use crate::util;
 
@@ -10,7 +10,7 @@ pub fn parse_access_flags<T: Read>(reader: &mut T) -> Result<EnumSet<ClassAccess
     let access_flags = util::read_u16(reader)?;
 
     let mut enumset = EnumSet::new();
-    
+
     if access_flags & 0x0001 > 0 {
         enumset.insert(ClassAccessFlag::Public);
     }
@@ -42,57 +42,46 @@ pub fn parse_access_flags<T: Read>(reader: &mut T) -> Result<EnumSet<ClassAccess
     Ok(enumset)
 }
 
-pub fn parse_this_class<T: Read>(reader: &mut T, constants: &ClassConstants) -> Result<String> {
-    let this_class_index = util::read_u16(reader)?;
-    let class_name = constant_value!(constants.get(this_class_index), ClassConstant::Class)?;
+pub fn parse_this_class<'a, T: Read>(reader: &mut T, constants: &'a ClassConstants) -> Result<&'a String> {
+    let this_class_index = util::read_u16(reader)? as usize;
+    let class_name = constants
+        .get(this_class_index)
+        .context(format!("get constant with index {}", this_class_index))?
+        .expect_class()?;
 
     Ok(class_name)
 }
 
-// pub fn parse<T: Read>(reader: &mut T) -> Result<ClassInfo> {
-//     pub this_class: String,
-//     pub super_class: Option<String>,
-//     pub interfaces: Vec<String>,
+pub fn parse_super_class<T: Read>(reader: &mut T, constants: &ClassConstants) -> Result<Option<String>> {
+    let super_class_index = util::read_u16(reader)? as usize;
+    
+    let super_class = if super_class_index > 0 {
+        let super_class_name = constants
+        .get(super_class_index)
+        .context(format!("get constant with index {}", super_class_index))?
+        .expect_class()?;
 
-//     let access_flags = util::read_u16(reader);
-//     let this_class = util::read_u16(reader);
-//     let super_class = util::read_u16(reader);
+        Some(super_class_name.clone())
+    } else {
+        None
+    };
 
-//     let interfaces_count = util::read_u16(reader);
-//     let mut interfaces = Vec::with_capacity(interfaces_count as usize);
-//     for _ in 0..interfaces_count {
-//         let interface = util::read_u16(reader);
-//         interfaces.push(interface);
-//     }
+    Ok(super_class)
+}
 
-//     ClassInfo {
-//         access_flags,
-//         this_class,
-//         super_class,
-//         interfaces,
-//     }
-// }
+pub fn parse_interfaces<T: Read>(reader: &mut T, constants: &ClassConstants) -> Result<Vec<String>> {
+    let interfaces_count = util::read_u16(reader)? as usize;
+    let mut interfaces = Vec::with_capacity(interfaces_count);
 
-// pub fn parse<T: Read>(reader: &mut T) -> Result<ClassInfo> {
-//     pub this_class: String,
-//     pub super_class: Option<String>,
-//     pub interfaces: Vec<String>,
+    for _ in 0..interfaces_count {
+        let interface_name_index = util::read_u16(reader)? as usize;
+        let interface_name = constants
+            .get(interface_name_index)
+            .context(format!("get constant with index {}", interface_name_index))?
+            .expect_class()?;
 
-//     let access_flags = util::read_u16(reader);
-//     let this_class = util::read_u16(reader);
-//     let super_class = util::read_u16(reader);
+        interfaces.push(interface_name.clone());
+    }
 
-//     let interfaces_count = util::read_u16(reader);
-//     let mut interfaces = Vec::with_capacity(interfaces_count as usize);
-//     for _ in 0..interfaces_count {
-//         let interface = util::read_u16(reader);
-//         interfaces.push(interface);
-//     }
-
-//     ClassInfo {
-//         access_flags,
-//         this_class,
-//         super_class,
-//         interfaces,
-//     }
-// }
+    Ok(interfaces)
+}

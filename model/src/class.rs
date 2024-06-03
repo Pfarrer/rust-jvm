@@ -1,12 +1,12 @@
 use enumset::{EnumSet, EnumSetType};
 
-#[derive(Default, Clone, Debug)]
-pub struct JvmClass {
+#[derive(Clone, Debug)]
+pub struct JvmClass<'a> {
     pub version: ClassVersion,
     pub constants: ClassConstants,
 
     pub access_flags: EnumSet<ClassAccessFlag>,
-    pub this_class: String,
+    pub this_class: &'a String,
     pub super_class: Option<String>,
     pub interfaces: Vec<String>,
 
@@ -185,7 +185,7 @@ pub type ClassAttributes = Vec<ClassAttribute>;
 
 #[derive(Clone, Debug)]
 pub enum ClassAttribute {
-    Code(CodeAttribute),
+    Code(Code),
     LineNumberTable(Vec<SourceLineNumber>),
     SourceFile(String),
     Exceptions(Vec<u16>),
@@ -197,7 +197,7 @@ pub enum ClassAttribute {
 }
 
 #[derive(Default, Clone, Debug)]
-pub struct CodeAttribute {
+pub struct Code {
     pub max_stack: u16,
     pub max_locals: u16,
     pub code: Vec<u8>,

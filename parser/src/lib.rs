@@ -10,6 +10,8 @@ mod util;
 mod version;
 mod constants;
 mod class_info;
+mod fields;
+mod methods;
 
 pub struct ClassfileParser {}
 
@@ -19,12 +21,13 @@ impl model::api::Parser for ClassfileParser {
         let constants = constants::parse(&mut reader)?;
 
         let access_flags = class_info::parse_access_flags(&mut reader)?;
-        let this_class = class_info::parse_this_class(&mut reader)?;
-        
-        
-        // let fields = fields::read(&mut reader, &constants)?;
-        // let methods = methods::read(&mut reader, &constants)?;
-        // let attributes = attributes::read(&mut reader, &constants)?;
+        let this_class = class_info::parse_this_class(&mut reader, &constants)?;
+        let super_class: Option<String> = class_info::parse_super_class(&mut reader, &constants)?;
+        let interfaces = class_info::parse_interfaces(&mut reader, &constants)?;
+
+        let fields = fields::parse(&mut reader, &constants)?;
+        let methods = methods::parse(&mut reader, &constants)?;
+        let attributes = attributes::parse(&mut reader, &constants)?;
 
         Ok(JvmClass {
             version,
@@ -32,10 +35,12 @@ impl model::api::Parser for ClassfileParser {
 
             access_flags,
             this_class,
+            super_class,
+            interfaces,
 
-            // fields,
-            // methods,
-            // attributes,
+            fields,
+            methods,
+            attributes,
         })
     }
 }
