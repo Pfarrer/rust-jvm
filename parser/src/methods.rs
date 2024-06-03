@@ -1,6 +1,7 @@
 use std::io::Read;
 
 use anyhow::{Context, Result};
+use class_constant_impl::ConstantAccessor;
 use enumset::EnumSet;
 use model::prelude::*;
 
@@ -21,10 +22,7 @@ fn parse_method<T: Read>(reader: &mut T, constants: &ClassConstants) -> Result<C
     let access_flags = parse_access_flags(reader)?;
 
     let name_index = util::read_u16(reader)? as usize;
-    let name = constants
-        .get(name_index)
-        .context(format!("get constant with index {}", name_index))?
-        .expect_utf8()?.clone();
+    let name = constants.expect_utf8_at(name_index)?.clone();
     
     let descriptor_index = util::read_u16(reader)? as usize;
     let descriptor_string = constants
