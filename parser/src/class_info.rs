@@ -1,58 +1,76 @@
-use anyhow::{bail, Result};
-use classfile_parser::{types::ClassFile, ClassAccessFlags};
+use std::io::Read;
+
+use anyhow::Result;
+use class_constant_impl::ClassConstantAccessor;
 use enumset::EnumSet;
-use model::class::{ClassAccessFlag, ClassConstants};
+use model::prelude::*;
 
-pub fn map(
-    classfile: &ClassFile,
-    constants: &ClassConstants,
-) -> Result<(
-    EnumSet<ClassAccessFlag>,
-    String,
-    Option<String>,
-    Vec<String>,
-)> {
-    let access_flags = Wrap(classfile.access_flags).try_into()?;
-    let this_class = constants.get_class(classfile.this_class)?.into();
+use crate::util;
 
-    let super_class = if classfile.super_class > 0 {
-        Some(constants.get_class(classfile.super_class)?.to_owned())
+pub fn parse_access_flags<T: Read>(reader: &mut T) -> Result<EnumSet<ClassAccessFlag>> {
+    let access_flags = util::read_u16(reader)?;
+
+    let mut enumset = EnumSet::new();
+
+    if access_flags & 0x0001 > 0 {
+        enumset.insert(ClassAccessFlag::Public);
+    }
+    if access_flags & 0x0010 > 0 {
+        enumset.insert(ClassAccessFlag::Final);
+    }
+    if access_flags & 0x0020 > 0 {
+        enumset.insert(ClassAccessFlag::Super);
+    }
+    if access_flags & 0x0200 > 0 {
+        enumset.insert(ClassAccessFlag::Interface);
+    }
+    if access_flags & 0x0400 > 0 {
+        enumset.insert(ClassAccessFlag::Abstract);
+    }
+    if access_flags & 0x1000 > 0 {
+        enumset.insert(ClassAccessFlag::Synthetic);
+    }
+    if access_flags & 0x2000 > 0 {
+        enumset.insert(ClassAccessFlag::Annotation);
+    }
+    if access_flags & 0x4000 > 0 {
+        enumset.insert(ClassAccessFlag::Enum);
+    }
+    if access_flags & 0x8000 > 0 {
+        enumset.insert(ClassAccessFlag::Module);
+    }
+
+    Ok(enumset)
+}
+
+pub fn parse_this_class<T: Read>(reader: &mut T, constants: &ClassConstants) -> Result<String> {
+    let this_class_index = util::read_u16(reader)? as usize;
+    let class_name = constants.get_class_or(this_class_index)?.clone();
+    Ok(class_name)
+}
+
+pub fn parse_super_class<T: Read>(reader: &mut T, constants: &ClassConstants) -> Result<Option<String>> {
+    let super_class_index = util::read_u16(reader)? as usize;
+    
+    let super_class = if super_class_index > 0 {
+        let super_class_name = constants.get_class_or(super_class_index)?.clone();
+        Some(super_class_name)
     } else {
         None
     };
 
-    let interfaces: Vec<_> = classfile
-        .interfaces
-        .iter()
-        .map(|index| constants.get_class(*index).map(|s| s.to_owned()))
-        .collect::<Result<_>>()?;
-
-    Ok((access_flags, this_class, super_class, interfaces))
+    Ok(super_class)
 }
 
-struct Wrap<T>(T);
+pub fn parse_interfaces<T: Read>(reader: &mut T, constants: &ClassConstants) -> Result<Vec<String>> {
+    let interfaces_count = util::read_u16(reader)? as usize;
+    let mut interfaces = Vec::with_capacity(interfaces_count);
 
-impl TryFrom<Wrap<ClassAccessFlags>> for EnumSet<ClassAccessFlag> {
-    type Error = anyhow::Error;
-
-    fn try_from(value: Wrap<ClassAccessFlags>) -> std::result::Result<Self, Self::Error> {
-        fn map_flag(flag: ClassAccessFlags) -> Result<ClassAccessFlag> {
-            match flag {
-                ClassAccessFlags::PUBLIC => Ok(ClassAccessFlag::Public),
-                ClassAccessFlags::FINAL => Ok(ClassAccessFlag::Final),
-                ClassAccessFlags::SUPER => Ok(ClassAccessFlag::Super),
-                ClassAccessFlags::INTERFACE => Ok(ClassAccessFlag::Interface),
-                ClassAccessFlags::ABSTRACT => Ok(ClassAccessFlag::Abstract),
-                ClassAccessFlags::SYNTHETIC => Ok(ClassAccessFlag::Synthetic),
-                ClassAccessFlags::ANNOTATION => Ok(ClassAccessFlag::Annotation),
-                ClassAccessFlags::ENUM => Ok(ClassAccessFlag::Enum),
-                it => bail!("Unexpected ClassAccessFlag: {:?}", it),
-            }
-        }
-
-        value
-            .0
-            .iter()
-            .try_fold(EnumSet::new(), |acc, flag| Ok(map_flag(flag)? | acc))
+    for _ in 0..interfaces_count {
+        let interface_name_index = util::read_u16(reader)? as usize;
+        let interface_name = constants.get_class_or(interface_name_index)?.clone();
+        interfaces.push(interface_name);
     }
+
+    Ok(interfaces)
 }

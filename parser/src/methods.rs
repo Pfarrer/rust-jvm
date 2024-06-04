@@ -1,52 +1,84 @@
-use anyhow::{bail, Result};
-use classfile_parser::{method_info::MethodAccessFlags, types::ClassFile};
+use std::io::Read;
+
+use anyhow::Result;
+use class_constant_impl::ClassConstantAccessor;
 use enumset::EnumSet;
-use model::class::{ClassConstants, ClassMethod, ClassMethods, MethodAccessFlag};
+use model::prelude::*;
 
-use crate::method_signature::parse_method_signature;
+use crate::{attributes, method_signature::parse_method_signature, util};
 
-pub fn map(classfile: &ClassFile, constants: &ClassConstants) -> Result<ClassMethods> {
-    classfile
-        .methods
-        .iter()
-        .map(|method| {
-            Ok(ClassMethod {
-                access_flags: Wrap(method.access_flags).try_into()?,
-                name: constants.get_string(method.name_index)?.into(),
-                descriptor: parse_method_signature(constants.get_string(method.descriptor_index)?)?,
-                attributes: vec![],
-            })
-        })
-        .collect()
+pub fn parse<T: Read>(reader: &mut T, constants: &ClassConstants) -> Result<ClassMethods> {
+    let fields_count = util::read_u16(reader)?;
+    let mut methods = Vec::with_capacity(fields_count as usize);
+
+    for _ in 0..fields_count {
+        methods.push(parse_method(reader, constants)?);
+    }
+
+    Ok(methods)
 }
 
-struct Wrap<T>(T);
+fn parse_method<T: Read>(reader: &mut T, constants: &ClassConstants) -> Result<ClassMethod> {
+    let access_flags = parse_access_flags(reader)?;
 
-impl TryFrom<Wrap<MethodAccessFlags>> for EnumSet<MethodAccessFlag> {
-    type Error = anyhow::Error;
+    let name_index = util::read_u16(reader)? as usize;
+    let name = constants.get_utf8_or(name_index)?.clone();
+    
+    let descriptor_index = util::read_u16(reader)? as usize;
+    let descriptor_string = constants.get_utf8_or(descriptor_index)?;
+    let descriptor = parse_method_signature(descriptor_string)?;
+    
+    let attributes = attributes::parse(reader, constants)?;
 
-    fn try_from(value: Wrap<MethodAccessFlags>) -> std::result::Result<Self, Self::Error> {
-        fn map_flag(flag: MethodAccessFlags) -> Result<MethodAccessFlag> {
-            match flag {
-                MethodAccessFlags::PUBLIC => Ok(MethodAccessFlag::Public),
-                MethodAccessFlags::PRIVATE => Ok(MethodAccessFlag::Private),
-                MethodAccessFlags::PROTECTED => Ok(MethodAccessFlag::Protected),
-                MethodAccessFlags::STATIC => Ok(MethodAccessFlag::Static),
-                MethodAccessFlags::FINAL => Ok(MethodAccessFlag::Final),
-                MethodAccessFlags::SYNCHRONIZED => Ok(MethodAccessFlag::Synchronized),
-                MethodAccessFlags::BRIDGE => Ok(MethodAccessFlag::Bridge),
-                MethodAccessFlags::VARARGS => Ok(MethodAccessFlag::Varargs),
-                MethodAccessFlags::NATIVE => Ok(MethodAccessFlag::Native),
-                MethodAccessFlags::ABSTRACT => Ok(MethodAccessFlag::Abstract),
-                MethodAccessFlags::STRICT => Ok(MethodAccessFlag::Strict),
-                MethodAccessFlags::SYNTHETIC => Ok(MethodAccessFlag::Synthetic),
-                it => bail!("Unexpected MethodAccessFlag: {:?}", it),
-            }
-        }
+    Ok(ClassMethod {
+        access_flags,
+        name,
+        descriptor,
+        attributes
+    })
+}
 
-        value
-            .0
-            .iter()
-            .try_fold(EnumSet::new(), |acc, flag| Ok(map_flag(flag)? | acc))
+fn parse_access_flags<T: Read>(reader: &mut T) -> Result<EnumSet<MethodAccessFlag>> {
+    let access_flags = util::read_u16(reader)?;
+
+    let mut enumset = EnumSet::new();
+
+    if access_flags & 0x0001 > 0 {
+        enumset.insert(MethodAccessFlag::Public);
     }
+    if access_flags & 0x0002 > 0 {
+        enumset.insert(MethodAccessFlag::Private);
+    }
+    if access_flags & 0x0004 > 0 {
+        enumset.insert(MethodAccessFlag::Protected);
+    }
+    if access_flags & 0x0008 > 0 {
+        enumset.insert(MethodAccessFlag::Static);
+    }
+    if access_flags & 0x0010 > 0 {
+        enumset.insert(MethodAccessFlag::Final);
+    }
+    if access_flags & 0x0020 > 0 {
+        enumset.insert(MethodAccessFlag::Synchronized);
+    }
+    if access_flags & 0x0040 > 0 {
+        enumset.insert(MethodAccessFlag::Bridge);
+    }
+    if access_flags & 0x0080 > 0 {
+        enumset.insert(MethodAccessFlag::Varargs);
+    }
+    if access_flags & 0x0100 > 0 {
+        enumset.insert(MethodAccessFlag::Native);
+    }
+    if access_flags & 0x0400 > 0 {
+        enumset.insert(MethodAccessFlag::Abstract);
+    }
+    if access_flags & 0x0800 > 0 {
+        enumset.insert(MethodAccessFlag::Strict);
+    }
+    if access_flags & 0x1000 > 0 {
+        enumset.insert(MethodAccessFlag::Synthetic);
+    }
+
+    Ok(enumset)
 }

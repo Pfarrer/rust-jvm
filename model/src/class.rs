@@ -1,19 +1,5 @@
 use enumset::{EnumSet, EnumSetType};
 
-#[derive(EnumSetType, Debug)]
-pub enum ClassAccessFlag {
-    Public,
-    Private,
-    Protected,
-    Final,
-    Super,
-    Interface,
-    Abstract,
-    Synthetic,
-    Annotation,
-    Enum,
-}
-
 #[derive(Default, Clone, Debug)]
 pub struct JvmClass {
     pub version: ClassVersion,
@@ -35,8 +21,7 @@ pub struct ClassVersion {
     pub minor: u16,
 }
 
-#[derive(Default, Clone, Debug)]
-pub struct ClassConstants(pub Vec<ClassConstant>);
+pub type ClassConstants = Vec<ClassConstant>;
 
 #[derive(Clone, Debug)]
 pub enum ClassConstant {
@@ -55,9 +40,6 @@ pub enum ClassConstant {
 
     // class_name, method_name, method_signature
     InterfaceMethodref(String, String, MethodSignature),
-
-    // class_index, name_and_type_index
-    //    InterfaceMethodref(u16, u16),
 
     // string_index
     String(String),
@@ -90,6 +72,21 @@ pub enum ClassConstant {
 
     // bootstrap_method_attr_index, name_and_type_index
     InvokeDynamic(u16, String, MethodSignature),
+}
+
+#[derive(EnumSetType, Debug)]
+pub enum ClassAccessFlag {
+    Public,
+    Private,
+    Protected,
+    Final,
+    Super,
+    Interface,
+    Abstract,
+    Synthetic,
+    Annotation,
+    Enum,
+    Module,
 }
 
 #[derive(EnumSetType, Debug)]
@@ -188,19 +185,17 @@ pub type ClassAttributes = Vec<ClassAttribute>;
 
 #[derive(Clone, Debug)]
 pub enum ClassAttribute {
-    Code(CodeAttribute),
+    Code(Code),
     LineNumberTable(Vec<SourceLineNumber>),
-    SourceFile(u16),
+    SourceFile(String),
     Exceptions(Vec<u16>),
-    Signature(u16),
-    ConstantValue(u16),
+    ConstantValue(ClassConstant),
     BootstrapMethods(Vec<BootstrapMethod>),
-    Deprecated,
     NotImplemented,
 }
 
 #[derive(Default, Clone, Debug)]
-pub struct CodeAttribute {
+pub struct Code {
     pub max_stack: u16,
     pub max_locals: u16,
     pub code: Vec<u8>,
@@ -213,7 +208,9 @@ pub struct ExceptionTable {
     pub start_pc: u16,
     pub end_pc: u16,
     pub handler_pc: u16,
-    pub catch_type: u16,
+    /// Some(String): String identifies the class of exceptions that this exception handler is designated to catch.
+    /// None: this exception handler is called for all exceptions.
+    pub catch_type: Option<String>,
 }
 
 #[derive(Default, Clone, Debug)]
