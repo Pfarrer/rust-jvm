@@ -49,9 +49,12 @@ pub fn parse_this_class<T: Read>(reader: &mut T, constants: &ClassConstants) -> 
     Ok(class_name)
 }
 
-pub fn parse_super_class<T: Read>(reader: &mut T, constants: &ClassConstants) -> Result<Option<String>> {
+pub fn parse_super_class<T: Read>(
+    reader: &mut T,
+    constants: &ClassConstants,
+) -> Result<Option<String>> {
     let super_class_index = util::read_u16(reader)? as usize;
-    
+
     let super_class = if super_class_index > 0 {
         let super_class_name = constants.get_class_or(super_class_index)?.clone();
         Some(super_class_name)
@@ -62,7 +65,10 @@ pub fn parse_super_class<T: Read>(reader: &mut T, constants: &ClassConstants) ->
     Ok(super_class)
 }
 
-pub fn parse_interfaces<T: Read>(reader: &mut T, constants: &ClassConstants) -> Result<Vec<String>> {
+pub fn parse_interfaces<T: Read>(
+    reader: &mut T,
+    constants: &ClassConstants,
+) -> Result<Vec<String>> {
     let interfaces_count = util::read_u16(reader)? as usize;
     let mut interfaces = Vec::with_capacity(interfaces_count);
 

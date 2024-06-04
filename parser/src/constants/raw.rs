@@ -1,7 +1,7 @@
 use std::io::Read;
 
-use anyhow::{anyhow, bail, Result};
 use crate::util;
+use anyhow::{anyhow, bail, Result};
 
 #[derive(Clone, Debug)]
 pub(crate) enum RawConstant {
@@ -41,15 +41,14 @@ pub(crate) enum RawConstant {
 
     // Value
     Utf8(String),
-
     // reference_kind, reference_index
-//    MethodHandle(u8, u16),
+    //    MethodHandle(u8, u16),
 
     // descriptor_index
-//    MethodType(u16),
+    //    MethodType(u16),
 
     // bootstrap_method_attr_index, name_and_type_index
-//    InvokeDynamic(u16, u16),
+    //    InvokeDynamic(u16, u16),
 }
 
 pub fn parse<T: Read>(reader: &mut T) -> Result<Vec<RawConstant>> {
@@ -58,7 +57,7 @@ pub fn parse<T: Read>(reader: &mut T) -> Result<Vec<RawConstant>> {
     constants.push(RawConstant::None());
 
     let mut tag_bin = [0u8; 1];
-    while constants.len() < constant_pool_count as usize {        
+    while constants.len() < constant_pool_count as usize {
         reader.read(&mut tag_bin).unwrap();
 
         constants.push(match tag_bin[0] {
@@ -73,7 +72,7 @@ pub fn parse<T: Read>(reader: &mut T) -> Result<Vec<RawConstant>> {
             10 => read_methodref(reader)?,
             11 => read_interface_methodref(reader)?,
             12 => read_name_and_type(reader)?,
-            _ => bail!("Unexpected Constant Pool Tag: {}", tag_bin[0])
+            _ => bail!("Unexpected Constant Pool Tag: {}", tag_bin[0]),
         });
 
         // In case of long and double, the next element of the constant pool must be empty
@@ -109,7 +108,10 @@ fn read_interface_methodref<T: Read>(reader: &mut T) -> Result<RawConstant> {
     let class_index = util::read_u16(reader)?;
     let name_and_type_index = util::read_u16(reader)?;
 
-    Ok(RawConstant::InterfaceMethodref(class_index, name_and_type_index))
+    Ok(RawConstant::InterfaceMethodref(
+        class_index,
+        name_and_type_index,
+    ))
 }
 
 fn read_string<T: Read>(reader: &mut T) -> Result<RawConstant> {

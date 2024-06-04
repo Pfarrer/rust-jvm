@@ -20,10 +20,7 @@ pub fn parse<T: Read>(reader: &mut T) -> Result<ClassVersion> {
         panic!("Unsupported Classfile version: {}.{} > 51.0.", major, minor);
     }
 
-    Ok(ClassVersion {
-        major,
-        minor,
-    })
+    Ok(ClassVersion { major, minor })
 }
 
 fn validate_magic(magic: [u8; 4]) -> bool {
