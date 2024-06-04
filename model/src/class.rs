@@ -189,10 +189,8 @@ pub enum ClassAttribute {
     LineNumberTable(Vec<SourceLineNumber>),
     SourceFile(String),
     Exceptions(Vec<u16>),
-    Signature(u16),
-    ConstantValue(u16),
+    ConstantValue(ClassConstant),
     BootstrapMethods(Vec<BootstrapMethod>),
-    Deprecated,
     NotImplemented,
 }
 
@@ -210,7 +208,9 @@ pub struct ExceptionTable {
     pub start_pc: u16,
     pub end_pc: u16,
     pub handler_pc: u16,
-    pub catch_type: u16,
+    /// Some(String): String identifies the class of exceptions that this exception handler is designated to catch.
+    /// None: this exception handler is called for all exceptions.
+    pub catch_type: Option<String>,
 }
 
 #[derive(Default, Clone, Debug)]

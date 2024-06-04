@@ -1,6 +1,7 @@
 use std::io::Read;
 
-use anyhow::{Context, Result};
+use anyhow::Result;
+use class_constant_impl::ClassConstantAccessor;
 use enumset::EnumSet;
 use model::prelude::*;
 
@@ -44,24 +45,16 @@ pub fn parse_access_flags<T: Read>(reader: &mut T) -> Result<EnumSet<ClassAccess
 
 pub fn parse_this_class<T: Read>(reader: &mut T, constants: &ClassConstants) -> Result<String> {
     let this_class_index = util::read_u16(reader)? as usize;
-    let class_name = constants
-        .get(this_class_index)
-        .context(format!("get constant with index {}", this_class_index))?
-        .expect_class()?;
-
-    Ok(class_name.clone())
+    let class_name = constants.get_class_or(this_class_index)?.clone();
+    Ok(class_name)
 }
 
 pub fn parse_super_class<T: Read>(reader: &mut T, constants: &ClassConstants) -> Result<Option<String>> {
     let super_class_index = util::read_u16(reader)? as usize;
     
     let super_class = if super_class_index > 0 {
-        let super_class_name = constants
-        .get(super_class_index)
-        .context(format!("get constant with index {}", super_class_index))?
-        .expect_class()?;
-
-        Some(super_class_name.clone())
+        let super_class_name = constants.get_class_or(super_class_index)?.clone();
+        Some(super_class_name)
     } else {
         None
     };
@@ -75,12 +68,8 @@ pub fn parse_interfaces<T: Read>(reader: &mut T, constants: &ClassConstants) -> 
 
     for _ in 0..interfaces_count {
         let interface_name_index = util::read_u16(reader)? as usize;
-        let interface_name = constants
-            .get(interface_name_index)
-            .context(format!("get constant with index {}", interface_name_index))?
-            .expect_class()?;
-
-        interfaces.push(interface_name.clone());
+        let interface_name = constants.get_class_or(interface_name_index)?.clone();
+        interfaces.push(interface_name);
     }
 
     Ok(interfaces)

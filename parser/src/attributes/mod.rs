@@ -1,9 +1,14 @@
 use std::io::Read;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{bail, Result};
+use class_constant_impl::ClassConstantAccessor;
 use model::prelude::*;
 
 use crate::util;
+
+mod code;
+mod source_file;
+mod constant_value;
 
 pub fn parse<T: Read>(reader: &mut T, constants: &ClassConstants) -> Result<ClassAttributes> {
     let attributes_count = util::read_u16(reader)? as usize;
@@ -21,44 +26,28 @@ pub fn parse_attribute<T: Read>(
     constants: &ClassConstants,
 ) -> Result<ClassAttribute> {
     let attribute_name_index = util::read_u16(reader)? as usize;
-    let atrribute_name = constants
-        .get(attribute_name_index)
-        .context(format!("get constant with index {}", attribute_name_index))?
-        .expect_utf8()?;
+    let atrribute_name = constants.get_utf8_or(attribute_name_index)?;
 
     match atrribute_name.as_str() {
-        // "Code" => Attribute::Code(code::read(reader, constants)),
-        // "LineNumberTable" => Attribute::LineNumberTable(line_number_table::read(reader)),
-        // "SourceFile" => Attribute::SourceFile(source_file::read(reader)),
-        // "Exceptions" => Attribute::Exceptions(exceptions::read(reader)),
-        // "Signature" => Attribute::Signature(signature::read(reader)),
-        // "ConstantValue" => Attribute::ConstantValue(constant_value::read(reader)),
+        "Code" => Ok(ClassAttribute::Code(code::parse(reader, constants)?)),
+        "SourceFile" => Ok(ClassAttribute::SourceFile(source_file::parse(reader, constants)?)),
+        "ConstantValue" => Ok(ClassAttribute::ConstantValue(constant_value::parse(reader, constants)?)),
+        "LineNumberTable"
+        | "LocalVariableTable"
+        | "RuntimeVisibleAnnotations"
+        | "InnerClasses"
+        | "EnclosingMethod"
+        | "Signature"
+        | "StackMapTable"
+        | "Exceptions"
+        | "Deprecated" => {
+            let attribute_length = util::read_u32(reader)? as usize;
+            if attribute_length > 0 {
+                util::read_raw(reader, attribute_length)?;
+            }
 
-        // "RuntimeVisibleAnnotations" => {
-        //     let attribute_length = util::read_u32(reader);
-        //     util::read_raw(reader, attribute_length as usize);
-        //     Attribute::NotImplemented
-        // }
-
-        // "InnerClasses" => {
-        //     let attribute_length = util::read_u32(reader);
-        //     util::read_raw(reader, attribute_length as usize);
-        //     Attribute::NotImplemented
-        // }
-
-        // "EnclosingMethod" => {
-        //     let attribute_length = util::read_u32(reader);
-        //     assert_eq!(4, attribute_length);
-        //     util::read_u32(reader);
-
-        //     Attribute::NotImplemented
-        // }
-
-        // "Deprecated" => {
-        //     /*let attribute_length = */
-        //     util::read_u32(reader);
-        //     Attribute::Deprecated
-        // }
+            Ok(ClassAttribute::NotImplemented)
+        }
 
         _ => bail!("Attribute not implemented: {atrribute_name}"),
     }

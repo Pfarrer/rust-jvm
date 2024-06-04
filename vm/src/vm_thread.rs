@@ -159,11 +159,8 @@ impl<'a> VmThread<'a> {
 
                 // Maybe there is a ConstantValue attribute, so check for that
                 for attr in field.attributes.iter() {
-                    if let &ClassAttribute::ConstantValue(ref index) = attr {
-                        let value = Primitive::from_constant(
-                            self.vm,
-                            jvm_class.constants.get(*index as usize).unwrap(),
-                        );
+                    if let &ClassAttribute::ConstantValue(ref constant) = attr {
+                        let value = Primitive::from_constant(self.vm, constant,);
 
                         // Set value
                         self.vm.mem.static_pool.set_class_field(

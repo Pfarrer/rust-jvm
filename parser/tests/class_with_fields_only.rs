@@ -10,7 +10,7 @@ fn validate_against_javap() {
     // # javap -v ClassOnlyWithFields
     // public class testdata.ClassOnlyWithFields
     //   minor version: 0
-    //   major version: 61
+    //   major version: 55
     assert_eq!(55, class.version.major);
     assert_eq!(0, class.version.minor);
 
