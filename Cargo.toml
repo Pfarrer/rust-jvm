@@ -5,7 +5,7 @@ members = [
     "model",
     "loader",
     "parser",
-    # "vm",
+    "vm",
     "rt",
     "cli",
 ]

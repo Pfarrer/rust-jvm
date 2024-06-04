@@ -10,7 +10,7 @@ pub fn eval(
     let frame = vm_thread.frame_stack.last_mut().unwrap();
 
     let index = utils::read_u16_code(code, pc);
-    match jvm_class.constants.0.get(index as usize).unwrap() {
+    match jvm_class.constants.get(index as usize).unwrap() {
         &ClassConstant::Long(ref value) => {
             trace!("ldc2_w: Pushing Long {} to stack", value);
             frame.stack_push(Primitive::Long(value.clone()));

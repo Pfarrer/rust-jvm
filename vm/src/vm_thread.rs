@@ -7,9 +7,7 @@ use crate::utils;
 use crate::Vm;
 use lazy_static::lazy_static;
 use log::{debug, trace};
-use model::class::FieldAccessFlag;
-use model::class::MethodAccessFlag;
-use model::class::{ClassAttribute, CodeAttribute, JvmClass};
+use model::prelude::*;
 use parser::method_signature::parse_method_signature;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -79,11 +77,11 @@ impl<'a> VmThread<'a> {
                 is_instance,
             );
 
-            self.execute_method(&class, &code_attr, frame);
+            self.execute_method(&class, code_attr, frame);
         }
     }
 
-    fn execute_method(&mut self, class: &JvmClass, code_attribute: &CodeAttribute, frame: Frame) {
+    fn execute_method(&mut self, class: &JvmClass, code_attribute: &Code, frame: Frame) {
         trace!(
             "Executing {}.{}{}s in thread {} now...",
             frame.class_path,
@@ -161,11 +159,8 @@ impl<'a> VmThread<'a> {
 
                 // Maybe there is a ConstantValue attribute, so check for that
                 for attr in field.attributes.iter() {
-                    if let &ClassAttribute::ConstantValue(ref index) = attr {
-                        let value = Primitive::from_constant(
-                            self.vm,
-                            jvm_class.constants.0.get(*index as usize).unwrap(),
-                        );
+                    if let &ClassAttribute::ConstantValue(ref constant) = attr {
+                        let value = Primitive::from_constant(self.vm, constant,);
 
                         // Set value
                         self.vm.mem.static_pool.set_class_field(

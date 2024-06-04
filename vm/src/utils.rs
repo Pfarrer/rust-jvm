@@ -1,6 +1,6 @@
 use crate::class_hierarchy::HierarchyIterator;
 use crate::VmThread;
-use model::class::{ClassAttribute, ClassMethod, CodeAttribute, JvmClass, MethodAccessFlag};
+use model::prelude::*;
 
 pub fn find_method(
     vm_thread: &mut VmThread,
@@ -42,7 +42,7 @@ pub fn find_method_in_classfile(
         .map(|m| m.clone())
 }
 
-pub fn find_code(method: &ClassMethod) -> Option<&CodeAttribute> {
+pub fn find_code(method: &ClassMethod) -> Option<&Code> {
     for attr in method.attributes.iter() {
         if let &ClassAttribute::Code(ref code) = attr {
             return Some(code);

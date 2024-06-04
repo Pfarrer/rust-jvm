@@ -1,43 +1,44 @@
-use anyhow::{bail, Result};
-use model::class::{ClassVersion, JvmClass};
 use std::io::Read;
+
+use anyhow::Result;
+use model::class::JvmClass;
 
 pub mod method_signature;
 pub mod type_signature;
 
-mod attributes;
-mod class_info;
+mod util;
+mod version;
 mod constants;
+mod class_info;
 mod fields;
 mod methods;
+mod attributes;
 
 pub struct ClassfileParser {}
 
 impl model::api::Parser for ClassfileParser {
-    fn parse<T: Read>(&self, reader: &mut T) -> Result<JvmClass> {
-        let classfile =
-            classfile_parser::parse_class_from_reader(reader, "unknown_path".to_string())
-                .or_else(|err| bail!(err))?;
+    fn parse<T: Read>(&self, mut reader: &mut T) -> Result<JvmClass> {
+        let version = version::parse(&mut reader)?;
+        let constants = constants::parse(&mut reader)?;
 
-        let version = ClassVersion {
-            major: classfile.major_version,
-            minor: classfile.minor_version,
-        };
-        let constants = constants::map(&classfile)?;
+        let access_flags = class_info::parse_access_flags(&mut reader)?;
+        let this_class = class_info::parse_this_class(&mut reader, &constants)?;
+        let super_class: Option<String> = class_info::parse_super_class(&mut reader, &constants)?;
+        let interfaces = class_info::parse_interfaces(&mut reader, &constants)?;
 
-        let (access_flags, this_class, super_class, interfaces) =
-            class_info::map(&classfile, &constants)?;
-        let fields = fields::map(&classfile, &constants)?;
-        let methods = methods::map(&classfile, &constants)?;
-        let attributes = attributes::map(&classfile, &constants)?;
+        let fields = fields::parse(&mut reader, &constants)?;
+        let methods = methods::parse(&mut reader, &constants)?;
+        let attributes = attributes::parse(&mut reader, &constants)?;
 
         Ok(JvmClass {
             version,
             constants,
+
             access_flags,
             this_class,
             super_class,
             interfaces,
+
             fields,
             methods,
             attributes,
