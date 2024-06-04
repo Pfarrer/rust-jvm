@@ -20,10 +20,10 @@ pub fn parse<T: Read>(reader: &mut T, constants: &ClassConstants) -> Result<Clas
 
 fn parse_field<T: Read>(reader: &mut T, constants: &ClassConstants) -> Result<ClassField> {
     let access_flags = parse_access_flags(reader)?;
-    
+
     let name_index = util::read_u16(reader)? as usize;
     let name = constants.get_utf8_or(name_index)?.clone();
-    
+
     let descriptor_index = util::read_u16(reader)? as usize;
     let descriptor_string = constants.get_utf8_or(descriptor_index)?;
     let descriptor = parse_type_signature(descriptor_string)?;
@@ -37,7 +37,6 @@ fn parse_field<T: Read>(reader: &mut T, constants: &ClassConstants) -> Result<Cl
         attributes,
     })
 }
-
 
 fn parse_access_flags<T: Read>(reader: &mut T) -> Result<EnumSet<FieldAccessFlag>> {
     let access_flags = util::read_u16(reader)?;

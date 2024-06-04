@@ -23,18 +23,18 @@ fn parse_method<T: Read>(reader: &mut T, constants: &ClassConstants) -> Result<C
 
     let name_index = util::read_u16(reader)? as usize;
     let name = constants.get_utf8_or(name_index)?.clone();
-    
+
     let descriptor_index = util::read_u16(reader)? as usize;
     let descriptor_string = constants.get_utf8_or(descriptor_index)?;
     let descriptor = parse_method_signature(descriptor_string)?;
-    
+
     let attributes = attributes::parse(reader, constants)?;
 
     Ok(ClassMethod {
         access_flags,
         name,
         descriptor,
-        attributes
+        attributes,
     })
 }
 

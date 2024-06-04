@@ -6,13 +6,13 @@ use model::class::JvmClass;
 pub mod method_signature;
 pub mod type_signature;
 
-mod util;
-mod version;
-mod constants;
+mod attributes;
 mod class_info;
+mod constants;
 mod fields;
 mod methods;
-mod attributes;
+mod util;
+mod version;
 
 pub struct ClassfileParser {}
 

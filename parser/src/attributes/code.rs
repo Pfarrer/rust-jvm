@@ -4,11 +4,12 @@ use anyhow::Result;
 use class_constant_impl::ClassConstantAccessor;
 use model::prelude::*;
 
-use crate::util;
 use crate::attributes;
+use crate::util;
 
 pub fn parse<T: Read>(reader: &mut T, constants: &ClassConstants) -> Result<Code> {
-    /*let attribute_length = */util::read_u32(reader)?;
+    /*let attribute_length = */
+    util::read_u32(reader)?;
 
     let max_stack = util::read_u16(reader)?;
     let max_locals = util::read_u16(reader)?;
@@ -28,7 +29,10 @@ pub fn parse<T: Read>(reader: &mut T, constants: &ClassConstants) -> Result<Code
     })
 }
 
-fn parse_exception_table<T: Read>(reader: &mut T, constants: &ClassConstants) -> Result<Vec<ExceptionTable>> {
+fn parse_exception_table<T: Read>(
+    reader: &mut T,
+    constants: &ClassConstants,
+) -> Result<Vec<ExceptionTable>> {
     let exception_table_length = util::read_u16(reader)? as usize;
     let mut entries = Vec::with_capacity(exception_table_length);
 
@@ -44,7 +48,10 @@ fn parse_exception_table<T: Read>(reader: &mut T, constants: &ClassConstants) ->
     Ok(entries)
 }
 
-fn parse_exception_table_catch_type<T: Read>(reader: &mut T, constants: &ClassConstants) -> Result<Option<String>> {
+fn parse_exception_table_catch_type<T: Read>(
+    reader: &mut T,
+    constants: &ClassConstants,
+) -> Result<Option<String>> {
     let class_name_index = util::read_u16(reader)? as usize;
     let class_name = if class_name_index == 0 {
         None

@@ -7,8 +7,8 @@ use model::prelude::*;
 use crate::util;
 
 mod code;
-mod source_file;
 mod constant_value;
+mod source_file;
 
 pub fn parse<T: Read>(reader: &mut T, constants: &ClassConstants) -> Result<ClassAttributes> {
     let attributes_count = util::read_u16(reader)? as usize;
@@ -30,8 +30,12 @@ pub fn parse_attribute<T: Read>(
 
     match atrribute_name.as_str() {
         "Code" => Ok(ClassAttribute::Code(code::parse(reader, constants)?)),
-        "SourceFile" => Ok(ClassAttribute::SourceFile(source_file::parse(reader, constants)?)),
-        "ConstantValue" => Ok(ClassAttribute::ConstantValue(constant_value::parse(reader, constants)?)),
+        "SourceFile" => Ok(ClassAttribute::SourceFile(source_file::parse(
+            reader, constants,
+        )?)),
+        "ConstantValue" => Ok(ClassAttribute::ConstantValue(constant_value::parse(
+            reader, constants,
+        )?)),
         "LineNumberTable"
         | "LocalVariableTable"
         | "RuntimeVisibleAnnotations"
