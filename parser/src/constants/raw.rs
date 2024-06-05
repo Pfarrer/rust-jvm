@@ -48,7 +48,7 @@ pub(crate) enum RawConstant {
     //    MethodType(u16),
 
     // bootstrap_method_attr_index, name_and_type_index
-    //    InvokeDynamic(u16, u16),
+       InvokeDynamic(u16, u16),
 }
 
 pub fn parse<T: Read>(reader: &mut T) -> Result<Vec<RawConstant>> {
@@ -72,6 +72,7 @@ pub fn parse<T: Read>(reader: &mut T) -> Result<Vec<RawConstant>> {
             10 => read_methodref(reader)?,
             11 => read_interface_methodref(reader)?,
             12 => read_name_and_type(reader)?,
+            18 => read_invoke_dynamic(reader)?,
             _ => bail!("Unexpected Constant Pool Tag: {}", tag_bin[0]),
         });
 
@@ -161,6 +162,13 @@ fn read_utf8<T: Read>(reader: &mut T) -> Result<RawConstant> {
 }
 
 fn read_name_and_type<T: Read>(reader: &mut T) -> Result<RawConstant> {
+    let name_index = util::read_u16(reader)?;
+    let descriptor_index = util::read_u16(reader)?;
+
+    Ok(RawConstant::NameAndType(name_index, descriptor_index))
+}
+
+fn read_invoke_dynamic<T: Read>(reader: &mut T) -> Result<RawConstant> {
     let name_index = util::read_u16(reader)?;
     let descriptor_index = util::read_u16(reader)?;
 
