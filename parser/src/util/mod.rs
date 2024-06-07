@@ -4,6 +4,13 @@ use std::io::Read;
 
 use anyhow::{anyhow, Result};
 
+pub fn read_u8<T: Read>(reader: &mut T) -> Result<u8> {
+    let mut bin = [0u8; 1];
+    reader.read_exact(&mut bin)?;
+
+    Ok(bin[0])
+}
+
 pub fn read_u16<T: Read>(reader: &mut T) -> Result<u16> {
     let mut bin = [0u8; 2];
     reader.read_exact(&mut bin)?;

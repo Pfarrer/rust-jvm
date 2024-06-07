@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use glob::glob;
 use log::debug;
 use model::api::Parser;
@@ -30,10 +30,8 @@ impl ClassfileLoader {
 
                 parser
                     .parse(&mut reader)
+                    .with_context(|| format!("parse classfile {}", file_path.display()))
                     .map(|class| (classpath, class))
-                    .map_err(|err| {
-                        anyhow!("Failed to parse classfile {}: {}", file_path.display(), err)
-                    })
             })
             .collect::<Result<_>>()?;
 

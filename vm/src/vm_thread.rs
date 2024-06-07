@@ -174,7 +174,7 @@ impl<'a> VmThread<'a> {
         }
 
         // Call <clinit> if it exists
-        if let Some(_) = utils::find_method_in_classfile(&jvm_class, "<clinit>", "()V") {
+        if utils::find_method_in_classfile(&jvm_class, "<clinit>", "()V").is_some() {
             debug!(
                 "Class {} not initialized and contains <clinit> -> executing now",
                 jvm_class.this_class

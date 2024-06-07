@@ -33,6 +33,7 @@ enum Command {
 
 fn main() {
     env_logger::init();
+    better_panic::install();
 
     let args = Args::parse();
 
