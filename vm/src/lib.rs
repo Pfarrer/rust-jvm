@@ -23,10 +23,19 @@ pub struct Vm {
 
 impl Vm {
     pub fn new(classloader: impl Classloader + 'static) -> Vm {
-        Vm {
+        let vm = Vm {
             classloader: Box::new(classloader),
             mem: VmMem::new(),
-        }
+        };
+
+        vm.spawn_thread("vm-init".to_string()).invoke_method(
+            &"java/lang/System".to_string(),
+            &"initPhase1".to_string(),
+            &"()V".to_string(),
+            false,
+        );
+
+        vm
     }
 
     pub fn spawn_thread(&self, thread_name: String) -> VmThread {

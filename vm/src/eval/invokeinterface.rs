@@ -18,8 +18,8 @@ pub fn eval(vm_thread: &mut VmThread, jvm_class: &JvmClass, code: &Vec<u8>, pc: 
         class_path
     };
 
-    match class.constants.get(index as usize).unwrap() {
-        &Constant::InterfaceMethodref(ref class_path, ref method_name, ref method_signature) => {
+    match jvm_class.constants.get(index as usize).unwrap() {
+        &ClassConstant::InterfaceMethodref(ref class_path, ref method_name, ref method_signature) => {
             debug!(
                 "invokeinterface: {}.{}{} on class {}",
                 class_path, method_name, method_signature, root_class_path

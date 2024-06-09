@@ -6,9 +6,9 @@ use vm::class_hierarchy::ClassHierarchy;
 
 pub fn eval(vm_thread: &mut VmThread, jvm_class: &JvmClass, code: &Vec<u8>, pc: u16) -> Option<u16> {
     let index = utils::read_u16_code(code, pc);
-    let constant = class.constants.get(index as usize).unwrap();
+    let constant = jvm_class.constants.get(index as usize).unwrap();
     let checkfor_class_name = match constant {
-        &Constant::Class(ref class_path) => class_path.clone(),
+        &ClassConstant::Class(ref class_path) => class_path.clone(),
         o => panic!("Unexpected constant: {:?}", o),
     };
 

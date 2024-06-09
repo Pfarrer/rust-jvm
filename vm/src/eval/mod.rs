@@ -43,14 +43,14 @@ mod if_x;
 // mod instanceof;
 // mod invokeinterface;
 // mod invokespecial;
-// mod invokestatic;
+mod invokestatic;
 mod invokevirtual;
 // mod ior;
 // mod irem;
 // mod ireturn;
 // mod ishl;
 // mod ishr;
-// mod istore_x;
+mod istore_x;
 // mod isub;
 // mod iushr;
 // mod ixor;
@@ -127,7 +127,7 @@ pub fn eval(
         // 54 => istore_x::eval(vm_thread, code, pc),
         // 55 => lstore_x::eval(vm_thread, code, pc),
         // 58 => astore_x::eval(vm_thread, code, pc),
-        // 59..=62 => istore_x::eval(vm_thread, code, pc),
+        59..=62 => istore_x::eval(vm_thread, code, pc),
         63..=66 => lstore_x::eval(vm_thread, code, pc),
         // 75..=78 => astore_x::eval(vm_thread, code, pc),
         // 79 => iastore::eval(vm_thread, pc),
@@ -179,7 +179,7 @@ pub fn eval(
         181 => putfield::eval(vm_thread, jvm_class, code, pc),
         182 => invokevirtual::eval(vm_thread, jvm_class, code, pc),
         // 183 => invokespecial::eval(vm_thread, jvm_class, code, pc),
-        // 184 => invokestatic::eval(vm_thread, jvm_class, code, pc),
+        184 => invokestatic::eval(vm_thread, jvm_class, code, pc),
         // 185 => invokeinterface::eval(vm_thread, jvm_class, code, pc),
         // 187 => new::eval(vm_thread, jvm_class, code, pc),
         // 188 => newarray::eval(vm_thread, code, pc),

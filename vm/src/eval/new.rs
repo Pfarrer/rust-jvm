@@ -9,8 +9,8 @@ use crate::{Primitive, VmThread};
 pub fn eval(vm_thread: &mut VmThread, jvm_class: &JvmClass, code: &Vec<u8>, pc: u16) -> Option<u16> {
     let index = utils::read_u16_code(code, pc);
 
-    match class.constants.get(index as usize).unwrap() {
-        &Constant::Class(ref class_path) => {
+    match jvm_class.constants.get(index as usize).unwrap() {
+        &ClassConstant::Class(ref class_path) => {
             let class = vm.load_and_clinit_class(class_path);
             let instance = Instance::new(vm, class);
 

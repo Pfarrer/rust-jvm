@@ -9,8 +9,14 @@ pub fn find_method(
     signature: &String,
 ) -> (JvmClass, ClassMethod) {
     // Loop through class hierarchy
+
+    print!("hierarchy_iter: {} ... ", root_class_path);
     let hierarchy_iter = HierarchyIterator::hierarchy_iter(vm_thread, root_class_path);
+    println!("done");
+
     for (class, _, _) in hierarchy_iter {
+        println!("find_method_in_classfile(&class, {}, {}): {}", name, signature, find_method_in_classfile(&class, name, signature).is_some());
+
         match find_method_in_classfile(&class, name, signature) {
             Some(method) => return (class, method),
             None => (),

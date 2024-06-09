@@ -137,10 +137,13 @@ impl<'a> VmThread<'a> {
             .get_class(&class_path)
             .expect(&format!("Class not found: {}", class_path));
 
-        let _lock = LOAD_AND_CLINIT_CLASS_MUTEX.lock().unwrap();
+        
         if !self.vm.mem.static_pool.has_class(class_path) {
+            println!("Aquire mutex ...");
+            let _lock = LOAD_AND_CLINIT_CLASS_MUTEX.lock().unwrap();
             self.vm.mem.static_pool.insert_class(class_path.clone());
             self.clinit_class(jvm_class);
+            println!("Release mutex ...");
         }
 
         jvm_class.clone()

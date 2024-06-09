@@ -31,17 +31,24 @@ enum Command {
     },
 }
 
+// fn main2() {
+//     env_logger::init();
+//     better_panic::install();
+
+//     let args = Args::parse();
+
+//     match args.command {
+//         Command::ListClasses { class_paths } => list_classes::run(class_paths),
+//         Command::Execute {
+//             main_class,
+//             class_paths,
+//         } => execute::run(main_class, class_paths),
+//     };
+// }
+
 fn main() {
     env_logger::init();
     better_panic::install();
 
-    let args = Args::parse();
-
-    match args.command {
-        Command::ListClasses { class_paths } => list_classes::run(class_paths),
-        Command::Execute {
-            main_class,
-            class_paths,
-        } => execute::run(main_class, class_paths),
-    };
+    execute::run("HelloWorld".into(), vec!["/home/coder/helloworld.jar".into(), "rt/jmods/java.base/classes/".into()]);
 }
