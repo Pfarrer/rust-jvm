@@ -6,3 +6,6 @@ edition = "2021"
 [dependencies]
 model = { path = "../model" }
 loader = { path = "../loader" }
+
+log = "0.4.17"
+anyhow = "1.0"

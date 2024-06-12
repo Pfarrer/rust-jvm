@@ -5,17 +5,11 @@ use crate::instance::Instance;
 use crate::primitive::Primitive;
 use crate::utils;
 use crate::Vm;
-use lazy_static::lazy_static;
 use log::{debug, trace};
 use model::prelude::*;
 use parser::method_signature::parse_method_signature;
 use std::cell::RefCell;
 use std::rc::Rc;
-use std::sync::Mutex;
-
-lazy_static! {
-    static ref LOAD_AND_CLINIT_CLASS_MUTEX: Mutex<i32> = Mutex::new(0);
-}
 
 pub struct VmThread<'a> {
     pub(crate) vm: &'a Vm,
@@ -66,6 +60,7 @@ impl<'a> VmThread<'a> {
                     )
                     .as_str(),
                 );
+
             native_method();
         } else {
             let code_attr = utils::find_code(&method).unwrap();
@@ -74,7 +69,7 @@ impl<'a> VmThread<'a> {
                 method_name,
                 method_signature,
                 code_attr.max_locals,
-                is_instance,
+                is_instance
             );
 
             self.execute_method(&class, code_attr, frame);
@@ -139,11 +134,8 @@ impl<'a> VmThread<'a> {
 
         
         if !self.vm.mem.static_pool.has_class(class_path) {
-            println!("Aquire mutex ...");
-            let _lock = LOAD_AND_CLINIT_CLASS_MUTEX.lock().unwrap();
             self.vm.mem.static_pool.insert_class(class_path.clone());
             self.clinit_class(jvm_class);
-            println!("Release mutex ...");
         }
 
         jvm_class.clone()

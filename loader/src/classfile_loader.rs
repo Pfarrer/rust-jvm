@@ -14,7 +14,7 @@ pub struct ClassfileLoader {
 }
 
 impl ClassfileLoader {
-    pub fn open(path: impl AsRef<Path>, _parser: &impl Parser) -> Result<ClassfileLoader> {
+    pub fn open(path: impl AsRef<Path>, parser: &impl Parser) -> Result<ClassfileLoader> {
         let class_cache = find_all_classfile_paths(path.as_ref())?
             .iter()
             .filter(|file_path| !file_path.ends_with("module-info.class"))

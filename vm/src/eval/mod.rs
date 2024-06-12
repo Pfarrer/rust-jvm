@@ -12,7 +12,7 @@ mod aconst_null;
 // mod caload;
 // mod castore;
 // mod checkcast;
-// mod dup;
+mod dup;
 // mod dup2;
 // mod dup2_x1;
 // mod dup_x1;
@@ -42,7 +42,7 @@ mod if_x;
 // mod imul;
 // mod instanceof;
 // mod invokeinterface;
-// mod invokespecial;
+mod invokespecial;
 mod invokestatic;
 mod invokevirtual;
 // mod ior;
@@ -68,7 +68,7 @@ mod lstore_x;
 // mod lxor;
 // mod monitorenter;
 // mod monitorexit;
-// mod new;
+mod new;
 // mod newarray;
 // mod pop;
 // mod pop2;
@@ -136,7 +136,7 @@ pub fn eval(
         // 85 => castore::eval(vm_thread, pc),
         // 87 => pop::eval(vm_thread, pc),
         // 88 => pop2::eval(vm_thread, pc),
-        // 89 => dup::eval(vm_thread, pc),
+        89 => dup::eval(vm_thread, pc),
         // 90 => dup_x1::eval(vm_thread, pc),
         // 92 => dup2::eval(vm_thread, pc),
         // 93 => dup2_x1::eval(vm_thread, pc),
@@ -178,10 +178,10 @@ pub fn eval(
         // 180 => getfield::eval(vm_thread, jvm_class, code, pc),
         181 => putfield::eval(vm_thread, jvm_class, code, pc),
         182 => invokevirtual::eval(vm_thread, jvm_class, code, pc),
-        // 183 => invokespecial::eval(vm_thread, jvm_class, code, pc),
+        183 => invokespecial::eval(vm_thread, jvm_class, code, pc),
         184 => invokestatic::eval(vm_thread, jvm_class, code, pc),
         // 185 => invokeinterface::eval(vm_thread, jvm_class, code, pc),
-        // 187 => new::eval(vm_thread, jvm_class, code, pc),
+        187 => new::eval(vm_thread, jvm_class, code, pc),
         // 188 => newarray::eval(vm_thread, code, pc),
         // 189 => anewarray::eval(vm_thread, jvm_class, code, pc),
         // 190 => arraylength::eval(vm_thread, pc),
