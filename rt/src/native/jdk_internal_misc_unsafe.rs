@@ -2,11 +2,11 @@ use log::trace;
 use model::prelude::*;
 
 pub fn get_method(
-    jvm_class: &JvmClass,
+    _jvm_class: &JvmClass,
     class_method: &ClassMethod,
 ) -> Option<NativeMethod> {
     match class_method.name.as_str() {
-        "registerNatives" => Some(register_natives(jvm_class, class_method)), // ()V
+        "registerNatives" => Some(register_natives), // ()V
         // "objectFieldOffset" => object_field_offset(vm, class_path, method_name, method_signature), // (Ljava/lang/reflect/Field;)J
         // "allocateMemory" => allocate_memory(vm, class_path, method_name, method_signature), // (J)J
         // "freeMemory" => free_memory(vm, class_path, method_name, method_signature), // (J)V
@@ -16,11 +16,8 @@ pub fn get_method(
     }
 }
 
-fn register_natives(jvm_class: &JvmClass, class_method: &ClassMethod) -> NativeMethod {
-    || {
-        // trace!("Execute native {}.{}{}", jvm_class.this_class, class_method.name, class_method.descriptor);
-        // Nothing to do
-    }
+fn register_natives() {
+    trace!("Execute native jdk/internal/misc/Unsave.registerNatives()V");
 }
 
 // /// (Ljava/lang/reflect/Field;)J

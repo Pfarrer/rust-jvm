@@ -2,6 +2,7 @@ use model::prelude::*;
 
 mod java_lang_object;
 mod java_lang_system;
+mod java_lang_class;
 mod jdk_internal_misc_unsafe;
 
 pub fn get_method(
@@ -11,7 +12,7 @@ pub fn get_method(
     match jvm_class.this_class.as_str() {
         "java/lang/Object" => java_lang_object::get_method(jvm_class, class_method),
         "java/lang/System" => java_lang_system::get_method(jvm_class, class_method),
-        // "java/lang/Class" => java_lang_class::invoke(jvm_class, class_method),
+        "java/lang/Class" => java_lang_class::get_method(jvm_class, class_method),
         // "java/lang/ClassLoader" => java_lang_class_loader::invoke(class_path, method_name, method_signature),
         // "java/lang/ClassLoader$NativeLibrary" => java_lang_class_loader_native_library::invoke(jvm_class, class_method),
         // "java/security/AccessController" => java_lang_accesscontroller::invoke(jvm_class, class_method),
