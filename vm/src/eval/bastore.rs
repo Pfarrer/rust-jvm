@@ -19,7 +19,7 @@ pub fn eval(vm_thread: &mut VmThread, pc: u16) -> Option<u16> {
     }
 
     trace!(
-        "bastore: Read three values from stack and store {} in array index {}",
+        "bastore: Read three values from stack and store {:?} in array index {}",
         array.elements[index],
         index
     );

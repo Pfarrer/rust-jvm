@@ -1,12 +1,10 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use classfile::constants::Constant;
-use model::class::*;
-use vm::array::Array;
+use model::prelude::*;
+use crate::array::Array;
 use crate::{Primitive, VmThread};
-use vm::utils;
-use crate::{Primitive, VmThread};
+use crate::utils;
 
 pub fn eval(vm_thread: &mut VmThread, jvm_class: &JvmClass, code: &Vec<u8>, pc: u16) -> Option<u16> {
     let frame = vm_thread.frame_stack.last_mut().unwrap();

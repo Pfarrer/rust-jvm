@@ -1,5 +1,5 @@
 use crate::{utils, VmThread};
-use model::class::*;
+use model::prelude::*;
 
 pub fn eval(
     vm_thread: &mut VmThread,

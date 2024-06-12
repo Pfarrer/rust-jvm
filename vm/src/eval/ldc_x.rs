@@ -1,5 +1,5 @@
 use crate::{utils, Primitive, VmThread};
-use model::class::*;
+use model::prelude::*;
 
 /// Can handle instructions ldc (decimal 18) and ldc_2 (decimal 19).
 pub fn eval(

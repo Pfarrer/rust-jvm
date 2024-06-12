@@ -1,5 +1,5 @@
 use crate::{utils, VmThread};
-use model::class::*;
+use model::prelude::*;
 
 pub fn eval(vm_thread: &mut VmThread, jvm_class: &JvmClass, code: &Vec<u8>, pc: u16) -> Option<u16> {
     let index = utils::read_u16_code(code, pc);

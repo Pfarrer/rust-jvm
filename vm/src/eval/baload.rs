@@ -1,4 +1,4 @@
-use crate::{Primitive, VmThread};
+use crate::VmThread;
 
 pub fn eval(vm_thread: &mut VmThread, pc: u16) -> Option<u16> {
     let (value, index) = {
@@ -14,7 +14,7 @@ pub fn eval(vm_thread: &mut VmThread, pc: u16) -> Option<u16> {
     };
 
     trace!(
-        "bastore: Read two values from stack and push {} to stack from array at index {}",
+        "bastore: Read two values from stack and push {:?} to stack from array at index {}",
         value,
         index
     );

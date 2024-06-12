@@ -1,6 +1,5 @@
-use classfile::constants::Constant;
-use model::class::*;
-use vm::utils;
+use model::prelude::*;
+use crate::utils;
 use crate::{Primitive, VmThread};
 
 pub fn eval(vm_thread: &mut VmThread, jvm_class: &JvmClass, code: &Vec<u8>, pc: u16) -> Option<u16> {
@@ -24,7 +23,7 @@ pub fn eval(vm_thread: &mut VmThread, jvm_class: &JvmClass, code: &Vec<u8>, pc: 
                 "invokeinterface: {}.{}{} on class {}",
                 class_path, method_name, method_signature, root_class_path
             );
-            utils::invoke_method(vm, &root_class_path, method_name, method_signature, true);
+            vm_thread.invoke_method(&root_class_path, method_name, &method_signature.to_string(), true);
         }
         it => panic!("Unexpected constant ref: {:?}", it),
     };

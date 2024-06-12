@@ -97,7 +97,7 @@ mod tests {
 
         let loader = ClassfileLoader::open(self::testdata_path(), &mock_parser).unwrap();
         assert_eq!(1, loader.class_cache.len());
-        loader.get_class("fundamentals/Empty").unwrap();
+        loader.get_class("fundamentals/EmptyClass").unwrap();
 
         let result = loader.get_class("no/valid/Cp");
         assert!(result.is_none());
