@@ -1,8 +1,13 @@
-use model::prelude::*;
 use crate::utils;
 use crate::VmThread;
+use model::prelude::*;
 
-pub fn eval(vm_thread: &mut VmThread, jvm_class: &JvmClass, code: &Vec<u8>, pc: u16) -> Option<u16> {
+pub fn eval(
+    vm_thread: &mut VmThread,
+    jvm_class: &JvmClass,
+    code: &Vec<u8>,
+    pc: u16,
+) -> Option<u16> {
     let index = utils::read_u16_code(code, pc);
     match jvm_class.constants.get(index as usize).unwrap() {
         &ClassConstant::Fieldref(ref class_path, ref field_name, _) => {

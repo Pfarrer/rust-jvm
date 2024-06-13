@@ -4,10 +4,7 @@
 use log::trace;
 use model::prelude::*;
 
-pub fn get_method(
-    jvm_class: &JvmClass,
-    class_method: &ClassMethod,
-) -> Option<NativeMethod> {
+pub fn get_method(_jvm_class: &JvmClass, class_method: &ClassMethod) -> Option<NativeMethod> {
     match class_method.name.as_str() {
         "registerNatives" => Some(register_natives),
         // "currentTimeMillis" => current_time_millis(vm, class_path, method_name, method_signature), // ()J
@@ -170,7 +167,6 @@ fn register_natives() {
 //         .insert("err".to_string(), Primitive::Objectref(rc_stream));
 // }
 
-
 // /// (Ljava/lang/String;)Ljava/lang/String;
 // fn map_library_name(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
 //     trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
@@ -179,7 +175,7 @@ fn register_natives() {
 //         let frame = vm.frame_stack.last_mut().unwrap();
 //         let rc_string = frame.stack_pop_objectref();
 //         let libname_string = rc_string.borrow();
-        
+
 //         utils::get_java_string_value(&*libname_string)
 //     };
 

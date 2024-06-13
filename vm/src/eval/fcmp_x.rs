@@ -1,5 +1,5 @@
-use std::f32::NAN;
 use crate::{Primitive, VmThread};
+use std::f32::NAN;
 
 pub fn eval(vm_thread: &mut VmThread, code: &Vec<u8>, pc: u16) -> Option<u16> {
     let frame = vm_thread.frame_stack.last_mut().unwrap();

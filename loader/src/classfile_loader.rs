@@ -14,7 +14,7 @@ pub struct ClassfileLoader {
 }
 
 impl ClassfileLoader {
-    pub fn open(path: impl AsRef<Path>, parser: &impl Parser) -> Result<ClassfileLoader> {
+    pub fn open(path: impl AsRef<Path>, _parser: &impl Parser) -> Result<ClassfileLoader> {
         let class_cache = find_all_classfile_paths(path.as_ref())?
             .iter()
             .filter(|file_path| !file_path.ends_with("module-info.class"))
@@ -38,18 +38,14 @@ impl Classloader for ClassfileLoader {
     }
 
     fn get_class(&self, classpath: &str) -> Option<&JvmClass> {
-        self.class_cache
-        .get(classpath)
-        .map(|(file_path, cell)| {
+        self.class_cache.get(classpath).map(|(file_path, cell)| {
             let file = File::open(file_path).unwrap();
             let mut reader = BufReader::new(file);
-            
+
             cell.get_or_init(|| {
                 debug!("Parsing classfile {}...", file_path.display());
 
-                ClassfileParser {}
-                    .parse(&mut reader)
-                    .unwrap()
+                ClassfileParser {}.parse(&mut reader).unwrap()
             })
         })
     }

@@ -11,7 +11,7 @@ impl Classloader for RtClassloader {
     fn list_classes(&self) -> Vec<&str> {
         self.classfile_loader.list_classes()
     }
-    
+
     fn get_class(&self, classpath: &str) -> Option<&JvmClass> {
         self.classfile_loader.get_class(classpath)
     }

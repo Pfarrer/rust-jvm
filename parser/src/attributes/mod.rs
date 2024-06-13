@@ -50,8 +50,7 @@ pub fn parse_attribute<T: Read>(
         | "NestMembers"
         | "Synthetic"
         | "LocalVariableTypeTable"
-        | "AnnotationDefault"
-         => {
+        | "AnnotationDefault" => {
             let attribute_length = util::read_u32(reader)? as usize;
             if attribute_length > 0 {
                 util::read_raw(reader, attribute_length)?;

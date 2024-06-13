@@ -69,7 +69,7 @@ impl<'a> VmThread<'a> {
                 method_name,
                 method_signature,
                 code_attr.max_locals,
-                is_instance
+                is_instance,
             );
 
             self.execute_method(&class, code_attr, frame);
@@ -132,7 +132,6 @@ impl<'a> VmThread<'a> {
             .get_class(&class_path)
             .expect(&format!("Class not found: {}", class_path));
 
-        
         if !self.vm.mem.static_pool.has_class(class_path) {
             self.vm.mem.static_pool.insert_class(class_path.clone());
             self.clinit_class(jvm_class);

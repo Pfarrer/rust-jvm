@@ -1,14 +1,11 @@
 use model::prelude::*;
 
+mod java_lang_class;
 mod java_lang_object;
 mod java_lang_system;
-mod java_lang_class;
 mod jdk_internal_misc_unsafe;
 
-pub fn get_method(
-    jvm_class: &JvmClass,
-    class_method: &ClassMethod,
-) -> Option<NativeMethod> {
+pub fn get_method(jvm_class: &JvmClass, class_method: &ClassMethod) -> Option<NativeMethod> {
     match jvm_class.this_class.as_str() {
         "java/lang/Object" => java_lang_object::get_method(jvm_class, class_method),
         "java/lang/System" => java_lang_system::get_method(jvm_class, class_method),
@@ -33,7 +30,6 @@ pub fn get_method(
         // "sun/misc/Signal" => sun_misc_signal::invoke(jvm_class, class_method),
         // "java/lang/Float" => java_lang_float::invoke(jvm_class, class_method),
         // "java/lang/Double" => java_lang_double::invoke(jvm_class, class_method),
-
         _ => None,
     }
 }

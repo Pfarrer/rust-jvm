@@ -193,12 +193,18 @@ fn parse_dynamic<T: Read>(reader: &mut T) -> Result<RawConstant> {
     let bootstrap_method_attr_index = util::read_u16(reader)?;
     let name_and_type_index = util::read_u16(reader)?;
 
-    Ok(RawConstant::Dynamic(bootstrap_method_attr_index, name_and_type_index))
+    Ok(RawConstant::Dynamic(
+        bootstrap_method_attr_index,
+        name_and_type_index,
+    ))
 }
 
 fn parse_invoke_dynamic<T: Read>(reader: &mut T) -> Result<RawConstant> {
     let bootstrap_method_attr_index = util::read_u16(reader)?;
     let name_and_type_index = util::read_u16(reader)?;
 
-    Ok(RawConstant::InvokeDynamic(bootstrap_method_attr_index, name_and_type_index))
+    Ok(RawConstant::InvokeDynamic(
+        bootstrap_method_attr_index,
+        name_and_type_index,
+    ))
 }

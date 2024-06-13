@@ -1,9 +1,14 @@
-use model::prelude::*;
-use crate::{Primitive, VmThread};
-use crate::utils;
 use crate::class_hierarchy::HierarchyIterator;
+use crate::utils;
+use crate::{Primitive, VmThread};
+use model::prelude::*;
 
-pub fn eval(vm_thread: &mut VmThread, jvm_class: &JvmClass, code: &Vec<u8>, pc: u16) -> Option<u16> {
+pub fn eval(
+    vm_thread: &mut VmThread,
+    jvm_class: &JvmClass,
+    code: &Vec<u8>,
+    pc: u16,
+) -> Option<u16> {
     let index = utils::read_u16_code(code, pc);
     let constant = jvm_class.constants.get(index as usize).unwrap();
     let checkfor_class_name = match constant {
@@ -12,12 +17,18 @@ pub fn eval(vm_thread: &mut VmThread, jvm_class: &JvmClass, code: &Vec<u8>, pc: 
     };
 
     let instance_class_name = pop_instance_and_get_class_name(vm_thread);
-    
-    let value = instance_class_name.as_ref()
+
+    let value = instance_class_name
+        .as_ref()
         .map(|name| for_class_instance(vm_thread, &checkfor_class_name, &name))
         .unwrap_or(0i32);
 
-    trace!("instanceof: Checking if {} is instance of {} -> {}", checkfor_class_name, instance_class_name.unwrap_or("null".to_owned()), value);
+    trace!(
+        "instanceof: Checking if {} is instance of {} -> {}",
+        checkfor_class_name,
+        instance_class_name.unwrap_or("null".to_owned()),
+        value
+    );
 
     let frame = vm_thread.frame_stack.last_mut().unwrap();
     frame.stack_push(Primitive::Int(value));
@@ -35,7 +46,11 @@ fn pop_instance_and_get_class_name(vm_thread: &mut VmThread) -> Option<String> {
     }
 }
 
-fn for_class_instance(vm_thread: &mut VmThread, checkfor_class_name: &String, instance_class_path: &String) -> i32 {
+fn for_class_instance(
+    vm_thread: &mut VmThread,
+    checkfor_class_name: &String,
+    instance_class_path: &String,
+) -> i32 {
     let hierarchy_iter = HierarchyIterator::hierarchy_iter(vm_thread, &instance_class_path);
     for (class, _, _) in hierarchy_iter {
         if checkfor_class_name.eq(&class.this_class) {

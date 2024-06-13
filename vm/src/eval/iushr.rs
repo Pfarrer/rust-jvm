@@ -13,7 +13,12 @@ pub fn eval(vm_thread: &mut VmThread, pc: u16) -> Option<u16> {
         (value1 >> s) + (2 << !s)
     };
 
-    trace!("iushr: Shifting {} right unsigned by {} -> pushing {} to stack", value1, s, result);
+    trace!(
+        "iushr: Shifting {} right unsigned by {} -> pushing {} to stack",
+        value1,
+        s,
+        result
+    );
     frame.stack_push(Primitive::Int(result));
 
     Some(pc + 1)

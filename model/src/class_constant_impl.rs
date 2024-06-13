@@ -1,6 +1,9 @@
 use anyhow::{bail, Context, Result};
 
-use crate::{class::ClassConstant, prelude::{ClassConstants, MethodSignature}};
+use crate::{
+    class::ClassConstant,
+    prelude::{ClassConstants, MethodSignature},
+};
 
 impl ClassConstant {
     pub fn ok_and_utf8_or(&self) -> Result<&String> {
@@ -19,7 +22,9 @@ impl ClassConstant {
 
     pub fn ok_and_methodref_or(&self) -> Result<(&String, &String, &MethodSignature)> {
         match self {
-            &ClassConstant::Methodref(ref class_path, ref method_name, ref method_signature) => Ok((class_path, method_name, method_signature)),
+            &ClassConstant::Methodref(ref class_path, ref method_name, ref method_signature) => {
+                Ok((class_path, method_name, method_signature))
+            }
             it => bail!("Expected Methodref but found {:?}", it),
         }
     }

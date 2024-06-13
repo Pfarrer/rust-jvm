@@ -1,4 +1,4 @@
-use crate::{Primitive, VmThread};
+use crate::VmThread;
 
 pub fn eval(vm_thread: &mut VmThread, code: &Vec<u8>, pc: u16) -> Option<u16> {
     // Check which instruction triggered this call, if it was aload, then one byte should be read,

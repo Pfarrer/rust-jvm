@@ -10,15 +10,15 @@ pub fn eval(vm_thread: &mut VmThread) -> Option<u16> {
         Primitive::Objectref(_) => {
             trace!("areturn: Popped Reference from stack, returning to parent method");
             parent_frame.stack_push(ret_val);
-        },
+        }
         Primitive::Arrayref(_) => {
             trace!("areturn: Popped Array from stack, returning to parent method");
             parent_frame.stack_push(ret_val);
-        },
+        }
         Primitive::Null => {
             trace!("areturn: Popped Null from stack, returning to parent method");
             parent_frame.stack_push(ret_val);
-        },
+        }
         v => panic!("Popped {:?} from stack but expected a Reference or Null", v),
     };
 

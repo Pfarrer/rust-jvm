@@ -1,12 +1,17 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use model::prelude::*;
 use crate::array::Array;
-use crate::{Primitive, VmThread};
 use crate::utils;
+use crate::{Primitive, VmThread};
+use model::prelude::*;
 
-pub fn eval(vm_thread: &mut VmThread, jvm_class: &JvmClass, code: &Vec<u8>, pc: u16) -> Option<u16> {
+pub fn eval(
+    vm_thread: &mut VmThread,
+    jvm_class: &JvmClass,
+    code: &Vec<u8>,
+    pc: u16,
+) -> Option<u16> {
     let frame = vm_thread.frame_stack.last_mut().unwrap();
     let count = frame.stack_pop_int();
     let index = utils::read_u16_code(code, pc);

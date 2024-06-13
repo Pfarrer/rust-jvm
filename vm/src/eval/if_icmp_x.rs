@@ -1,5 +1,5 @@
 use crate::utils;
-use crate::{Primitive, VmThread};
+use crate::VmThread;
 
 pub fn eval(vm_thread: &mut VmThread, code: &Vec<u8>, pc: u16) -> Option<u16> {
     let frame = vm_thread.frame_stack.last_mut().unwrap();
@@ -16,7 +16,13 @@ pub fn eval(vm_thread: &mut VmThread, code: &Vec<u8>, pc: u16) -> Option<u16> {
         _ => panic!("if_icmp_x::eval was called on a non if_icmp_x instruction."),
     };
 
-    trace!("if_icmp{}: {} and {} -> {}", instr_name, value1, value2, cmp_result);
+    trace!(
+        "if_icmp{}: {} and {} -> {}",
+        instr_name,
+        value1,
+        value2,
+        cmp_result
+    );
 
     if cmp_result {
         let branchoffset = utils::read_i16_code(code, pc);
