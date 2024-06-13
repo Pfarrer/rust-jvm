@@ -15,5 +15,5 @@ See it in action:
 
 - [ ] Java 11
   - [x] Parse Classfiles
-  - [ ] Initialize VM & Runtime
+  - [x] Initialize VM & Runtime
   - [ ] Run simple HelloWorld

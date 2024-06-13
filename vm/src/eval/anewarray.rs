@@ -1,9 +1,9 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use crate::array::Array;
+use crate::array::VmArray;
 use crate::utils;
-use crate::{Primitive, VmThread};
+use crate::{VmPrimitive, VmThread};
 use model::prelude::*;
 
 pub fn eval(
@@ -26,12 +26,12 @@ pub fn eval(
     };
 
     trace!(
-        "anewarray: Create new Array of length {} and push Arrayref to stack",
+        "anewarray: Create new VmArray of length {} and push Arrayref to stack",
         count
     );
 
-    let array = Array::new_complex(count as usize, class_path);
-    frame.stack_push(Primitive::Arrayref(Rc::new(RefCell::new(array))));
+    let array = VmArray::new_complex(count as usize, class_path);
+    frame.stack_push(VmPrimitive::Arrayref(Rc::new(RefCell::new(array))));
 
     Some(pc + 3)
 }

@@ -1,4 +1,4 @@
-use crate::{Primitive, VmThread};
+use crate::{VmPrimitive, VmThread};
 
 /// Can handle instructions lload and lload_<n>.
 pub fn eval(vm_thread: &mut VmThread, code: &Vec<u8>, pc: u16) -> Option<u16> {
@@ -20,7 +20,7 @@ pub fn eval(vm_thread: &mut VmThread, code: &Vec<u8>, pc: u16) -> Option<u16> {
         value
     );
 
-    frame.stack_push(Primitive::Long(value));
+    frame.stack_push(VmPrimitive::Long(value));
 
     Some(pc + pc_inc)
 }

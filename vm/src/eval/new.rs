@@ -3,8 +3,8 @@ use model::prelude::*;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use crate::instance::Instance;
-use crate::primitive::Primitive;
+use crate::instance::VmInstance;
+use crate::primitive::VmPrimitive;
 use crate::utils;
 use crate::vm_thread::VmThread;
 
@@ -18,11 +18,11 @@ pub fn eval(
 
     let class_path = jvm_class.constants.get_class_or(index).unwrap();
     let class = vm_thread.load_and_clinit_class(class_path);
-    let instance = Instance::new(vm_thread, &class);
+    let instance = VmInstance::new(vm_thread, &class);
 
     trace!("new: {} -> Pushing reference to stack", class_path);
     let frame = vm_thread.frame_stack.last_mut().unwrap();
-    frame.stack_push(Primitive::Objectref(Rc::new(RefCell::new(instance))));
+    frame.stack_push(VmPrimitive::Objectref(Rc::new(RefCell::new(instance))));
 
     Some(pc + 3)
 }

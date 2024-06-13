@@ -1,10 +1,5 @@
-use crate::array::Array;
-use crate::eval::eval;
-use crate::frame::Frame;
-use crate::instance::Instance;
-use crate::primitive::Primitive;
+// use crate::eval::eval;
 use crate::utils;
-use crate::Vm;
 use log::{debug, trace};
 use model::prelude::*;
 use parser::method_signature::parse_method_signature;
@@ -14,23 +9,18 @@ use std::rc::Rc;
 pub struct VmThread<'a> {
     pub(crate) vm: &'a Vm,
     pub(crate) thread_name: String,
-    pub(crate) frame_stack: Vec<Frame>,
+    pub(crate) frame_stack: Vec<VmFrame>,
 }
 
 impl<'a> VmThread<'a> {
     pub fn new(vm: &'a Vm, thread_name: String) -> VmThread<'a> {
         // Create root frame
-        let mut frame = Frame::new(
-            0,
-            "<root_frame>".to_string(),
-            "<root_frame>".to_string(),
-            "<root_frame>".to_string(),
-        );
+        let mut frame = VmFrame::new(0, "<root_frame>".to_string(), "<root_frame>".to_string(), "<root_frame>".to_string());
 
         // Add args array
-        let args = Array::new_complex(0, "java/lang/String".to_string());
+        let args = VmArray::new_complex(0, "java/lang/String".to_string());
         let rc_args = Rc::new(RefCell::new(args));
-        frame.stack_push(Primitive::Arrayref(rc_args));
+        frame.stack_push(VmPrimitive::Arrayref(rc_args));
 
         VmThread {
             vm,
@@ -61,7 +51,7 @@ impl<'a> VmThread<'a> {
                     .as_str(),
                 );
 
-            native_method();
+            native_method(self);
         } else {
             let code_attr = utils::find_code(&method).unwrap();
             let frame = self.create_method_frame(
@@ -76,7 +66,7 @@ impl<'a> VmThread<'a> {
         }
     }
 
-    fn execute_method(&mut self, class: &JvmClass, code_attribute: &Code, frame: Frame) {
+    fn execute_method(&mut self, class: &JvmClass, code_attribute: &Code, frame: VmFrame) {
         trace!(
             "Executing {}.{}{}s in thread {} now...",
             frame.class_path,
@@ -89,21 +79,22 @@ impl<'a> VmThread<'a> {
         let mut pc = 0;
 
         loop {
-            match eval(self, class, &code_attribute.code, pc) {
-                Some(new_pc) => pc = new_pc,
-                None => break,
-            }
+            todo!()
+            // match eval(self, class, &code_attribute.code, pc) {
+            //     Some(new_pc) => pc = new_pc,
+            //     None => break,
+            // }
         }
 
         self.frame_stack.pop();
     }
 
-    pub fn get_java_class_instance_for(&mut self, class_path: &String) -> Rc<RefCell<Instance>> {
+    pub fn get_java_class_instance_for(&mut self, class_path: &String) -> Rc<RefCell<VmInstance>> {
         let jvm_class = self.load_and_clinit_class(&"java/lang/Class".to_string());
 
         // Create instance ...
         // THISISSHIT Should be located in the following lambda
-        let mut instance = Instance::new(self, &jvm_class);
+        let mut instance = VmInstance::new(self, &jvm_class);
 
         let rc_interned_class_path = self.vm.mem.string_pool.intern(self, class_path);
 
@@ -116,9 +107,9 @@ impl<'a> VmThread<'a> {
             .or_insert_with(|| {
                 instance.fields.insert(
                     "name".to_string(),
-                    Primitive::Objectref(rc_interned_class_path),
+                    VmPrimitive::Objectref(rc_interned_class_path),
                 );
-                // instance.fields.insert("classLoader".to_string(), Primitive::Objectref(rc_class_path));
+                // instance.fields.insert("classLoader".to_string(), VmPrimitive::Objectref(rc_class_path));
 
                 Rc::new(RefCell::new(instance))
             })
@@ -148,13 +139,13 @@ impl<'a> VmThread<'a> {
                 self.vm.mem.static_pool.set_class_field(
                     &jvm_class.this_class,
                     field.name.clone(),
-                    Primitive::get_default_value(&field.descriptor),
+                    VmPrimitive::get_default_value(&field.descriptor),
                 );
 
                 // Maybe there is a ConstantValue attribute, so check for that
                 for attr in field.attributes.iter() {
                     if let &ClassAttribute::ConstantValue(ref constant) = attr {
-                        let value = Primitive::from_constant(self.vm, constant);
+                        let value = VmPrimitive::from_constant(self.vm, constant);
 
                         // Set value
                         self.vm.mem.static_pool.set_class_field(
@@ -192,8 +183,8 @@ impl<'a> VmThread<'a> {
         method_signature: &String,
         max_locals: u16,
         is_instance: bool,
-    ) -> Frame {
-        let mut frame = Frame::new(
+    ) -> VmFrame {
+        let mut frame = VmFrame::new(
             max_locals,
             class_path.clone(),
             method_name.clone(),

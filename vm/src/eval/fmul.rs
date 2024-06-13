@@ -1,4 +1,4 @@
-use crate::{Primitive, VmThread};
+use crate::{VmPrimitive, VmThread};
 
 pub fn eval(vm_thread: &mut VmThread, pc: u16) -> Option<u16> {
     let frame = vm_thread.frame_stack.last_mut().unwrap();
@@ -13,7 +13,7 @@ pub fn eval(vm_thread: &mut VmThread, pc: u16) -> Option<u16> {
         result
     );
 
-    frame.stack_push(Primitive::Float(result));
+    frame.stack_push(VmPrimitive::Float(result));
 
     Some(pc + 1)
 }

@@ -1,14 +1,14 @@
-use crate::{Primitive, VmThread};
+use crate::{VmPrimitive, VmThread};
 use std::f32::NAN;
 
 pub fn eval(vm_thread: &mut VmThread, code: &Vec<u8>, pc: u16) -> Option<u16> {
     let frame = vm_thread.frame_stack.last_mut().unwrap();
     let value2 = match frame.stack_pop() {
-        Primitive::Float(val) => val,
+        VmPrimitive::Float(val) => val,
         _ => panic!("Value set conversion (§2.8.3) not implemented"),
     };
     let value1 = match frame.stack_pop() {
-        Primitive::Float(val) => val,
+        VmPrimitive::Float(val) => val,
         _ => panic!("Value set conversion (§2.8.3) not implemented"),
     };
 
@@ -39,7 +39,7 @@ pub fn eval(vm_thread: &mut VmThread, code: &Vec<u8>, pc: u16) -> Option<u16> {
         value2,
         result
     );
-    frame.stack_push(Primitive::Int(result));
+    frame.stack_push(VmPrimitive::Int(result));
 
     Some(pc + 1)
 }

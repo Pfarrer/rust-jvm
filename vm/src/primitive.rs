@@ -1,57 +1,35 @@
-use std::cell::RefCell;
-use std::rc::Rc;
-
-use crate::array::Array;
-use crate::instance::Instance;
 use crate::Vm;
-use model::class::{ClassConstant, TypeSignature};
+use model::prelude::*;
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum Primitive {
-    Boolean(bool),
-
-    Byte(u8),
-
-    Short(i16),
-    Char(u16),
-
-    Int(i32),
-    Float(f32),
-
-    Long(i64),
-    Double(f64),
-
-    Arrayref(Rc<RefCell<Array>>),
-    Objectref(Rc<RefCell<Instance>>),
-    ReturnAddress(u16),
-
-    Null,
+pub trait VmPrimitiveImpl {
+    fn get_default_value(sig: &TypeSignature) -> VmPrimitive;
+    fn from_constant(_vm: &Vm, constant: &ClassConstant) -> VmPrimitive;
 }
 
-impl Primitive {
-    pub fn get_default_value(sig: &TypeSignature) -> Primitive {
+impl VmPrimitiveImpl for VmPrimitive {
+    fn get_default_value(sig: &TypeSignature) -> VmPrimitive {
         match sig {
-            &TypeSignature::Boolean => Primitive::Boolean(false),
-            &TypeSignature::Byte => Primitive::Byte(0),
-            &TypeSignature::Short => Primitive::Short(0),
-            &TypeSignature::Char => Primitive::Char(0),
-            &TypeSignature::Int => Primitive::Int(0),
-            &TypeSignature::Float => Primitive::Float(0.0),
-            &TypeSignature::Long => Primitive::Long(0),
-            &TypeSignature::Double => Primitive::Double(0.0),
-            &TypeSignature::Class(_) => Primitive::Null,
-            &TypeSignature::Array(_) => Primitive::Null,
+            &TypeSignature::Boolean => VmPrimitive::Boolean(false),
+            &TypeSignature::Byte => VmPrimitive::Byte(0),
+            &TypeSignature::Short => VmPrimitive::Short(0),
+            &TypeSignature::Char => VmPrimitive::Char(0),
+            &TypeSignature::Int => VmPrimitive::Int(0),
+            &TypeSignature::Float => VmPrimitive::Float(0.0),
+            &TypeSignature::Long => VmPrimitive::Long(0),
+            &TypeSignature::Double => VmPrimitive::Double(0.0),
+            &TypeSignature::Class(_) => VmPrimitive::Null,
+            &TypeSignature::Array(_) => VmPrimitive::Null,
             _ => panic!("Default value not implemented for signature: {:?}", sig),
         }
     }
 
-    pub fn from_constant(_vm: &Vm, constant: &ClassConstant) -> Primitive {
+    fn from_constant(_vm: &Vm, constant: &ClassConstant) -> VmPrimitive {
         match constant {
-            &ClassConstant::Integer(value) => Primitive::Int(value),
-            &ClassConstant::Float(value) => Primitive::Float(value),
-            &ClassConstant::Long(value) => Primitive::Long(value),
-            &ClassConstant::Double(value) => Primitive::Double(value),
-            &ClassConstant::String(ref _value) => todo!(), //Primitive::Objectref(StringPool::intern(vm, value)),
+            &ClassConstant::Integer(value) => VmPrimitive::Int(value),
+            &ClassConstant::Float(value) => VmPrimitive::Float(value),
+            &ClassConstant::Long(value) => VmPrimitive::Long(value),
+            &ClassConstant::Double(value) => VmPrimitive::Double(value),
+            &ClassConstant::String(ref _value) => todo!(), //VmPrimitive::Objectref(VmStringPool::intern(vm, value)),
             c => panic!("Unexpected constant found: {:?}", c),
         }
     }

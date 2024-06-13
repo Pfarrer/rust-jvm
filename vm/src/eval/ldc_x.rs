@@ -1,4 +1,4 @@
-use crate::{utils, Primitive, VmThread};
+use crate::{utils, VmPrimitive, VmThread};
 use model::prelude::*;
 
 /// Can handle instructions ldc (decimal 18) and ldc_2 (decimal 19).
@@ -25,7 +25,7 @@ pub fn eval(
                 .frame_stack
                 .last_mut()
                 .unwrap()
-                .stack_push(Primitive::Objectref(rc_instance));
+                .stack_push(VmPrimitive::Objectref(rc_instance));
         }
         &ClassConstant::Float(ref value) => {
             trace!("{}: Pushing Float {} to stack", instr_name, value);
@@ -33,7 +33,7 @@ pub fn eval(
                 .frame_stack
                 .last_mut()
                 .unwrap()
-                .stack_push(Primitive::Float(value.clone()));
+                .stack_push(VmPrimitive::Float(value.clone()));
         }
         &ClassConstant::Integer(ref value) => {
             trace!("{}: Pushing Int {} to stack", instr_name, value);
@@ -41,7 +41,7 @@ pub fn eval(
                 .frame_stack
                 .last_mut()
                 .unwrap()
-                .stack_push(Primitive::Int(value.clone()));
+                .stack_push(VmPrimitive::Int(value.clone()));
         }
         &ClassConstant::Class(ref class_path) => {
             trace!("{}: Found Class {}", instr_name, class_path);
@@ -50,7 +50,7 @@ pub fn eval(
                 .frame_stack
                 .last_mut()
                 .unwrap()
-                .stack_push(Primitive::Objectref(rc_instance));
+                .stack_push(VmPrimitive::Objectref(rc_instance));
         }
         it => panic!("Unexpected constant ref: {:?}", it),
     };

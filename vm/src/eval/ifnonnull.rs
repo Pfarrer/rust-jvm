@@ -1,11 +1,11 @@
 use crate::utils;
-use crate::{Primitive, VmThread};
+use crate::{VmPrimitive, VmThread};
 
 pub fn eval(vm_thread: &mut VmThread, code: &Vec<u8>, pc: u16) -> Option<u16> {
     let frame = vm_thread.frame_stack.last_mut().unwrap();
     let value = frame.stack_pop_reference();
     match value {
-        Primitive::Null => {
+        VmPrimitive::Null => {
             trace!("ifnonnull: Popped Null from stack -> not branching");
 
             Some(pc + 3)

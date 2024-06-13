@@ -1,4 +1,4 @@
-use crate::{utils, Primitive, VmThread};
+use crate::{utils, VmPrimitive, VmThread};
 
 pub fn eval(vm_thread: &mut VmThread, code: &Vec<u8>, pc: u16) -> Option<u16> {
     let frame = vm_thread.frame_stack.last_mut().unwrap();
@@ -6,12 +6,12 @@ pub fn eval(vm_thread: &mut VmThread, code: &Vec<u8>, pc: u16) -> Option<u16> {
     let value1 = frame.stack_pop();
 
     let equals = match (&value1, &value2) {
-        (&Primitive::Objectref(ref rc_instance1), &Primitive::Objectref(ref rc_instance2)) => {
+        (&VmPrimitive::Objectref(ref rc_instance1), &VmPrimitive::Objectref(ref rc_instance2)) => {
             rc_instance1.eq(rc_instance2)
         }
-        (&Primitive::Objectref(_), &Primitive::Null) => false,
-        (&Primitive::Null, &Primitive::Objectref(_)) => false,
-        (&Primitive::Null, &Primitive::Null) => true,
+        (&VmPrimitive::Objectref(_), &VmPrimitive::Null) => false,
+        (&VmPrimitive::Null, &VmPrimitive::Objectref(_)) => false,
+        (&VmPrimitive::Null, &VmPrimitive::Null) => true,
         _ => panic!("Not implemented: {:?} -- {:?}", value1, value2),
     };
 

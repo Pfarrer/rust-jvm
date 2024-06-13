@@ -1,4 +1,4 @@
-use crate::{Primitive, VmThread};
+use crate::{VmPrimitive, VmThread};
 
 /// Can handle instructions lstore and lstore_<n>.
 pub fn eval(vm_thread: &mut VmThread, code: &Vec<u8>, pc: u16) -> Option<u16> {
@@ -21,7 +21,7 @@ pub fn eval(vm_thread: &mut VmThread, code: &Vec<u8>, pc: u16) -> Option<u16> {
         value
     );
 
-    frame.locals_write(index as usize, Primitive::Long(value));
+    frame.locals_write(index as usize, VmPrimitive::Long(value));
 
     Some(pc + pc_inc)
 }

@@ -1,24 +1,23 @@
-use crate::primitive::Primitive;
+use model::prelude::*;
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct Array {
-    pub atype: Option<u8>,
-    pub class_path: Option<String>,
-    pub elements: Vec<Primitive>,
+pub trait VmArrayImpl {
+    fn new_primitive(count: usize, atype: u8) -> VmArray;
+    fn new_complex(count: usize, class_path: String) -> VmArray;
+    fn new_complex_of(elements: Vec<VmPrimitive>, class_path: String) -> VmArray;
 }
 
-impl Array {
-    pub fn new_primitive(count: usize, atype: u8) -> Array {
+impl VmArrayImpl for VmArray {
+    fn new_primitive(count: usize, atype: u8) -> VmArray {
         let default_value = match atype {
-            4 => Primitive::Boolean(false),
-            5 => Primitive::Char(0),
-            6 => Primitive::Float(0.0),
-            7 => Primitive::Double(0.0),
-            8 => Primitive::Byte(0),
-            9 => Primitive::Short(0),
-            10 => Primitive::Int(0),
-            11 => Primitive::Long(0),
-            _ => panic!("Array atype {} not implemented!", atype),
+            4 => VmPrimitive::Boolean(false),
+            5 => VmPrimitive::Char(0),
+            6 => VmPrimitive::Float(0.0),
+            7 => VmPrimitive::Double(0.0),
+            8 => VmPrimitive::Byte(0),
+            9 => VmPrimitive::Short(0),
+            10 => VmPrimitive::Int(0),
+            11 => VmPrimitive::Long(0),
+            _ => panic!("VmArray atype {} not implemented!", atype),
         };
 
         let mut elements = Vec::with_capacity(count as usize);
@@ -26,30 +25,30 @@ impl Array {
             elements.push(default_value.clone());
         }
 
-        Array {
+        VmArray {
             atype: Some(atype),
             class_path: None,
             elements,
         }
     }
 
-    pub fn new_complex(count: usize, class_path: String) -> Array {
-        let default_value = Primitive::Null;
+    fn new_complex(count: usize, class_path: String) -> VmArray {
+        let default_value = VmPrimitive::Null;
 
         let mut elements = Vec::with_capacity(count);
         for _ in 0..count {
             elements.push(default_value.clone());
         }
 
-        Array {
+        VmArray {
             atype: None,
             class_path: Some(class_path),
             elements,
         }
     }
 
-    pub fn new_complex_of(elements: Vec<Primitive>, class_path: String) -> Array {
-        Array {
+    fn new_complex_of(elements: Vec<VmPrimitive>, class_path: String) -> VmArray {
+        VmArray {
             atype: None,
             class_path: Some(class_path),
             elements,

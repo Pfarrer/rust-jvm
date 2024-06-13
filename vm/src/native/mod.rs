@@ -14,7 +14,7 @@ pub fn get_method(jvm_class: &JvmClass, class_method: &ClassMethod) -> Option<Na
         // "java/lang/ClassLoader$NativeLibrary" => java_lang_class_loader_native_library::invoke(jvm_class, class_method),
         // "java/security/AccessController" => java_lang_accesscontroller::invoke(jvm_class, class_method),
         // "java/lang/String" => java_lang_string::invoke(jvm_class, class_method),
-        // "java/lang/Thread" => java_lang_thread::invoke(jvm_class, class_method),
+        // "java/lang/VmThread" => java_lang_thread::invoke(jvm_class, class_method),
         // "java/lang/Throwable" => java_lang_throwable::invoke(jvm_class, class_method),
         // "java/io/ObjectStreamClass" => java_io_objectstreamclass::invoke(class_path, method_name, method_signature),
         // "java/io/FileInputStream" => java_io_fileinputstream::invoke(class_path, method_name, method_signature),

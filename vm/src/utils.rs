@@ -1,18 +1,14 @@
-use crate::array::Array;
 use crate::class_hierarchy::HierarchyIterator;
-use crate::instance::Instance;
-use crate::primitive::Primitive;
-use crate::VmThread;
 use model::prelude::*;
 
 pub fn find_method(
-    vm_thread: &mut VmThread,
+    thread: &mut VmThread,
     root_class_path: &String,
     name: &String,
     signature: &String,
 ) -> (JvmClass, ClassMethod) {
     // Loop through class hierarchy
-    let hierarchy_iter = HierarchyIterator::hierarchy_iter(vm_thread, root_class_path);
+    let hierarchy_iter = HierarchyIterator::hierarchy_iter(thread, root_class_path);
     for (class, _, _) in hierarchy_iter {
         match find_method_in_classfile(&class, name, signature) {
             Some(method) => return (class, method),
@@ -78,12 +74,12 @@ pub fn read_i32_code(code: &Vec<u8>, pc: u16, offset: u16) -> i32 {
     ((byte1 << 24) | (byte2 << 16) | (byte3 << 8) | byte4) as i32
 }
 
-pub fn get_java_byte_array_string_value(value_array: &Array) -> String {
+pub fn get_java_byte_array_string_value(value_array: &VmArray) -> String {
     let element_values: Vec<u16> = value_array
         .elements
         .iter()
         .map(|p| match p {
-            &Primitive::Char(ref code) => *code,
+            &VmPrimitive::Char(ref code) => *code,
             p => panic!("Unexpected primitive: {:?}", p),
         })
         .collect();
@@ -91,21 +87,21 @@ pub fn get_java_byte_array_string_value(value_array: &Array) -> String {
     String::from_utf16_lossy(element_values.as_slice())
 }
 
-pub fn get_java_string_value(string_instance: &Instance) -> String {
+pub fn get_java_string_value(string_instance: &VmInstance) -> String {
     match string_instance.fields.get("value").unwrap() {
-        &Primitive::Arrayref(ref rc_value_array) => {
+        &VmPrimitive::Arrayref(ref rc_value_array) => {
             get_java_byte_array_string_value(&*rc_value_array.borrow())
         }
         p => panic!("Unexpected primitive: {:?}", p),
     }
 }
 
-pub fn get_instance_field_string_value(class_instance: &Instance, field_name: &str) -> String {
+pub fn get_instance_field_string_value(class_instance: &VmInstance, field_name: &str) -> String {
     let rc_string = class_instance.fields.get(field_name).unwrap();
     match rc_string {
-        &Primitive::Objectref(ref rc_string_instance) => {
+        &VmPrimitive::Objectref(ref rc_string_instance) => {
             get_java_string_value(&*rc_string_instance.borrow())
         }
-        _ => panic!("Expected to find Instance but found {:?}", rc_string),
+        _ => panic!("Expected to find VmInstance but found {:?}", rc_string),
     }
 }

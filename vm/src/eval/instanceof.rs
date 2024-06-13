@@ -1,6 +1,6 @@
 use crate::class_hierarchy::HierarchyIterator;
 use crate::utils;
-use crate::{Primitive, VmThread};
+use crate::{VmPrimitive, VmThread};
 use model::prelude::*;
 
 pub fn eval(
@@ -31,7 +31,7 @@ pub fn eval(
     );
 
     let frame = vm_thread.frame_stack.last_mut().unwrap();
-    frame.stack_push(Primitive::Int(value));
+    frame.stack_push(VmPrimitive::Int(value));
 
     Some(pc + 3)
 }
@@ -40,8 +40,8 @@ fn pop_instance_and_get_class_name(vm_thread: &mut VmThread) -> Option<String> {
     let frame = vm_thread.frame_stack.last_mut().unwrap();
     let reference = frame.stack_pop();
     match reference {
-        Primitive::Objectref(ref rc_instance) => Some(rc_instance.borrow().class_path.clone()),
-        Primitive::Null => None,
+        VmPrimitive::Objectref(ref rc_instance) => Some(rc_instance.borrow().class_path.clone()),
+        VmPrimitive::Null => None,
         _ => panic!("Unexpected value, found {:?}", reference),
     }
 }

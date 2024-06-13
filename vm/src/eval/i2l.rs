@@ -1,4 +1,4 @@
-use crate::{Primitive, VmThread};
+use crate::{VmPrimitive, VmThread};
 
 pub fn eval(vm_thread: &mut VmThread, pc: u16) -> Option<u16> {
     let frame = vm_thread.frame_stack.last_mut().unwrap();
@@ -8,7 +8,7 @@ pub fn eval(vm_thread: &mut VmThread, pc: u16) -> Option<u16> {
         "i2l: Popped Int {} from stack and push it back as Long",
         value
     );
-    frame.stack_push(Primitive::Long(value as i64));
+    frame.stack_push(VmPrimitive::Long(value as i64));
 
     Some(pc + 1)
 }

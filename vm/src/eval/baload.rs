@@ -7,7 +7,7 @@ pub fn eval(vm_thread: &mut VmThread, pc: u16) -> Option<u16> {
         let rc_array = frame.stack_pop_arrayref();
         let array = rc_array.borrow_mut();
 
-        // Array must be of type byte or boolean
+        // VmArray must be of type byte or boolean
         assert!(array.atype == Some(4) || array.atype == Some(8));
 
         (array.elements[index].clone(), index)

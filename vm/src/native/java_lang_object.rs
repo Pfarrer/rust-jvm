@@ -37,7 +37,7 @@ fn register_natives() {
 
 //     // Push result to stack
 //     let frame = vm.frame_stack.last_mut().unwrap();
-//     frame.stack_push(Primitive::Long(millis_int));
+//     frame.stack_push(VmPrimitive::Long(millis_int));
 // }
 
 // fn nano_time(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
@@ -47,7 +47,7 @@ fn register_natives() {
 
 //     // Push result to stack
 //     let frame = vm.frame_stack.last_mut().unwrap();
-//     frame.stack_push(Primitive::Long(nano_time as i64));
+//     frame.stack_push(VmPrimitive::Long(nano_time as i64));
 // }
 
 // /// java/lang/System.initProperties(Ljava/util/Properties;)Ljava/util/Properties;
@@ -86,8 +86,8 @@ fn register_natives() {
 
 //     fn set_property(vm: &mut Vm, key: &str, value: &str) {
 //         // Intern key and value first
-//         let rc_interned_key = StringPool::intern(vm, &key.to_string());
-//         let rc_interned_value = StringPool::intern(vm, &value.to_string());
+//         let rc_interned_key = VmStringPool::intern(vm, &key.to_string());
+//         let rc_interned_value = VmStringPool::intern(vm, &value.to_string());
 
 //         {
 //             let frame = vm.frame_stack.last_mut().unwrap();
@@ -98,10 +98,10 @@ fn register_natives() {
 //             frame.stack_push(value);
 
 //             // Push the key to the stack
-//             frame.stack_push(Primitive::Objectref(rc_interned_key));
+//             frame.stack_push(VmPrimitive::Objectref(rc_interned_key));
 
 //             // Push the value to the stack
-//             frame.stack_push(Primitive::Objectref(rc_interned_value));
+//             frame.stack_push(VmPrimitive::Objectref(rc_interned_value));
 //         }
 
 //         // Invoke the setProperty method
@@ -142,7 +142,7 @@ fn register_natives() {
 //     let rc_stream = frame.stack_pop_objectref();
 
 //     vm.class_statics.get_mut(class_path).unwrap()
-//         .insert("in".to_string(), Primitive::Objectref(rc_stream));
+//         .insert("in".to_string(), VmPrimitive::Objectref(rc_stream));
 // }
 
 // // (Ljava/io/PrintStream;)V
@@ -153,7 +153,7 @@ fn register_natives() {
 //     let rc_stream = frame.stack_pop_objectref();
 
 //     vm.class_statics.get_mut(class_path).unwrap()
-//         .insert("out".to_string(), Primitive::Objectref(rc_stream));
+//         .insert("out".to_string(), VmPrimitive::Objectref(rc_stream));
 // }
 
 // // (Ljava/io/PrintStream;)V
@@ -164,7 +164,7 @@ fn register_natives() {
 //     let rc_stream = frame.stack_pop_objectref();
 
 //     vm.class_statics.get_mut(class_path).unwrap()
-//         .insert("err".to_string(), Primitive::Objectref(rc_stream));
+//         .insert("err".to_string(), VmPrimitive::Objectref(rc_stream));
 // }
 
 // /// (Ljava/lang/String;)Ljava/lang/String;
@@ -182,10 +182,10 @@ fn register_natives() {
 //     assert_eq!("zip", libname);
 
 //     let mapped_libname = "libzip.so".to_string();
-//     let rc_mapped_libname = StringPool::intern(vm, &mapped_libname);
+//     let rc_mapped_libname = VmStringPool::intern(vm, &mapped_libname);
 
 //     trace!("Popped an Objectref (String {}) from stack and push Objecref (String {}) back to the stack", libname, mapped_libname);
 
 //     let frame = vm.frame_stack.last_mut().unwrap();
-//     frame.stack_push(Primitive::Objectref(rc_mapped_libname));
+//     frame.stack_push(VmPrimitive::Objectref(rc_mapped_libname));
 // }

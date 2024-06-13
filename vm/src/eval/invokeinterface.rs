@@ -1,5 +1,5 @@
 use crate::utils;
-use crate::{Primitive, VmThread};
+use crate::{VmPrimitive, VmThread};
 use model::prelude::*;
 
 pub fn eval(
@@ -15,7 +15,7 @@ pub fn eval(
     let root_class_path = {
         let frame = vm_thread.frame_stack.last_mut().unwrap();
         let class_path = match frame.stack_peek_reverse(count - 1) {
-            &Primitive::Objectref(ref rc_object) => rc_object.borrow().class_path.clone(),
+            &VmPrimitive::Objectref(ref rc_object) => rc_object.borrow().class_path.clone(),
             p => panic!("Expected to pop Objectref from stack but found: {:?}", p),
         };
 

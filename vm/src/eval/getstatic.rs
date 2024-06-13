@@ -1,5 +1,5 @@
 use crate::class_hierarchy::HierarchyIterator;
-use crate::{utils, Primitive, VmThread};
+use crate::{utils, VmPrimitive, VmThread};
 use model::prelude::*;
 
 pub fn eval(
@@ -32,7 +32,7 @@ fn find_static_value(
     vm_thread: &mut VmThread,
     root_class_path: &String,
     field_name: &String,
-) -> Primitive {
+) -> VmPrimitive {
     let class_paths: Vec<String> = {
         let hierarchy_iter = HierarchyIterator::hierarchy_iter(vm_thread, root_class_path);
         hierarchy_iter
