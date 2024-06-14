@@ -11,6 +11,7 @@ mod vm_thread;
 
 use model::prelude::*;
 use vm_mem::VmMemImpl;
+use vm_thread::VmTheadImpl;
 
 pub fn bootstrap_vm(classloader: impl Classloader + 'static) -> Vm {
     let vm = Vm {
@@ -18,7 +19,7 @@ pub fn bootstrap_vm(classloader: impl Classloader + 'static) -> Vm {
         mem: VmMem::new(),
     };
 
-    vm.spawn_thread("vm-init".to_string()).invoke_method(
+    VmThread::new(&vm, "vm-init".to_string()).invoke_method(
         &"java/lang/System".to_string(),
         &"initPhase1".to_string(),
         &"()V".to_string(),

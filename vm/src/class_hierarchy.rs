@@ -2,6 +2,8 @@ use std::iter::Iterator;
 
 use model::prelude::*;
 
+use crate::vm_thread::VmTheadImpl;
+
 pub type HierarchyClassInfo = (JvmClass, String, Vec<String>);
 
 pub struct HierarchyIterator<'a, 'b> {

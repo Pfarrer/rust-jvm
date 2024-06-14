@@ -1,19 +1,31 @@
+use crate::array::VmArrayImpl;
+use crate::frame::VmFrameImpl;
+use crate::instance::VmInstanceImpl;
+use crate::primitive::VmPrimitiveImpl;
 // use crate::eval::eval;
 use crate::utils;
+use crate::vm_mem::VmStaticPoolImpl;
 use log::{debug, trace};
 use model::prelude::*;
 use parser::method_signature::parse_method_signature;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-pub struct VmThread<'a> {
-    pub(crate) vm: &'a Vm,
-    pub(crate) thread_name: String,
-    pub(crate) frame_stack: Vec<VmFrame>,
+pub trait VmTheadImpl<'a> {
+    fn new(vm: &'a Vm, thread_name: String) -> VmThread<'a>;
+    fn invoke_method(
+        &mut self,
+        class_path: &String,
+        method_name: &String,
+        method_signature: &String,
+        is_instance: bool,
+    );
+    fn get_java_class_instance_for(&mut self, class_path: &String) -> Rc<RefCell<VmInstance>>;
+    fn load_and_clinit_class(&mut self, class_path: &String) -> JvmClass;
 }
 
-impl<'a> VmThread<'a> {
-    pub fn new(vm: &'a Vm, thread_name: String) -> VmThread<'a> {
+impl<'a> VmTheadImpl<'a> for VmThread<'a> {
+    fn new(vm: &'a Vm, thread_name: String) -> VmThread<'a> {
         // Create root frame
         let mut frame = VmFrame::new(0, "<root_frame>".to_string(), "<root_frame>".to_string(), "<root_frame>".to_string());
 
@@ -21,15 +33,16 @@ impl<'a> VmThread<'a> {
         let args = VmArray::new_complex(0, "java/lang/String".to_string());
         let rc_args = Rc::new(RefCell::new(args));
         frame.stack_push(VmPrimitive::Arrayref(rc_args));
+        let frame_stack = vec![frame];
 
         VmThread {
             vm,
             thread_name,
-            frame_stack: vec![frame],
+            frame_stack,
         }
     }
 
-    pub fn invoke_method(
+    fn invoke_method(
         &mut self,
         class_path: &String,
         method_name: &String,
@@ -53,43 +66,21 @@ impl<'a> VmThread<'a> {
 
             native_method(self);
         } else {
-            let code_attr = utils::find_code(&method).unwrap();
-            let frame = self.create_method_frame(
+            let code = utils::find_code(&method).unwrap();
+            let frame = create_method_frame(
+                self,
                 class_path,
                 method_name,
                 method_signature,
-                code_attr.max_locals,
+                code.max_locals,
                 is_instance,
             );
 
-            self.execute_method(&class, code_attr, frame);
+            execute_method(self, &class, code, frame);
         }
     }
 
-    fn execute_method(&mut self, class: &JvmClass, code_attribute: &Code, frame: VmFrame) {
-        trace!(
-            "Executing {}.{}{}s in thread {} now...",
-            frame.class_path,
-            frame.method_name,
-            frame.method_signature,
-            self.thread_name,
-        );
-
-        self.frame_stack.push(frame);
-        let mut pc = 0;
-
-        loop {
-            todo!()
-            // match eval(self, class, &code_attribute.code, pc) {
-            //     Some(new_pc) => pc = new_pc,
-            //     None => break,
-            // }
-        }
-
-        self.frame_stack.pop();
-    }
-
-    pub fn get_java_class_instance_for(&mut self, class_path: &String) -> Rc<RefCell<VmInstance>> {
+    fn get_java_class_instance_for(&mut self, class_path: &String) -> Rc<RefCell<VmInstance>> {
         let jvm_class = self.load_and_clinit_class(&"java/lang/Class".to_string());
 
         // Create instance ...
@@ -102,7 +93,9 @@ impl<'a> VmThread<'a> {
         self.vm
             .mem
             .class_object_pool
-            .pool()
+            .pool
+            .write()
+            .unwrap()
             .entry(class_path.clone())
             .or_insert_with(|| {
                 instance.fields.insert(
@@ -116,7 +109,7 @@ impl<'a> VmThread<'a> {
             .clone()
     }
 
-    pub fn load_and_clinit_class(&mut self, class_path: &String) -> JvmClass {
+    fn load_and_clinit_class(&mut self, class_path: &String) -> JvmClass {
         let jvm_class = self
             .vm
             .classloader
@@ -125,84 +118,107 @@ impl<'a> VmThread<'a> {
 
         if !self.vm.mem.static_pool.has_class(class_path) {
             self.vm.mem.static_pool.insert_class(class_path.clone());
-            self.clinit_class(jvm_class);
+            clinit_class(self, jvm_class);
         }
 
         jvm_class.clone()
     }
+}
 
-    fn clinit_class(&mut self, jvm_class: &JvmClass) {
-        // Search for static fields with a ConstantValue attribute and initialize accordingly
-        for field in jvm_class.fields.iter() {
-            if field.access_flags.contains(FieldAccessFlag::Static) {
-                // Static field found -> Set the types default value
-                self.vm.mem.static_pool.set_class_field(
-                    &jvm_class.this_class,
-                    field.name.clone(),
-                    VmPrimitive::get_default_value(&field.descriptor),
-                );
+fn execute_method(vm_thread: &mut VmThread, class: &JvmClass, code_attribute: &Code, frame: VmFrame) {
+    trace!(
+        "Executing {}.{}{}s in thread {} now...",
+        frame.class_path,
+        frame.method_name,
+        frame.method_signature,
+        vm_thread.thread_name,
+    );
 
-                // Maybe there is a ConstantValue attribute, so check for that
-                for attr in field.attributes.iter() {
-                    if let &ClassAttribute::ConstantValue(ref constant) = attr {
-                        let value = VmPrimitive::from_constant(self.vm, constant);
+    vm_thread.frame_stack.push(frame);
+    let mut pc = 0;
 
-                        // Set value
-                        self.vm.mem.static_pool.set_class_field(
-                            &jvm_class.this_class,
-                            field.name.clone(),
-                            value,
-                        );
-                    }
-                }
-            }
-        }
+    loop {
+        todo!()
+        // match eval(self, class, &code_attribute.code, pc) {
+        //     Some(new_pc) => pc = new_pc,
+        //     None => break,
+        // }
+    }
 
-        // Call <clinit> if it exists
-        if utils::find_method_in_classfile(&jvm_class, "<clinit>", "()V").is_some() {
-            debug!(
-                "Class {} not initialized and contains <clinit> -> executing now",
-                jvm_class.this_class
-            );
+    vm_thread.frame_stack.pop();
+}
 
-            self.invoke_method(
-                &jvm_class.this_class,
-                &"<clinit>".to_string(),
-                &"()V".to_string(),
-                false,
-            );
+fn create_method_frame(
+    vm_thread: &mut VmThread,
+    class_path: &String,
+    method_name: &String,
+    method_signature: &String,
+    max_locals: u16,
+    is_instance: bool,
+) -> VmFrame {
+    let mut frame = VmFrame::new(
+        max_locals,
+        class_path.clone(),
+        method_name.clone(),
+        method_signature.clone(),
+    );
 
-            debug!("{}.<clinit> done", jvm_class.this_class);
+    // Parse signature and move arguments from caller frame to callee frame
+    {
+        let parent_frame = vm_thread.frame_stack.last_mut().unwrap();
+
+        let sig = parse_method_signature(method_signature).unwrap();
+        let number_of_locals = sig.parameters.len() + if is_instance { 1 } else { 0 };
+        for i in (0..number_of_locals).rev() {
+            let arg = parent_frame.stack_pop();
+            frame.locals_write(i, arg);
         }
     }
 
-    fn create_method_frame(
-        &mut self,
-        class_path: &String,
-        method_name: &String,
-        method_signature: &String,
-        max_locals: u16,
-        is_instance: bool,
-    ) -> VmFrame {
-        let mut frame = VmFrame::new(
-            max_locals,
-            class_path.clone(),
-            method_name.clone(),
-            method_signature.clone(),
-        );
+    frame
+}
 
-        // Parse signature and move arguments from caller frame to callee frame
-        {
-            let parent_frame = self.frame_stack.last_mut().unwrap();
+fn clinit_class(vm_thread: &mut VmThread, jvm_class: &JvmClass) {
+    // Search for static fields with a ConstantValue attribute and initialize accordingly
+    for field in jvm_class.fields.iter() {
+        if field.access_flags.contains(FieldAccessFlag::Static) {
+            // Static field found -> Set the types default value
+            vm_thread.vm.mem.static_pool.set_class_field(
+                &jvm_class.this_class,
+                field.name.clone(),
+                VmPrimitive::get_default_value(&field.descriptor),
+            );
 
-            let sig = parse_method_signature(method_signature).unwrap();
-            let number_of_locals = sig.parameters.len() + if is_instance { 1 } else { 0 };
-            for i in (0..number_of_locals).rev() {
-                let arg = parent_frame.stack_pop();
-                frame.locals_write(i, arg);
+            // Maybe there is a ConstantValue attribute, so check for that
+            for attr in field.attributes.iter() {
+                if let &ClassAttribute::ConstantValue(ref constant) = attr {
+                    let value = VmPrimitive::from_constant(vm_thread.vm, constant);
+
+                    // Set value
+                    vm_thread.vm.mem.static_pool.set_class_field(
+                        &jvm_class.this_class,
+                        field.name.clone(),
+                        value,
+                    );
+                }
             }
         }
+    }
 
-        frame
+    // Call <clinit> if it exists
+    if utils::find_method_in_classfile(&jvm_class, "<clinit>", "()V").is_some() {
+        debug!(
+            "Class {} not initialized and contains <clinit> -> executing now",
+            jvm_class.this_class
+        );
+
+        vm_thread.invoke_method(
+            &jvm_class.this_class,
+            &"<clinit>".to_string(),
+            &"()V".to_string(),
+            false,
+        );
+
+        debug!("{}.<clinit> done", jvm_class.this_class);
     }
 }

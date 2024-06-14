@@ -19,7 +19,7 @@ pub fn get_method(_jvm_class: &JvmClass, class_method: &ClassMethod) -> Option<N
     }
 }
 
-fn register_natives() {
+fn register_natives(_: &mut VmThread) {
     trace!("Execute native java/lang/Object.registerNatives()V");
 }
 

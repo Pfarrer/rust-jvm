@@ -1,4 +1,4 @@
-use crate::class_hierarchy::HierarchyIterator;
+use crate::{class_hierarchy::HierarchyIterator, primitive::VmPrimitiveImpl};
 use model::prelude::*;
 use std::collections::HashMap;
 

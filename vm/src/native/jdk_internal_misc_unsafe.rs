@@ -1,6 +1,8 @@
 use log::{trace, warn};
 use model::prelude::*;
 
+use crate::frame::VmFrameImpl;
+
 pub fn get_method(_jvm_class: &JvmClass, class_method: &ClassMethod) -> Option<NativeMethod> {
     match class_method.name.as_str() {
         "registerNatives" => Some(register_natives), // ()V
@@ -14,7 +16,7 @@ pub fn get_method(_jvm_class: &JvmClass, class_method: &ClassMethod) -> Option<N
     }
 }
 
-fn register_natives(_: &VmThread) {
+fn register_natives(_: &mut VmThread) {
     trace!("Execute native jdk/internal/misc/Unsave.registerNatives()V");
 }
 
@@ -22,7 +24,7 @@ fn array_base_offset0(vm_thread: &mut VmThread) {
     trace!("Execute native jdk/internal/misc/Unsave.arrayBaseOffset0(Ljava/lang/Class;)I");
 
     // Remove parameter from stack
-    let frame = vm_thread.frame_stack_last_mut();
+    let frame = vm_thread.frame_stack.last_mut().unwrap();
     let _ = frame.stack_pop_objectref();
     
     warn!("Not properly implemented -> will always return 0");

@@ -4,6 +4,10 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::{RwLock, RwLockWriteGuard};
 
+use crate::array::VmArrayImpl;
+use crate::instance::VmInstanceImpl;
+use crate::vm_thread::VmTheadImpl;
+
 pub trait VmMemImpl {
     fn new() -> VmMem;
 }
@@ -63,14 +67,19 @@ impl VmStaticPoolImpl for VmStaticPool {
     }
 }
 
-impl VmStringPool {
+trait VmStringPoolImpl {
+    fn new() -> VmStringPool;
+    fn intern(&self, thread: &mut VmThread, string: &String) -> Rc<RefCell<VmInstance>>;
+}
+
+impl VmStringPoolImpl for VmStringPool {
     fn new() -> VmStringPool {
         VmStringPool {
             pool: RwLock::new(HashMap::new()),
         }
     }
 
-    pub fn intern(&self, thread: &mut VmThread, string: &String) -> Rc<RefCell<VmInstance>> {
+    fn intern(&self, thread: &mut VmThread, string: &String) -> Rc<RefCell<VmInstance>> {
         let jvm_class = thread.load_and_clinit_class(&"java/lang/String".to_string());
         let mut instance = VmInstance::new(thread, &jvm_class);
 
@@ -101,14 +110,19 @@ impl VmStringPool {
     }
 }
 
-impl VmClassObjectPool {
+trait VmClassObjectPoolImpl {
+    fn new() -> VmClassObjectPool;
+    fn pool(&self) -> RwLockWriteGuard<HashMap<String, Rc<RefCell<VmInstance>>>>;
+}
+
+impl VmClassObjectPoolImpl for VmClassObjectPool {
     fn new() -> VmClassObjectPool {
         VmClassObjectPool {
             pool: RwLock::new(HashMap::new()),
         }
     }
 
-    pub fn pool(&self) -> RwLockWriteGuard<HashMap<String, Rc<RefCell<VmInstance>>>> {
+    fn pool(&self) -> RwLockWriteGuard<HashMap<String, Rc<RefCell<VmInstance>>>> {
         self.pool.write().unwrap()
     }
 }
