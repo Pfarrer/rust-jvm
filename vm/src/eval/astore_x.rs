@@ -1,4 +1,4 @@
-use crate::VmThread;
+use crate::{frame::VmFrameImpl, VmThread};
 
 /// Can handle instructions astore and astore_<n>.
 pub fn eval(vm_thread: &mut VmThread, code: &Vec<u8>, pc: u16) -> Option<u16> {

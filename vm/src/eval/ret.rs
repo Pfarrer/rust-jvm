@@ -1,4 +1,4 @@
-use crate::VmThread;
+use crate::{frame::VmFrameImpl, VmThread};
 
 pub fn eval(vm_thread: &mut VmThread, code: &Vec<u8>, pc: u16) -> Option<u16> {
     let index = *code.get((pc + 1) as usize).unwrap() as u8;

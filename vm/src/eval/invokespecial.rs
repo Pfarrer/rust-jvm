@@ -1,4 +1,5 @@
 use crate::utils;
+use crate::vm_thread::VmTheadImpl;
 use crate::VmThread;
 use class_constant_impl::ClassConstantAccessor;
 use model::prelude::*;

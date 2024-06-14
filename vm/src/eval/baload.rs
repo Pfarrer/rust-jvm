@@ -1,4 +1,4 @@
-use crate::VmThread;
+use crate::{frame::VmFrameImpl, VmThread};
 
 pub fn eval(vm_thread: &mut VmThread, pc: u16) -> Option<u16> {
     let (value, index) = {

@@ -1,10 +1,11 @@
 use crate::array::VmArrayImpl;
+use crate::eval::eval;
 use crate::frame::VmFrameImpl;
 use crate::instance::VmInstanceImpl;
 use crate::primitive::VmPrimitiveImpl;
-// use crate::eval::eval;
 use crate::utils;
 use crate::vm_mem::VmStaticPoolImpl;
+use crate::vm_mem::VmStringPoolImpl;
 use log::{debug, trace};
 use model::prelude::*;
 use parser::method_signature::parse_method_signature;
@@ -27,7 +28,12 @@ pub trait VmTheadImpl<'a> {
 impl<'a> VmTheadImpl<'a> for VmThread<'a> {
     fn new(vm: &'a Vm, thread_name: String) -> VmThread<'a> {
         // Create root frame
-        let mut frame = VmFrame::new(0, "<root_frame>".to_string(), "<root_frame>".to_string(), "<root_frame>".to_string());
+        let mut frame = VmFrame::new(
+            0,
+            "<root_frame>".to_string(),
+            "<root_frame>".to_string(),
+            "<root_frame>".to_string(),
+        );
 
         // Add args array
         let args = VmArray::new_complex(0, "java/lang/String".to_string());
@@ -125,7 +131,12 @@ impl<'a> VmTheadImpl<'a> for VmThread<'a> {
     }
 }
 
-fn execute_method(vm_thread: &mut VmThread, class: &JvmClass, code_attribute: &Code, frame: VmFrame) {
+fn execute_method(
+    vm_thread: &mut VmThread,
+    jvm_class: &JvmClass,
+    code_attribute: &Code,
+    frame: VmFrame,
+) {
     trace!(
         "Executing {}.{}{}s in thread {} now...",
         frame.class_path,
@@ -138,11 +149,10 @@ fn execute_method(vm_thread: &mut VmThread, class: &JvmClass, code_attribute: &C
     let mut pc = 0;
 
     loop {
-        todo!()
-        // match eval(self, class, &code_attribute.code, pc) {
-        //     Some(new_pc) => pc = new_pc,
-        //     None => break,
-        // }
+        match eval(vm_thread, jvm_class, &code_attribute.code, pc) {
+            Some(new_pc) => pc = new_pc,
+            None => break,
+        }
     }
 
     vm_thread.frame_stack.pop();

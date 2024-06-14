@@ -1,6 +1,9 @@
 use anyhow::Result;
 
-use crate::{class::{ClassMethod, JvmClass}, vm::NativeMethod};
+use crate::{
+    class::{ClassMethod, JvmClass},
+    vm::NativeMethod,
+};
 use std::io::Read;
 
 pub trait Parser {

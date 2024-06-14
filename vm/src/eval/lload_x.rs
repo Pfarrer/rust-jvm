@@ -1,4 +1,4 @@
-use crate::{VmPrimitive, VmThread};
+use crate::{frame::VmFrameImpl, VmPrimitive, VmThread};
 
 /// Can handle instructions lload and lload_<n>.
 pub fn eval(vm_thread: &mut VmThread, code: &Vec<u8>, pc: u16) -> Option<u16> {

@@ -1,6 +1,6 @@
 use crate::class_hierarchy::HierarchyIterator;
 use crate::utils;
-use crate::{VmPrimitive, VmThread};
+use crate::{frame::VmFrameImpl, VmPrimitive, VmThread};
 use model::prelude::*;
 
 pub fn eval(

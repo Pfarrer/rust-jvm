@@ -1,4 +1,7 @@
-use crate::{utils, VmPrimitive, VmThread};
+use crate::{
+    frame::VmFrameImpl, utils, vm_mem::VmStringPoolImpl, vm_thread::VmTheadImpl, VmPrimitive,
+    VmThread,
+};
 use model::prelude::*;
 
 /// Can handle instructions ldc (decimal 18) and ldc_2 (decimal 19).

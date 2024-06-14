@@ -56,7 +56,7 @@ impl VmStaticPoolImpl for VmStaticPool {
             .unwrap()
             .insert(field_name, value);
     }
-    
+
     fn get_class_field(&self, class_path: &String, field_name: &String) -> Option<VmPrimitive> {
         self.pool
             .read()
@@ -67,7 +67,7 @@ impl VmStaticPoolImpl for VmStaticPool {
     }
 }
 
-trait VmStringPoolImpl {
+pub trait VmStringPoolImpl {
     fn new() -> VmStringPool;
     fn intern(&self, thread: &mut VmThread, string: &String) -> Rc<RefCell<VmInstance>>;
 }
@@ -112,7 +112,6 @@ impl VmStringPoolImpl for VmStringPool {
 
 trait VmClassObjectPoolImpl {
     fn new() -> VmClassObjectPool;
-    fn pool(&self) -> RwLockWriteGuard<HashMap<String, Rc<RefCell<VmInstance>>>>;
 }
 
 impl VmClassObjectPoolImpl for VmClassObjectPool {
@@ -120,9 +119,5 @@ impl VmClassObjectPoolImpl for VmClassObjectPool {
         VmClassObjectPool {
             pool: RwLock::new(HashMap::new()),
         }
-    }
-
-    fn pool(&self) -> RwLockWriteGuard<HashMap<String, Rc<RefCell<VmInstance>>>> {
-        self.pool.write().unwrap()
     }
 }

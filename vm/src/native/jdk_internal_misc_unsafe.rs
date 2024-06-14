@@ -5,7 +5,7 @@ use crate::frame::VmFrameImpl;
 
 pub fn get_method(_jvm_class: &JvmClass, class_method: &ClassMethod) -> Option<NativeMethod> {
     match class_method.name.as_str() {
-        "registerNatives" => Some(register_natives), // ()V
+        "registerNatives" => Some(register_natives),    // ()V
         "arrayBaseOffset0" => Some(array_base_offset0), // (Ljava/lang/Class;)I
         // "objectFieldOffset" => object_field_offset(vm, class_path, method_name, method_signature), // (Ljava/lang/reflect/Field;)J
         // "allocateMemory" => allocate_memory(vm, class_path, method_name, method_signature), // (J)J
@@ -26,7 +26,7 @@ fn array_base_offset0(vm_thread: &mut VmThread) {
     // Remove parameter from stack
     let frame = vm_thread.frame_stack.last_mut().unwrap();
     let _ = frame.stack_pop_objectref();
-    
+
     warn!("Not properly implemented -> will always return 0");
     frame.stack_push(VmPrimitive::Int(0));
 }

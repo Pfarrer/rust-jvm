@@ -1,5 +1,5 @@
 use crate::utils;
-use crate::VmThread;
+use crate::{frame::VmFrameImpl, VmThread};
 
 pub fn eval(vm_thread: &mut VmThread, pc: u16, code: &Vec<u8>) -> Option<u16> {
     // The following is 4-byte aligned, thus, there can be up to 3 padding bytes

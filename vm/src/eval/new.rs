@@ -3,10 +3,10 @@ use model::prelude::*;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use crate::instance::VmInstance;
-use crate::primitive::VmPrimitive;
+use crate::frame::VmFrameImpl;
+use crate::instance::VmInstanceImpl;
 use crate::utils;
-use crate::vm_thread::VmThread;
+use crate::vm_thread::VmTheadImpl;
 
 pub fn eval(
     vm_thread: &mut VmThread,

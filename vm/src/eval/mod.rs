@@ -78,8 +78,7 @@ mod ret;
 mod return_;
 mod sipush;
 
-use crate::vm_thread::VmThread;
-use model::class::JvmClass;
+use model::prelude::*;
 
 pub fn eval(
     vm_thread: &mut VmThread,

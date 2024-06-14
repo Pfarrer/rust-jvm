@@ -1,5 +1,5 @@
-use std::{cell::RefCell, collections::HashMap, rc::Rc, sync::RwLock};
 use crate::prelude::Classloader;
+use std::{cell::RefCell, collections::HashMap, rc::Rc, sync::RwLock};
 
 pub type NativeMethod = fn(thread: &mut VmThread) -> ();
 
@@ -48,14 +48,15 @@ pub struct VmInstance {
     pub fields: HashMap<String, VmPrimitive>,
 }
 
-
-pub struct VmMemPool<T> {
-    pub pool: RwLock<HashMap<String, T>>,
+pub struct VmStaticPool {
+    pub pool: RwLock<HashMap<String, HashMap<String, VmPrimitive>>>,
 }
-
-pub type VmStaticPool = VmMemPool<HashMap<String, VmPrimitive>>;
-pub type VmStringPool = VmMemPool<Rc<RefCell<VmInstance>>>;
-pub type VmClassObjectPool = VmMemPool<Rc<RefCell<VmInstance>>>;
+pub struct VmStringPool {
+    pub pool: RwLock<HashMap<String, Rc<RefCell<VmInstance>>>>,
+}
+pub struct VmClassObjectPool {
+    pub pool: RwLock<HashMap<String, Rc<RefCell<VmInstance>>>>,
+}
 
 pub struct VmMem {
     pub static_pool: VmStaticPool,

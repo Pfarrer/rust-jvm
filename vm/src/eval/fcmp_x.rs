@@ -1,4 +1,4 @@
-use crate::{VmPrimitive, VmThread};
+use crate::{frame::VmFrameImpl, VmPrimitive, VmThread};
 use std::f32::NAN;
 
 pub fn eval(vm_thread: &mut VmThread, code: &Vec<u8>, pc: u16) -> Option<u16> {

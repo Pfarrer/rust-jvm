@@ -1,9 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use crate::array::VmArray;
-use crate::utils;
-use crate::{VmPrimitive, VmThread};
+use crate::{array::VmArrayImpl, frame::VmFrameImpl, utils, VmPrimitive, VmThread};
 use model::prelude::*;
 
 pub fn eval(

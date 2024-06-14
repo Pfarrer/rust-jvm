@@ -1,8 +1,9 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use crate::array::VmArray;
-use crate::{VmPrimitive, VmThread};
+use model::prelude::*;
+
+use crate::{array::VmArrayImpl, frame::VmFrameImpl, VmPrimitive, VmThread};
 
 pub fn eval(vm_thread: &mut VmThread, code: &Vec<u8>, pc: u16) -> Option<u16> {
     let frame = vm_thread.frame_stack.last_mut().unwrap();

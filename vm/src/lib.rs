@@ -1,13 +1,16 @@
+#[macro_use]
+extern crate log;
+
 mod array;
 mod class_hierarchy;
-// mod eval;
-mod native;
+mod eval;
 mod frame;
 mod instance;
+mod native;
 mod primitive;
 mod utils;
 mod vm_mem;
-mod vm_thread;
+pub mod vm_thread;
 
 use model::prelude::*;
 use vm_mem::VmMemImpl;

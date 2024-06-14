@@ -1,5 +1,5 @@
 use crate::utils;
-use crate::VmThread;
+use crate::{frame::VmFrameImpl, VmThread};
 use model::prelude::*;
 
 pub fn eval(

@@ -1,4 +1,6 @@
 use crate::class_hierarchy::HierarchyIterator;
+use crate::frame::VmFrameImpl;
+use crate::vm_mem::VmStaticPoolImpl;
 use crate::{utils, VmPrimitive, VmThread};
 use model::prelude::*;
 

@@ -1,4 +1,6 @@
-use crate::{primitive::VmPrimitive, VmThread};
+use model::prelude::*;
+
+use crate::{frame::VmFrameImpl, VmThread};
 
 /// Can handle instructions istore and istore_<n>.
 pub fn eval(vm_thread: &mut VmThread, code: &Vec<u8>, pc: u16) -> Option<u16> {

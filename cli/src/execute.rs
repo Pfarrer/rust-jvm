@@ -1,7 +1,8 @@
 use std::path::PathBuf;
 
 use loader::CompositeLoader;
-use vm::Vm;
+use model::vm::VmThread;
+use vm::{bootstrap_vm, vm_thread::VmTheadImpl};
 
 const MAIN_METHOD_NAME: &str = "main";
 const MAIN_METHOD_SIGNATURE: &str = "([Ljava/lang/String;)V";
@@ -15,8 +16,8 @@ pub fn run(main_class: String, class_paths: Vec<PathBuf>) {
     let classloader =
         CompositeLoader::open(vec![Box::new(runtime_classloader), Box::new(classloader)]);
 
-    let vm = Vm::new(classloader);
-    vm.spawn_thread("Thread-0".to_string()).invoke_method(
+    let vm = bootstrap_vm(classloader);
+    VmThread::new(&vm, "Thread-0".to_string()).invoke_method(
         &main_class,
         &MAIN_METHOD_NAME.to_string(),
         &MAIN_METHOD_SIGNATURE.to_string(),

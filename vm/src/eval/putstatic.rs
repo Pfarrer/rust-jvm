@@ -1,4 +1,6 @@
-use crate::{utils, VmThread};
+use crate::{
+    frame::VmFrameImpl, utils, vm_mem::VmStaticPoolImpl, vm_thread::VmTheadImpl, VmThread,
+};
 use model::prelude::*;
 
 pub fn eval(
