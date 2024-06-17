@@ -12,13 +12,18 @@ mod bipush;
 mod caload;
 mod castore;
 mod checkcast;
+mod d2l;
+mod dadd;
+mod dconst_x;
 mod dup;
 mod dup2;
 mod dup2_x1;
 mod dup_x1;
+mod f2d;
 mod f2i;
 mod fcmp_x;
 mod fconst_x;
+mod fdiv;
 mod fload_x;
 mod fmul;
 mod getfield;
@@ -55,10 +60,11 @@ mod isub;
 mod iushr;
 mod ixor;
 mod jsr;
+mod l2f;
 mod ladd;
 mod land;
 mod lcmp;
-mod lconst;
+mod lconst_x;
 mod ldc2_w;
 mod ldc_x;
 mod lload_x;
@@ -104,9 +110,9 @@ pub fn eval(
         0 => Some(pc + 1),
         1 => aconst_null::eval(vm_thread, pc),
         2..=8 => iconst_x::eval(vm_thread, code, pc),
-        9 => lconst::eval(0, vm_thread, pc),
-        10 => lconst::eval(1, vm_thread, pc),
+        9..=10 => lconst_x::eval(vm_thread, code, pc),
         11..=13 => fconst_x::eval(vm_thread, code, pc),
+        14..=15 => dconst_x::eval(vm_thread, code, pc),
         16 => bipush::eval(vm_thread, code, pc),
         17 => sipush::eval(vm_thread, code, pc),
         18 => ldc_x::eval(vm_thread, jvm_class, code, pc),
@@ -141,9 +147,11 @@ pub fn eval(
         93 => dup2_x1::eval(vm_thread, pc),
         96 => iadd::eval(vm_thread, pc),
         97 => ladd::eval(vm_thread, pc),
+        99 => dadd::eval(vm_thread, pc),
         100 => isub::eval(vm_thread, pc),
         104 => imul::eval(vm_thread, pc),
         106 => fmul::eval(vm_thread, pc),
+        110 => fdiv::eval(vm_thread, pc),
         112 => irem::eval(vm_thread, pc),
         120 => ishl::eval(vm_thread, pc),
         122 => ishr::eval(vm_thread, pc),
@@ -156,7 +164,10 @@ pub fn eval(
         132 => iinc::eval(vm_thread, code, pc),
         133 => i2l::eval(vm_thread, pc),
         134 => i2f::eval(vm_thread, pc),
+        137 => l2f::eval(vm_thread, pc),
         139 => f2i::eval(vm_thread, pc),
+        141 => f2d::eval(vm_thread, pc),
+        143 => d2l::eval(vm_thread, pc),
         145 => i2b::eval(vm_thread, pc),
         146 => i2c::eval(vm_thread, pc),
         148 => lcmp::eval(vm_thread, pc),

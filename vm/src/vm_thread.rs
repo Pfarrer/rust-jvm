@@ -138,7 +138,7 @@ fn execute_method(
     frame: VmFrame,
 ) {
     trace!(
-        "Executing {}.{}{}s in thread {} now...",
+        "Executing {}.{}{} in thread {} now...",
         frame.class_path,
         frame.method_name,
         frame.method_signature,

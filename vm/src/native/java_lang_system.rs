@@ -1,15 +1,21 @@
 // extern crate time;
 // extern crate dirs;
 
+use std::env;
+
 use log::trace;
 use model::prelude::*;
+
+use crate::{frame::VmFrameImpl, utils, vm_mem::VmStringPoolImpl, vm_thread::VmTheadImpl};
 
 pub fn get_method(_jvm_class: &JvmClass, class_method: &ClassMethod) -> Option<NativeMethod> {
     match class_method.name.as_str() {
         "registerNatives" => Some(register_natives),
+        "initProperties" => Some(init_properties), // (Ljava/util/Properties;)Ljava/util/Properties;
+
         // "currentTimeMillis" => current_time_millis(vm, class_path, method_name, method_signature), // ()J
         // "nanoTime" => nano_time(vm, class_path, method_name, method_signature), // ()J
-        // "initProperties" => init_properties(vm, class_path, method_name, method_signature), // (Ljava/util/Properties;)Ljava/util/Properties;
+        
         // "setIn0" => set_in0(vm, class_path, method_name, method_signature), // (Ljava/io/InputStream;)V
         // "setOut0" => set_out0(vm, class_path, method_name, method_signature), // (Ljava/io/PrintStream;)V
         // "setErr0" => set_err0(vm, class_path, method_name, method_signature), // (Ljava/io/PrintStream;)V
@@ -21,6 +27,55 @@ pub fn get_method(_jvm_class: &JvmClass, class_method: &ClassMethod) -> Option<N
 
 fn register_natives(_: &mut VmThread) {
     trace!("Execute native java/lang/System.registerNatives()V");
+}
+
+/// (Ljava/util/Properties;)Ljava/util/Properties;
+fn init_properties(vm_thread: &mut VmThread) {
+    trace!("Execute native java/lang/System.initProperties(Ljava/util/Properties;)Ljava/util/Properties;");
+    warn!("This method is only partially implemented!");
+
+//    set_property(vm, "sun.stdout.encoding", "UTF-8");
+//    set_property(vm, "sun.stderr.encoding", "UTF-8");
+    set_property(vm_thread, "file.encoding", "UTF-8");
+
+    set_property(vm_thread, "line.separator", "\n");
+    set_property(vm_thread, "file.separator", "/");
+    set_property(vm_thread, "path.separator", ":");
+
+    let java_home_pathbuf = env::current_dir().unwrap();
+    set_property(vm_thread, "java.home",  java_home_pathbuf.to_str().unwrap());
+
+    let user_dir_pathbuf = dirs::home_dir().unwrap();
+    set_property(vm_thread, "user.dir",  user_dir_pathbuf.to_str().unwrap());
+
+    fn set_property(vm_thread: &mut VmThread, key: &str, value: &str) {
+        // Intern key and value first
+        let rc_interned_key = vm_thread.vm.mem.string_pool.intern(vm_thread, &key.to_string());
+        let rc_interned_value = vm_thread.vm.mem.string_pool.intern(vm_thread, &value.to_string());
+
+        {
+            let frame = vm_thread.frame_stack.last_mut().unwrap();
+
+            // Clone instance first
+            let value = frame.stack_pop();
+            frame.stack_push(value.clone());
+            frame.stack_push(value);
+
+            // Push the key to the stack
+            frame.stack_push(VmPrimitive::Objectref(rc_interned_key));
+
+            // Push the value to the stack
+            frame.stack_push(VmPrimitive::Objectref(rc_interned_value));
+        }
+
+        // Invoke the setProperty method
+        vm_thread.invoke_method(&"java/util/Properties".to_string(), &"setProperty".to_string(),
+                             &"(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;".to_string(), true);
+
+        // Pop return value from stack
+        let frame = vm_thread.frame_stack.last_mut().unwrap();
+        frame.stack_pop();
+    }
 }
 
 // fn current_time_millis(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
@@ -48,70 +103,6 @@ fn register_natives(_: &mut VmThread) {
 //     // Push result to stack
 //     let frame = vm.frame_stack.last_mut().unwrap();
 //     frame.stack_push(VmPrimitive::Long(nano_time as i64));
-// }
-
-// /// java/lang/System.initProperties(Ljava/util/Properties;)Ljava/util/Properties;
-// fn init_properties(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
-// //        * <dt>java.version         <dd>Java version number
-// //        * <dt>java.vendor          <dd>Java vendor specific string
-// //        * <dt>java.vendor.url      <dd>Java vendor URL
-// //        * <dt>java.home            <dd>Java installation directory
-// //        * <dt>java.class.version   <dd>Java class version number
-// //        * <dt>java.class.path      <dd>Java classpath
-// //        * <dt>os.name              <dd>Operating System Name
-// //        * <dt>os.arch              <dd>Operating System Architecture
-// //        * <dt>os.version           <dd>Operating System Version
-// //        * <dt>file.separator       <dd>File separator ("/" on Unix)
-// //        * <dt>path.separator       <dd>Path separator (":" on Unix)
-// //        * <dt>user.name            <dd>User account name
-// //        * <dt>user.home            <dd>User home directory
-// //        * <dt>user.dir             <dd>User's current working directory
-
-//     trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
-//     warn!("This method is only partially implemented!");
-
-// //    set_property(vm, "sun.stdout.encoding", "UTF-8");
-// //    set_property(vm, "sun.stderr.encoding", "UTF-8");
-//     set_property(vm, "file.encoding", "UTF-8");
-
-//     set_property(vm, "line.separator", "\n");
-//     set_property(vm, "file.separator", "/");
-//     set_property(vm, "path.separator", ":");
-
-//     let java_home_pathbuf = env::current_dir().unwrap();
-//     set_property(vm, "java.home",  java_home_pathbuf.to_str().unwrap());
-
-//     let user_dir_pathbuf = dirs::home_dir().unwrap();
-//     set_property(vm, "user.dir",  user_dir_pathbuf.to_str().unwrap());
-
-//     fn set_property(vm: &mut Vm, key: &str, value: &str) {
-//         // Intern key and value first
-//         let rc_interned_key = VmStringPool::intern(vm, &key.to_string());
-//         let rc_interned_value = VmStringPool::intern(vm, &value.to_string());
-
-//         {
-//             let frame = vm.frame_stack.last_mut().unwrap();
-
-//             // Clone instance first
-//             let value = frame.stack_pop();
-//             frame.stack_push(value.clone());
-//             frame.stack_push(value);
-
-//             // Push the key to the stack
-//             frame.stack_push(VmPrimitive::Objectref(rc_interned_key));
-
-//             // Push the value to the stack
-//             frame.stack_push(VmPrimitive::Objectref(rc_interned_value));
-//         }
-
-//         // Invoke the setProperty method
-//         utils::invoke_method(vm, &"java/util/Properties".to_string(), &"setProperty".to_string(),
-//                              &"(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;".to_string(), true);
-
-//         // Pop return value from stack
-//         let frame = vm.frame_stack.last_mut().unwrap();
-//         frame.stack_pop();
-//     }
 // }
 
 // /// arraycopy(Ljava/lang/Object;ILjava/lang/Object;II)V

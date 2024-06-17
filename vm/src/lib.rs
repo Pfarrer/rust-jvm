@@ -18,7 +18,9 @@ use vm_thread::VmTheadImpl;
 
 pub fn bootstrap_vm(classloader: impl Classloader + 'static) -> Vm {
     let vm = Vm {
-        classloader: Box::new(classloader),
+        classloader: Box::new(native::NativeClassloader {
+            classloader: Box::new(classloader),
+        }),
         mem: VmMem::new(),
     };
 

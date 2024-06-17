@@ -2,7 +2,7 @@ use model::prelude::*;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
-use std::sync::{RwLock, RwLockWriteGuard};
+use std::sync::RwLock;
 
 use crate::array::VmArrayImpl;
 use crate::instance::VmInstanceImpl;
