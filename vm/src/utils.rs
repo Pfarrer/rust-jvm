@@ -1,4 +1,5 @@
 use crate::class_hierarchy::HierarchyIterator;
+use itertools::Itertools;
 use model::prelude::*;
 
 pub fn find_method(
@@ -78,9 +79,10 @@ pub fn get_java_byte_array_string_value(value_array: &VmArray) -> String {
     let element_values: Vec<u16> = value_array
         .elements
         .iter()
-        .map(|p| match p {
-            &VmPrimitive::Char(ref code) => *code,
-            p => panic!("Unexpected primitive: {:?}", p),
+        .tuples()
+        .map(|(h, l)| match (h, l) {
+            (VmPrimitive::Byte(ref hb), VmPrimitive::Byte(ref lb)) => (*hb as u16) << 8 | *lb as u16,
+            p => panic!("Unexpected primitives: {:?}", p),
         })
         .collect();
 

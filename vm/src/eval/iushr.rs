@@ -7,11 +7,8 @@ pub fn eval(vm_thread: &mut VmThread, pc: u16) -> Option<u16> {
 
     let s = value2 & 0x1f;
 
-    let result = if value1 >= 0 {
-        value1 >> s
-    } else {
-        (value1 >> s) + (2 << !s)
-    };
+    // The JVM Spec recommends a different calulation, but this seems to work better
+    let result = (value1 as u32 >> s) as i32;
 
     trace!(
         "iushr: Shifting {} right unsigned by {} -> pushing {} to stack",

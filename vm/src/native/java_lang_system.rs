@@ -6,7 +6,7 @@ use std::env;
 use log::trace;
 use model::prelude::*;
 
-use crate::{frame::VmFrameImpl, utils, vm_mem::VmStringPoolImpl, vm_thread::VmTheadImpl};
+use crate::{frame::VmFrameImpl, vm_mem::VmStringPoolImpl, vm_thread::VmTheadImpl};
 
 pub fn get_method(_jvm_class: &JvmClass, class_method: &ClassMethod) -> Option<NativeMethod> {
     match class_method.name.as_str() {
@@ -50,6 +50,7 @@ fn init_properties(vm_thread: &mut VmThread) {
 
     fn set_property(vm_thread: &mut VmThread, key: &str, value: &str) {
         // Intern key and value first
+        
         let rc_interned_key = vm_thread.vm.mem.string_pool.intern(vm_thread, &key.to_string());
         let rc_interned_value = vm_thread.vm.mem.string_pool.intern(vm_thread, &value.to_string());
 

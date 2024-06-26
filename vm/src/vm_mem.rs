@@ -91,13 +91,10 @@ impl VmStringPoolImpl for VmStringPool {
             .or_insert_with(|| {
                 // ... and set fields
                 let count = string.encode_utf16().count();
-                instance
-                    .fields
-                    .insert("count".to_string(), VmPrimitive::Int(count as i32));
-
-                let mut array = VmArray::new_primitive(count, 5);
+                let mut array = VmArray::new_primitive(count*2, 8);
                 for (i, c) in string.encode_utf16().enumerate() {
-                    array.elements[i] = VmPrimitive::Char(c);
+                    array.elements[i*2] = VmPrimitive::Byte((c >> 8) as u8);
+                    array.elements[i*2+1] = VmPrimitive::Byte(c as u8);
                 }
                 let rc_array = Rc::new(RefCell::new(array));
                 instance
