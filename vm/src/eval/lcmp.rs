@@ -5,9 +5,9 @@ pub fn eval(vm_thread: &mut VmThread, pc: u16) -> Option<u16> {
     let value2 = frame.stack_pop_long();
     let value1 = frame.stack_pop_long();
     let result = if value1 > value2 {
-        -1
-    } else if value2 > value1 {
         1
+    } else if value2 > value1 {
+        -1
     } else {
         0
     };
