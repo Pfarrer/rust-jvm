@@ -36,9 +36,9 @@ fn array_base_offset0(vm_thread: &mut VmThread) {
 
     // Remove parameter from stack
     let frame = vm_thread.frame_stack.last_mut().unwrap();
-    let rc_instance = frame.stack_pop_objectref();
+    let _ = frame.stack_pop_objectref();
 
-    warn!("Not properly implemented, popped {:?} from the stack -> will always return 0", rc_instance);
+    warn!("Not properly implemented -> will always return 0");
     frame.stack_push(VmPrimitive::Int(0));
 }
 
@@ -48,9 +48,9 @@ fn array_index_scale0(vm_thread: &mut VmThread) {
 
     // Remove parameter from stack
     let frame = vm_thread.frame_stack.last_mut().unwrap();
-    let rc_instance = frame.stack_pop_objectref();
+    let _ = frame.stack_pop_objectref();
 
-    warn!("Not properly implemented, popped {:?} from the stack -> will always return 1", rc_instance);
+    warn!("Not properly implemented -> will always return 1");
     frame.stack_push(VmPrimitive::Int(1));
 }
 

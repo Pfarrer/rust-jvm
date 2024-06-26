@@ -61,12 +61,14 @@ mod iushr;
 mod ixor;
 mod jsr;
 mod l2f;
+mod l2i;
 mod ladd;
 mod land;
 mod lcmp;
 mod lconst_x;
 mod ldc2_w;
 mod ldc_x;
+mod lshl;
 mod lload_x;
 mod lookupswitch;
 mod lreturn;
@@ -154,6 +156,7 @@ pub fn eval(
         110 => fdiv::eval(vm_thread, pc),
         112 => irem::eval(vm_thread, pc),
         120 => ishl::eval(vm_thread, pc),
+        121 => lshl::eval(vm_thread, pc),
         122 => ishr::eval(vm_thread, pc),
         124 => iushr::eval(vm_thread, pc),
         126 => iand::eval(vm_thread, pc),
@@ -164,6 +167,7 @@ pub fn eval(
         132 => iinc::eval(vm_thread, code, pc),
         133 => i2l::eval(vm_thread, pc),
         134 => i2f::eval(vm_thread, pc),
+        136 => l2i::eval(vm_thread, pc),
         137 => l2f::eval(vm_thread, pc),
         139 => f2i::eval(vm_thread, pc),
         141 => f2d::eval(vm_thread, pc),
