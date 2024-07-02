@@ -145,7 +145,7 @@ impl VmFrameImpl for VmFrame {
     fn locals_get_int(&mut self, index: usize) -> i32 {
         match self.locals.get(index).unwrap() {
             &VmPrimitive::Int(ref value) => value.clone(),
-            p => panic!("Expected to get Int from locals but found: {:?}", p),
+            p => panic!("Expected to get Int from locals but found: {:?}\n{:#?}", p, self),
         }
     }
 

@@ -5,7 +5,7 @@ use crate::{frame::VmFrameImpl, utils::get_java_string_value, vm_thread::VmThead
 
 pub fn get_method(_jvm_class: &JvmClass, class_method: &ClassMethod) -> Option<NativeMethod> {
     match class_method.name.as_str() {
-        "registerNatives" => Some(register_natives),    // ()V
+        "registerNatives" => Some(register_natives), // ()V
         "arrayBaseOffset0" => Some(array_base_offset0), // (Ljava/lang/Class;)I
         "arrayIndexScale0" => Some(array_index_scale0), // (Ljava/lang/Class;)I
         "addressSize0" => Some(address_size0), // ()I
@@ -16,12 +16,10 @@ pub fn get_method(_jvm_class: &JvmClass, class_method: &ClassMethod) -> Option<N
         "storeFence" => Some(store_fence), // ()V
         "fullFence" => Some(full_fence), // ()V
         "compareAndSetInt" => Some(compare_and_set_int), // (Ljava/lang/Object;JII)Z
+        "compareAndSetLong" => Some(compare_and_set_long), // (Ljava/lang/Object;JJJ)Z
+        "compareAndSetObject" => Some(compare_and_set_object), // (Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z
+        "getObjectVolatile" => Some(get_object_volatile), //(Ljava/lang/Object;J)Ljava/lang/Object;
 
-        // "objectFieldOffset" => object_field_offset(vm, class_path, method_name, method_signature), // (Ljava/lang/reflect/Field;)J
-        // "allocateMemory" => allocate_memory(vm, class_path, method_name, method_signature), // (J)J
-        // "freeMemory" => free_memory(vm, class_path, method_name, method_signature), // (J)V
-        // "putLong" => put_long(vm, class_path, method_name, method_signature), // (JJ)V
-        // "getByte" => get_byte(vm, class_path, method_name, method_signature), // (J)B
         _ => None,
     }
 }
@@ -168,60 +166,88 @@ fn compare_and_set_int(vm_thread: &mut VmThread) {
     frame.stack_push(VmPrimitive::Boolean(success));
 }
 
-// /// (Ljava/lang/reflect/Field;)J
-// fn object_field_offset(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
-//     trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
+/// (Ljava/lang/Object;JJJ)Z
+fn compare_and_set_long(vm_thread: &mut VmThread) {
+    trace!("Execute native jdk/internal/misc/Unsafe.compareAndSetLong(Ljava/lang/Object;JJJ)Z");
 
-//     // Remove parameter from stack
-//     let frame = vm.frame_stack.last_mut().unwrap();
-//     let _ = frame.stack_pop_objectref();
-// //    let instance = rc_instance.borrow();
+    // Remove parameters from stack
+    let (rc_instance, field_index, expected, x) = {
+        let frame = vm_thread.frame_stack.last_mut().unwrap();
+        let x = frame.stack_pop_long();
+        let expected = frame.stack_pop_long();
+        let field_index = frame.stack_pop_long();
+        let rc_instance = frame.stack_pop_objectref();
 
-//     warn!("Not properly implemented -> will always return 0L");
+        (rc_instance, field_index as usize, expected, x)
+    };
 
-//     frame.stack_push(VmPrimitive::Long(0));
-// }
+    let instance = &mut *rc_instance.borrow_mut();
+    let jvm_class = vm_thread.load_and_clinit_class(&instance.class_path);
 
-// /// (J)J
-// fn allocate_memory(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
-//     trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
+    let (_, field) = jvm_class.fields.iter().enumerate().find(|(n, _)| *n == field_index).unwrap();
 
-//     let size = vm.frame_stack.last_mut().unwrap().stack_pop_long();
-//     let ptr = vm.memory_pool.allocate(size as usize);
+    let success = match instance.fields.get(&field.name).unwrap() {
+        VmPrimitive::Long(ref actual) => if *actual == expected {
+            instance.fields.insert(field.name.clone(), VmPrimitive::Long(x));
+            true
+        } else {
+            false
+        },
+        a => panic!("Expected Int field in '{}' but found {:?}", field.name, a),
+    };
 
-//     let frame = vm.frame_stack.last_mut().unwrap();
-//     frame.stack_push(VmPrimitive::Long(ptr as i64));
-// }
+    let frame = vm_thread.frame_stack.last_mut().unwrap();
+    frame.stack_push(VmPrimitive::Boolean(success));
+}
 
-// /// (J)V
-// fn free_memory(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
-//     trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
+/// (Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z
+fn compare_and_set_object(vm_thread: &mut VmThread) {
+    trace!("Execute native jdk/internal/misc/Unsafe.compareAndSetObject(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z");
 
-//     let _ = vm.frame_stack.last_mut().unwrap().stack_pop_long();
-//     vm.memory_pool.free();
-// }
+    // Remove parameters from stack
+    let (rc_instance, offset, expected, x) = {
+        let frame = vm_thread.frame_stack.last_mut().unwrap();
+        let x = frame.stack_pop_reference();
+        let expected = frame.stack_pop_reference();
+        let offset = frame.stack_pop_long();
+        let rc_instance = frame.stack_pop_reference();
 
-// /// putLong(JJ)V
-// fn put_long(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
-//     trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
+        (rc_instance, offset as usize, expected, x)
+    };
 
-//     let value = vm.frame_stack.last_mut().unwrap().stack_pop_long();
-//     let address = vm.frame_stack.last_mut().unwrap().stack_pop_long();
+    let success = match rc_instance {
+        VmPrimitive::Arrayref(ref rc_array) => {
+            let mut array = rc_array.borrow_mut();
+            let actual = array.elements.get(offset).unwrap();
+            
+            if actual == &expected {
+                array.elements.insert(offset, x);
+                true
+            } else {
+                false
+            }
+        },
+        a => panic!("Not implemented for {:?}", a),
+    };
 
-//     trace!("Popped two Longs from stack and write value {} at address {}", value, address);
+    let frame = vm_thread.frame_stack.last_mut().unwrap();
+    frame.stack_push(VmPrimitive::Boolean(success));
+}
 
-//     unsafe { vm.memory_pool.put_long(address as usize, value) };
-// }
+/// (Ljava/lang/Object;J)Ljava/lang/Object;
+fn get_object_volatile(vm_thread: &mut VmThread) {
+    trace!("Execute native jdk/internal/misc/Unsafe.getObjectVolatile(Ljava/lang/Object;J)Ljava/lang/Object;");
 
-// /// getByte(J)B
-// fn get_byte(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
-//     trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
+    let frame = vm_thread.frame_stack.last_mut().unwrap();
+    let offset = frame.stack_pop_long();
+    let vm_object = frame.stack_pop();
 
-//     let address = vm.frame_stack.last_mut().unwrap().stack_pop_long();
-//     let value = unsafe { vm.memory_pool.get_byte(address as usize) };
+    let rc_object = match vm_object {
+        VmPrimitive::Arrayref(ref rc_array) => {
+            rc_array.borrow_mut().elements.get(offset as usize).unwrap().clone()
+        },
+        a => panic!("Not implemented for {:?}", a),
+    };
 
-//     trace!("Popped address {} from stack and push byte {} back", address, value);
-
-//     let frame = vm.frame_stack.last_mut().unwrap();
-//     frame.stack_push(VmPrimitive::Byte(value));
-// }
+    frame.stack_push(rc_object);
+}
