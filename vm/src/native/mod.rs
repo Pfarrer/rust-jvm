@@ -5,6 +5,7 @@ mod java_lang_object;
 mod java_lang_system;
 mod java_lang_runtime;
 mod jdk_internal_misc_unsafe;
+mod jdk_internal_misc_vm;
 
 pub struct NativeClassloader {
     pub classloader: Box<dyn Classloader + 'static>,
@@ -29,6 +30,7 @@ impl Classloader for NativeClassloader {
             "java/lang/System" => java_lang_system::get_method(jvm_class, class_method),
             "java/lang/Class" => java_lang_class::get_method(jvm_class, class_method),
             "java/lang/Runtime" => java_lang_runtime::get_method(jvm_class, class_method),
+            "jdk/internal/misc/VM" => jdk_internal_misc_vm::get_method(jvm_class, class_method),
             // "java/lang/ClassLoader" => java_lang_class_loader::invoke(class_path, method_name, method_signature),
             // "java/lang/ClassLoader$NativeLibrary" => java_lang_class_loader_native_library::invoke(jvm_class, class_method),
             // "java/security/AccessController" => java_lang_accesscontroller::invoke(jvm_class, class_method),

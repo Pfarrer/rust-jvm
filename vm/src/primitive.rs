@@ -1,4 +1,4 @@
-use crate::Vm;
+use crate::{vm_mem::VmStringPoolImpl, vm_thread::VmTheadImpl, Vm};
 use model::prelude::*;
 
 pub trait VmPrimitiveImpl {
@@ -23,13 +23,16 @@ impl VmPrimitiveImpl for VmPrimitive {
         }
     }
 
-    fn from_constant(_vm: &Vm, constant: &ClassConstant) -> VmPrimitive {
+    fn from_constant(vm: &Vm, constant: &ClassConstant) -> VmPrimitive {
         match constant {
             &ClassConstant::Integer(value) => VmPrimitive::Int(value),
             &ClassConstant::Float(value) => VmPrimitive::Float(value),
             &ClassConstant::Long(value) => VmPrimitive::Long(value),
             &ClassConstant::Double(value) => VmPrimitive::Double(value),
-            &ClassConstant::String(ref _value) => todo!(), //VmPrimitive::Objectref(VmStringPool::intern(vm, value)),
+            &ClassConstant::String(ref value) => {
+                let mut vm_thread = VmThread::new(vm, "string_pool.intern".to_string());
+                VmPrimitive::Objectref(vm.mem.string_pool.intern(&mut vm_thread, value))
+            },
             c => panic!("Unexpected constant found: {:?}", c),
         }
     }
