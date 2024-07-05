@@ -179,9 +179,16 @@ fn create_method_frame(
 
         let sig = parse_method_signature(method_signature).unwrap();
         let number_of_locals = sig.parameters.len() + if is_instance { 1 } else { 0 };
-        for i in (0..number_of_locals).rev() {
-            let arg = parent_frame.stack_pop();
-            frame.locals_write(i, arg);
+
+        let stack_size = parent_frame.stack.len();
+        let primitives = parent_frame.stack.drain((stack_size - number_of_locals)..);
+        let mut i = 0;
+        for primitive in primitives {
+            let is_wide = matches!(primitive, VmPrimitive::Long(_))
+                || matches!(primitive, VmPrimitive::Double(_));
+
+            frame.locals_write(i, primitive);
+            i += if is_wide { 2 } else { 1 };
         }
     }
 

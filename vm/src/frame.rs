@@ -14,7 +14,7 @@ pub trait VmFrameImpl {
     fn stack_push(&mut self, val: VmPrimitive);
     fn stack_pop(&mut self) -> VmPrimitive;
     fn stack_peek_reverse(&mut self, n: usize) -> &VmPrimitive;
-    fn stack_pop_boolean(&mut self) -> bool;
+    // fn stack_pop_boolean(&mut self) -> bool;
     fn stack_pop_int(&mut self) -> i32;
     fn stack_pop_long(&mut self) -> i64;
     fn stack_pop_float(&mut self) -> f32;
@@ -70,13 +70,13 @@ impl VmFrameImpl for VmFrame {
         &self.stack[self.stack.len() - 1 - n]
     }
 
-    fn stack_pop_boolean(&mut self) -> bool {
-        match self.stack_pop() {
-            VmPrimitive::Boolean(v) => v,
-            VmPrimitive::Int(v) => v == 1,
-            p => panic!("Expected to pop Boolean from stack but found: {:?}", p),
-        }
-    }
+    // fn stack_pop_boolean(&mut self) -> bool {
+    //     match self.stack_pop() {
+    //         VmPrimitive::Boolean(v) => v,
+    //         VmPrimitive::Int(v) => v == 1,
+    //         p => panic!("Expected to pop Boolean from stack but found: {:?}", p),
+    //     }
+    // }
 
     fn stack_pop_int(&mut self) -> i32 {
         match self.stack_pop() {
@@ -145,7 +145,7 @@ impl VmFrameImpl for VmFrame {
     fn locals_get_int(&mut self, index: usize) -> i32 {
         match self.locals.get(index).unwrap() {
             &VmPrimitive::Int(ref value) => value.clone(),
-            p => panic!("Expected to get Int from locals but found: {:?}\n{:#?}", p, self),
+            p => panic!("Expected to get Int from locals but found: {:?}", p),
         }
     }
 
