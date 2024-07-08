@@ -4,13 +4,14 @@ use log::trace;
 use model::prelude::*;
 
 use crate::{
-    frame::VmFrameImpl, instance::VmInstanceImpl, utils, vm_mem::VmStringPoolImpl, vm_thread::VmTheadImpl
+    frame::VmFrameImpl, instance::VmInstanceImpl, utils::{self, get_java_string_value}, vm_mem::VmStringPoolImpl, vm_thread::VmTheadImpl
 };
 
 pub fn get_method(_jvm_class: &JvmClass, class_method: &ClassMethod) -> Option<NativeMethod> {
     match class_method.name.as_str() {
         "registerNatives" => Some(register_natives),
         "getPrimitiveClass" => Some(get_primitive_class), // (Ljava/lang/String;)Ljava/lang/Class;
+        "isArray" => Some(is_array), // ()Z
         _ => None,
     }
 }
@@ -47,4 +48,26 @@ fn get_primitive_class(vm_thread: &mut VmThread) {
 
     let frame = vm_thread.frame_stack.last_mut().unwrap();
     frame.stack_push(VmPrimitive::Objectref(Rc::new(RefCell::new(class_instance))));
+}
+
+/// ()Z
+fn is_array(vm_thread: &mut VmThread) {
+    let frame = vm_thread.frame_stack.last_mut().unwrap();
+
+    let rc_instance_class = frame.stack_pop_objectref();
+    let name = {
+        let class_instance: &VmInstance = &*rc_instance_class.borrow_mut();
+        assert_eq!(class_instance.class_path, "java/lang/Class");
+
+        match &class_instance.fields["name"] {
+            VmPrimitive::Objectref(ref rc_object) => get_java_string_value(&*rc_object.borrow_mut()),
+            a => panic!("Expected Arrayref but found: {:?}", a),
+        }
+    };
+    
+    let result = name.starts_with("[");
+    debug!("Popped Objectref from stack and found Class for type {}, will push Boolean {} to the stack", name, result);
+
+    let frame = vm_thread.frame_stack.last_mut().unwrap();
+    frame.stack_push(VmPrimitive::Boolean(result));
 }
