@@ -10,7 +10,7 @@ loader = { path = "../loader" }
 vm = { path = "../vm" }
 rt = { path = "../rt" }
 
-clap = { version = "3.1.2", features = ["derive"] }
+clap = { version = "4.5.14", features = ["derive"] }
 prettytable-rs = "0.10"
 env_logger = "0.11"
 anyhow = { version = "1.0", features = ["backtrace"] }
