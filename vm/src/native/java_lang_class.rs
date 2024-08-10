@@ -12,6 +12,7 @@ pub fn get_method(_jvm_class: &JvmClass, class_method: &ClassMethod) -> Option<N
         "registerNatives" => Some(register_natives),
         "getPrimitiveClass" => Some(get_primitive_class), // (Ljava/lang/String;)Ljava/lang/Class;
         "isArray" => Some(is_array), // ()Z
+        "desiredAssertionStatus0" => Some(desired_assertion_status0), // (Ljava/lang/Class;)Z
         _ => None,
     }
 }
@@ -70,4 +71,12 @@ fn is_array(vm_thread: &mut VmThread) {
 
     let frame = vm_thread.frame_stack.last_mut().unwrap();
     frame.stack_push(VmPrimitive::Boolean(result));
+}
+
+/// desiredAssertionStatus0(Ljava/lang/Class;)Z
+fn desired_assertion_status0(vm_thread: &mut VmThread) {
+    let frame = vm_thread.frame_stack.last_mut().unwrap();
+
+    frame.stack_pop_objectref();
+    frame.stack_push(VmPrimitive::Boolean(true));
 }

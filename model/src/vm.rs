@@ -42,7 +42,7 @@ pub struct VmArray {
     pub elements: Vec<VmPrimitive>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct VmInstance {
     pub class_path: String,
     pub fields: HashMap<String, VmPrimitive>,
