@@ -36,6 +36,6 @@ fn get_class(vm_thread: &mut VmThread) {
 
     let rc_class_instance = vm_thread.get_java_class_instance_for(&class_path);
 
-    let frame = vm_thread.frame_stack.last_mut().unwrap();
+    let frame: &mut VmFrame = vm_thread.frame_stack.last_mut().unwrap();
     frame.stack_push(VmPrimitive::Objectref(rc_class_instance));
 }

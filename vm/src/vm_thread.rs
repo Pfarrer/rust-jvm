@@ -95,6 +95,12 @@ impl<'a> VmTheadImpl<'a> for VmThread<'a> {
 
         let rc_interned_class_path = self.vm.mem.string_pool.intern(self, class_path);
 
+        let component_type_primitive = if class_path.starts_with("[") {
+            VmPrimitive::Objectref(self.get_java_class_instance_for(&class_path[1..].to_string()))
+        } else {
+            VmPrimitive::Null
+        };
+
         // Get pooled String instance or create new instance
         self.vm
             .mem
@@ -108,7 +114,10 @@ impl<'a> VmTheadImpl<'a> for VmThread<'a> {
                     "name".to_string(),
                     VmPrimitive::Objectref(rc_interned_class_path),
                 );
-                // instance.fields.insert("classLoader".to_string(), VmPrimitive::Objectref(rc_class_path));
+                instance                .fields.insert(
+                    "componentType".to_string(),
+                     component_type_primitive
+                    );
 
                 Rc::new(RefCell::new(instance))
             })
