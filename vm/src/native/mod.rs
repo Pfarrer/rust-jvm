@@ -4,6 +4,8 @@ mod java_lang_class;
 mod java_lang_object;
 mod java_lang_system;
 mod java_lang_runtime;
+mod java_lang_float;
+mod java_lang_double;
 mod java_lang_reflect_array;
 mod jdk_internal_misc_unsafe;
 mod jdk_internal_misc_vm;
@@ -53,8 +55,8 @@ impl Classloader for NativeClassloader {
             // "sun/reflect/NativeConstructorAccessorImpl" => sun_reflect_native_constructor_accessor_impl::invoke(jvm_class, class_method),
             // "sun/misc/VM" => sun_misc_vm::invoke(jvm_class, class_method),
             // "sun/misc/Signal" => sun_misc_signal::invoke(jvm_class, class_method),
-            // "java/lang/Float" => java_lang_float::invoke(jvm_class, class_method),
-            // "java/lang/Double" => java_lang_double::invoke(jvm_class, class_method),
+            "java/lang/Float" => java_lang_float::get_method(jvm_class, class_method),
+            "java/lang/Double" => java_lang_double::get_method(jvm_class, class_method),
             _ => None,
         }
     }
