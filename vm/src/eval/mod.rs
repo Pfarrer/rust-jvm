@@ -24,6 +24,7 @@ mod f2i;
 mod fcmp_x;
 mod fconst_x;
 mod fdiv;
+mod idiv;
 mod fload_x;
 mod fmul;
 mod getfield;
@@ -71,6 +72,7 @@ mod ldc_x;
 mod lshl;
 mod lload_x;
 mod lookupswitch;
+mod dreturn;
 mod lreturn;
 mod lstore_x;
 mod lxor;
@@ -153,6 +155,7 @@ pub fn eval(
         100 => isub::eval(vm_thread, pc),
         104 => imul::eval(vm_thread, pc),
         106 => fmul::eval(vm_thread, pc),
+        108 => idiv::eval(vm_thread, pc),
         110 => fdiv::eval(vm_thread, pc),
         112 => irem::eval(vm_thread, pc),
         120 => ishl::eval(vm_thread, pc),
@@ -185,6 +188,7 @@ pub fn eval(
         171 => lookupswitch::eval(vm_thread, pc, code),
         172 => ireturn::eval(vm_thread),
         173 => lreturn::eval(vm_thread),
+        175 => dreturn::eval(vm_thread),
         176 => areturn::eval(vm_thread),
         177 => return_::eval(),
         178 => getstatic::eval(vm_thread, jvm_class, code, pc),
