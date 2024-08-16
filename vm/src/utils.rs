@@ -98,12 +98,12 @@ pub fn get_java_string_value(string_instance: &VmInstance) -> String {
     }
 }
 
-pub fn get_instance_field_string_value(class_instance: &VmInstance, field_name: &str) -> String {
-    let rc_string = class_instance.fields.get(field_name).unwrap();
-    match rc_string {
-        &VmPrimitive::Objectref(ref rc_string_instance) => {
-            get_java_string_value(&*rc_string_instance.borrow())
-        }
-        _ => panic!("Expected to find VmInstance but found {:?}", rc_string),
-    }
-}
+// pub fn get_instance_field_string_value(class_instance: &VmInstance, field_name: &str) -> String {
+//     let rc_string = class_instance.fields.get(field_name).unwrap();
+//     match rc_string {
+//         &VmPrimitive::Objectref(ref rc_string_instance) => {
+//             get_java_string_value(&*rc_string_instance.borrow())
+//         }
+//         _ => panic!("Expected to find VmInstance but found {:?}", rc_string),
+//     }
+// }

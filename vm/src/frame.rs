@@ -24,6 +24,7 @@ pub trait VmFrameImpl {
     fn stack_pop_reference(&mut self) -> VmPrimitive;
     fn locals_get_int(&mut self, index: usize) -> i32;
     fn locals_get_float(&mut self, index: usize) -> f32;
+    fn locals_get_double(&mut self, index: usize) -> f64;
     fn locals_get_long(&mut self, index: usize) -> i64;
     fn locals_get_returnaddress(&mut self, index: usize) -> u16;
     fn locals_get_reference(&mut self, index: usize) -> &VmPrimitive;
@@ -153,6 +154,13 @@ impl VmFrameImpl for VmFrame {
         match self.locals.get(index).unwrap() {
             &VmPrimitive::Float(ref value) => value.clone(),
             p => panic!("Expected to get Float from locals but found: {:?}", p),
+        }
+    }
+
+    fn locals_get_double(&mut self, index: usize) -> f64 {
+        match self.locals.get(index).unwrap() {
+            &VmPrimitive::Double(ref value) => value.clone(),
+            p => panic!("Expected to get Double from locals but found: {:?}", p),
         }
     }
 

@@ -14,3 +14,11 @@ lazy_static = "1.4.0"
 anyhow = "1.0"
 dirs = "5.0"
 itertools = "0.13"
+
+[dev-dependencies]
+rt = { path = "../rt" }
+
+rstest = "0.22.0"
+pretty_assertions = "1.4.0"
+env_logger = "0.11"
+ctor = "0.2.8"

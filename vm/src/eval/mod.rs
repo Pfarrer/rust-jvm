@@ -14,7 +14,15 @@ mod castore;
 mod checkcast;
 mod d2l;
 mod dadd;
+mod daload;
+mod dastore;
 mod dconst_x;
+mod dcmp_x;
+mod ddiv;
+mod dload_x;
+mod dmul;
+mod dstore_x;
+mod dsub;
 mod dup;
 mod dup2;
 mod dup2_x1;
@@ -27,11 +35,13 @@ mod fdiv;
 mod idiv;
 mod fload_x;
 mod fmul;
+mod freturn;
 mod getfield;
 mod getstatic;
 mod goto;
 mod i2b;
 mod i2c;
+mod i2d;
 mod i2f;
 mod i2l;
 mod iadd;
@@ -69,7 +79,9 @@ mod lcmp;
 mod lconst_x;
 mod ldc2_w;
 mod ldc_x;
+mod lor;
 mod lshl;
+mod lshr;
 mod lload_x;
 mod lookupswitch;
 mod dreturn;
@@ -98,17 +110,17 @@ pub fn eval(
 ) -> Option<u16> {
     let instr = *code.get(pc as usize).unwrap();
 
-    // {
-    //     let frame = vm_thread.frame_stack.last().unwrap();
-    //     trace!(
-    //         "{}.{}{}#{} = {}",
-    //         frame.class_path,
-    //         frame.method_name,
-    //         frame.method_signature,
-    //         pc,
-    //         instr
-    //     );
-    // }
+    {
+        let frame = vm_thread.frame_stack.last().unwrap();
+        trace!(
+            "{}.{}{}#{} = {}",
+            frame.class_path,
+            frame.method_name,
+            frame.method_signature,
+            pc,
+            instr
+        );
+    }
 
     match instr {
         0 => Some(pc + 1),
@@ -125,21 +137,27 @@ pub fn eval(
         21 => iload_x::eval(vm_thread, code, pc),
         22 => lload_x::eval(vm_thread, code, pc),
         23 => fload_x::eval(vm_thread, code, pc),
+        24 => dload_x::eval(vm_thread, code, pc),
         25 => aload_x::eval(vm_thread, code, pc),
         26..=29 => iload_x::eval(vm_thread, code, pc),
         30..=33 => lload_x::eval(vm_thread, code, pc),
         34..=37 => fload_x::eval(vm_thread, code, pc),
+        38..=41 => dload_x::eval(vm_thread, code, pc),
         42..=45 => aload_x::eval(vm_thread, code, pc),
+        49 => daload::eval(vm_thread, pc),
         50 => aaload::eval(vm_thread, pc),
         51 => baload::eval(vm_thread, pc),
         52 => caload::eval(vm_thread, pc),
         54 => istore_x::eval(vm_thread, code, pc),
         55 => lstore_x::eval(vm_thread, code, pc),
+        57 => dstore_x::eval(vm_thread, code, pc),
         58 => astore_x::eval(vm_thread, code, pc),
         59..=62 => istore_x::eval(vm_thread, code, pc),
         63..=66 => lstore_x::eval(vm_thread, code, pc),
+        71..=74 => dstore_x::eval(vm_thread, code, pc),
         75..=78 => astore_x::eval(vm_thread, code, pc),
         79 => iastore::eval(vm_thread, pc),
+        82 => dastore::eval(vm_thread, pc),
         83 => aastore::eval(vm_thread, pc),
         84 => bastore::eval(vm_thread, pc),
         85 => castore::eval(vm_thread, pc),
@@ -153,23 +171,29 @@ pub fn eval(
         97 => ladd::eval(vm_thread, pc),
         99 => dadd::eval(vm_thread, pc),
         100 => isub::eval(vm_thread, pc),
+        103 => dsub::eval(vm_thread, pc),
         104 => imul::eval(vm_thread, pc),
         106 => fmul::eval(vm_thread, pc),
+        107 => dmul::eval(vm_thread, pc),
         108 => idiv::eval(vm_thread, pc),
         110 => fdiv::eval(vm_thread, pc),
+        111 => ddiv::eval(vm_thread, pc),
         112 => irem::eval(vm_thread, pc),
         120 => ishl::eval(vm_thread, pc),
         121 => lshl::eval(vm_thread, pc),
         122 => ishr::eval(vm_thread, pc),
+        123 => lshr::eval(vm_thread, pc),
         124 => iushr::eval(vm_thread, pc),
         126 => iand::eval(vm_thread, pc),
         127 => land::eval(vm_thread, pc),
         128 => ior::eval(vm_thread, pc),
+        129 => lor::eval(vm_thread, pc),
         130 => ixor::eval(vm_thread, pc),
         131 => lxor::eval(vm_thread, pc),
         132 => iinc::eval(vm_thread, code, pc),
         133 => i2l::eval(vm_thread, pc),
         134 => i2f::eval(vm_thread, pc),
+        135 => i2d::eval(vm_thread, pc),
         136 => l2i::eval(vm_thread, pc),
         137 => l2f::eval(vm_thread, pc),
         139 => f2i::eval(vm_thread, pc),
@@ -179,6 +203,7 @@ pub fn eval(
         146 => i2c::eval(vm_thread, pc),
         148 => lcmp::eval(vm_thread, pc),
         149..=150 => fcmp_x::eval(vm_thread, code, pc),
+        151..=152 => dcmp_x::eval(vm_thread, code, pc),
         153..=158 => if_x::eval(vm_thread, code, pc),
         159..=164 => if_icmp_x::eval(vm_thread, code, pc),
         165..=166 => if_acmp_x::eval(vm_thread, code, pc),
@@ -188,6 +213,7 @@ pub fn eval(
         171 => lookupswitch::eval(vm_thread, pc, code),
         172 => ireturn::eval(vm_thread),
         173 => lreturn::eval(vm_thread),
+        174 => freturn::eval(vm_thread),
         175 => dreturn::eval(vm_thread),
         176 => areturn::eval(vm_thread),
         177 => return_::eval(),

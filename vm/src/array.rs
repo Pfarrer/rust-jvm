@@ -3,7 +3,7 @@ use model::prelude::*;
 pub trait VmArrayImpl {
     fn new_primitive(count: usize, atype: u8) -> VmArray;
     fn new_complex(count: usize, class_path: String) -> VmArray;
-    fn new_complex_of(elements: Vec<VmPrimitive>, class_path: String) -> VmArray;
+    // fn new_complex_of(elements: Vec<VmPrimitive>, class_path: String) -> VmArray;
 }
 
 impl VmArrayImpl for VmArray {
@@ -47,11 +47,11 @@ impl VmArrayImpl for VmArray {
         }
     }
 
-    fn new_complex_of(elements: Vec<VmPrimitive>, class_path: String) -> VmArray {
-        VmArray {
-            atype: None,
-            class_path: Some(class_path),
-            elements,
-        }
-    }
+    // fn new_complex_of(elements: Vec<VmPrimitive>, class_path: String) -> VmArray {
+    //     VmArray {
+    //         atype: None,
+    //         class_path: Some(class_path),
+    //         elements,
+    //     }
+    // }
 }
