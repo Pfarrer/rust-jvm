@@ -1,7 +1,7 @@
 use log::{trace, warn};
 use model::prelude::*;
 
-use crate::frame::VmFrameImpl;
+use vm::frame::VmFrameImpl;
 
 pub fn get_method(_jvm_class: &JvmClass, class_method: &ClassMethod) -> Option<NativeMethod> {
     match class_method.name.as_str() {

@@ -4,7 +4,7 @@
 use log::trace;
 use model::prelude::*;
 
-use crate::{frame::VmFrameImpl, vm_thread::VmTheadImpl};
+use vm::{frame::VmFrameImpl, vm_thread::VmTheadImpl};
 
 pub fn get_method(_jvm_class: &JvmClass, class_method: &ClassMethod) -> Option<NativeMethod> {
     match class_method.name.as_str() {

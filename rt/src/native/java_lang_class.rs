@@ -1,9 +1,9 @@
 use std::{cell::RefCell, rc::Rc};
 
-use log::trace;
+use log::{debug, trace};
 use model::prelude::*;
 
-use crate::{
+use vm::{
     frame::VmFrameImpl, instance::VmInstanceImpl, utils::{self, get_java_string_value}, vm_mem::VmStringPoolImpl, vm_thread::VmTheadImpl
 };
 

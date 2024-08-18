@@ -6,6 +6,16 @@ edition = "2021"
 [dependencies]
 model = { path = "../model" }
 loader = { path = "../loader" }
+vm = { path = "../vm" }
 
 log = "0.4.17"
 anyhow = "1.0"
+dirs = "5.0"
+
+[dev-dependencies]
+parser = { path = "../parser" }
+
+rstest = "0.22.0"
+pretty_assertions = "1.4.0"
+env_logger = "0.11"
+ctor = "0.2.8"

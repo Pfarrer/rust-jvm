@@ -2,7 +2,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use model::prelude::*;
 
-use crate::{array::VmArrayImpl, frame::VmFrameImpl, utils::get_java_string_value};
+use vm::{array::VmArrayImpl, frame::VmFrameImpl, utils::get_java_string_value};
 
 pub fn get_method(_jvm_class: &JvmClass, class_method: &ClassMethod) -> Option<NativeMethod> {
     match class_method.name.as_str() {

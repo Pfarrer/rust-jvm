@@ -2,6 +2,7 @@ use ctor::ctor;
 use model::prelude::*;
 use rstest::rstest;
 use pretty_assertions::assert_eq;
+use rt::NativeClassloader;
 use vm::{new_vm, vm_thread::VmTheadImpl};
 
 #[ctor]
@@ -21,10 +22,7 @@ fn foo() {
 #[case::positive_6_and_3(6, 3, 2)]
 #[case(-1069723481, 12, -89143624)]
 fn floor_div_calculates_correctly(#[case] n1: i32, #[case] n2: i32, #[case] expected: i32) {
-    let parser = parser::ClassfileParser {};
-    let classloader = rt::make_classloader(&parser);
-
-    let vm = new_vm(classloader);
+    let vm = new_test_vm();
     let mut vm_thread = VmThread::new(&vm, "test".to_string());
 
     vm_thread.frame_stack.last_mut().unwrap().stack.push(VmPrimitive::Int(n1));
@@ -46,10 +44,7 @@ fn floor_div_calculates_correctly(#[case] n1: i32, #[case] n2: i32, #[case] expe
 #[case(512, 1.3407807929942597e154)]
 #[case(-512, 7.458340731200207e-155)]
 fn power_of_two_d_calculates_correctly(#[case] n: i32, #[case] expected: f64) {
-    let parser = parser::ClassfileParser {};
-    let classloader = rt::make_classloader(&parser);
-
-    let vm = new_vm(classloader);
+    let vm = new_test_vm();
     let mut vm_thread = VmThread::new(&vm, "test".to_string());
 
     vm_thread.frame_stack.last_mut().unwrap().stack.push(VmPrimitive::Int(n));
@@ -70,10 +65,7 @@ fn power_of_two_d_calculates_correctly(#[case] n: i32, #[case] expected: f64) {
 #[case(127, 1.7014118e38)]
 #[case(-126, 1.17549435e-38)]
 fn power_of_two_f_calculates_correctly(#[case] n: i32, #[case] expected: f32) {
-    let parser = parser::ClassfileParser {};
-    let classloader = rt::make_classloader(&parser);
-
-    let vm = new_vm(classloader);
+    let vm = new_test_vm();
     let mut vm_thread = VmThread::new(&vm, "test".to_string());
 
     vm_thread.frame_stack.last_mut().unwrap().stack.push(VmPrimitive::Int(n));
@@ -85,4 +77,13 @@ fn power_of_two_f_calculates_correctly(#[case] n: i32, #[case] expected: f32) {
     );
 
     assert_eq!(vm_thread.frame_stack.last().unwrap().stack.last().unwrap(), &VmPrimitive::Float(expected));
+}
+
+fn new_test_vm() -> Vm {
+    let parser = parser::ClassfileParser {};
+    let classloader = NativeClassloader {
+        classloader: Box::new(rt::make_classloader(&parser)),
+    };
+
+    new_vm(classloader)
 }
