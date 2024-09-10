@@ -7,7 +7,7 @@ pub fn eval(vm_thread: &mut VmThread, pc: u16) -> Option<u16> {
     let result = value1 | value2;
 
     trace!(
-        "ior: {} & {} -> pushing {} to stack",
+        "ior: {} | {} -> pushing {} to stack",
         value1,
         value2,
         result

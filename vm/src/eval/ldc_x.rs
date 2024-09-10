@@ -1,5 +1,5 @@
 use crate::{
-    frame::VmFrameImpl, utils, vm_mem::VmStringPoolImpl, vm_thread::VmTheadImpl, VmPrimitive,
+    frame::VmFrameImpl, utils::{self, create_java_string}, vm_thread::VmTheadImpl, VmPrimitive,
     VmThread,
 };
 use model::prelude::*;
@@ -14,16 +14,20 @@ pub fn eval(
     // Check which instruction triggered this call, if it was ldc, then only one byte should be read,
     // when it was ldc_w, two bytes must be read
     let (index, pc_inc, instr_name) = match *code.get(pc as usize).unwrap() {
-        18 => (*code.get((pc + 1) as usize).unwrap() as u16, 2, "ldc"),
-        19 => (utils::read_u16_code(code, pc), 3, "ldc_w"),
+        18 => (*code.get((pc + 1) as usize).unwrap() as usize, 2, "ldc"),
+        19 => (utils::read_u16_code(code, pc) as usize, 3, "ldc_w"),
         i => panic!("Unexpected invocation of this instruction, found: {}", i),
     };
 
-    match jvm_class.constants.get(index as usize).unwrap() {
+    match jvm_class.constants.get(index).unwrap() {
         &ClassConstant::String(ref value) => {
-            trace!("{}: Pushing String \"{}\" to stack", instr_name, value);
+            error!("{}: Pushing String \"{}\" to stack", instr_name, value);
+            let rc_instance = create_java_string(vm_thread, value.clone());
 
-            let rc_instance = vm_thread.vm.mem.string_pool.intern(vm_thread, value);
+            if value == "Hello world from HelloWorld.jar!" {
+                error!("{:?}", rc_instance.borrow().fields["value"]);
+            }
+
             vm_thread
                 .frame_stack
                 .last_mut()

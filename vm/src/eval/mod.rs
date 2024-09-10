@@ -56,6 +56,7 @@ mod ifnull;
 mod iinc;
 mod iload_x;
 mod imul;
+mod ineg;
 mod instanceof;
 mod invokeinterface;
 mod invokespecial;
@@ -179,6 +180,7 @@ pub fn eval(
         110 => fdiv::eval(vm_thread, pc),
         111 => ddiv::eval(vm_thread, pc),
         112 => irem::eval(vm_thread, pc),
+        116 => ineg::eval(vm_thread, pc),
         120 => ishl::eval(vm_thread, pc),
         121 => lshl::eval(vm_thread, pc),
         122 => ishr::eval(vm_thread, pc),

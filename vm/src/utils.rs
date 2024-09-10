@@ -1,4 +1,6 @@
-use crate::class_hierarchy::HierarchyIterator;
+use std::{cell::RefCell, rc::Rc};
+
+use crate::{array::VmArrayImpl, class_hierarchy::HierarchyIterator, instance::VmInstanceImpl, vm_thread::VmTheadImpl};
 use itertools::Itertools;
 use model::prelude::*;
 
@@ -75,10 +77,8 @@ pub fn read_i32_code(code: &Vec<u8>, pc: u16, offset: u16) -> i32 {
     ((byte1 << 24) | (byte2 << 16) | (byte3 << 8) | byte4) as i32
 }
 
-pub fn get_java_byte_array_string_value(value_array: &VmArray) -> String {
-    let element_values: Vec<u16> = value_array
-        .elements
-        .iter()
+pub fn get_java_bytes_as_string_value(bytes: &[VmPrimitive]) -> String {
+    let element_values: Vec<u16> = bytes.iter()
         .tuples()
         .map(|(h, l)| match (h, l) {
             (VmPrimitive::Byte(ref hb), VmPrimitive::Byte(ref lb)) => (*hb as u16) << 8 | *lb as u16,
@@ -92,18 +92,37 @@ pub fn get_java_byte_array_string_value(value_array: &VmArray) -> String {
 pub fn get_java_string_value(string_instance: &VmInstance) -> String {
     match string_instance.fields.get("value").unwrap() {
         &VmPrimitive::Arrayref(ref rc_value_array) => {
-            get_java_byte_array_string_value(&*rc_value_array.borrow())
+            get_java_bytes_as_string_value(&*rc_value_array.borrow().elements)
         }
         p => panic!("Unexpected primitive: {:?}", p),
     }
 }
 
-// pub fn get_instance_field_string_value(class_instance: &VmInstance, field_name: &str) -> String {
-//     let rc_string = class_instance.fields.get(field_name).unwrap();
-//     match rc_string {
-//         &VmPrimitive::Objectref(ref rc_string_instance) => {
-//             get_java_string_value(&*rc_string_instance.borrow())
-//         }
-//         _ => panic!("Expected to find VmInstance but found {:?}", rc_string),
-//     }
-// }
+pub fn create_java_string(vm_thread: &mut VmThread, string: String) -> Rc<RefCell<VmInstance>> {
+    let count = string.encode_utf16().count();
+    let mut array = VmArray::new_primitive(count*2, 8);
+    for (i, c) in string.encode_utf16().enumerate() {
+        array.elements[i*2] = VmPrimitive::Byte((c >> 8) as u8);
+        array.elements[i*2+1] = VmPrimitive::Byte(c as u8);
+    }
+    
+    array.elements.iter().map(|a| match a {
+        VmPrimitive::Byte(b) => *b,
+        _ => todo!()
+    }).for_each(|b| {
+        print!("{} ", b);
+    });
+    println!();
+
+    let rc_array = Rc::new(RefCell::new(array));
+    let jvm_class = vm_thread.load_and_clinit_class(&"java/lang/String".to_string());
+    let mut instance = VmInstance::new(vm_thread, &jvm_class);
+    instance
+        .fields
+        .insert("value".to_string(), VmPrimitive::Arrayref(rc_array));
+    instance
+        .fields
+        .insert("coder".to_string(), VmPrimitive::Byte(1)); // coder = 1 which means UTF16 encoded string
+
+    Rc::new(RefCell::new(instance))
+}

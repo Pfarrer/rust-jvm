@@ -1,7 +1,5 @@
-// extern crate time;
-// extern crate dirs;
 
-use log::trace;
+use log::warn;
 use model::prelude::*;
 
 use vm::{frame::VmFrameImpl, vm_thread::VmTheadImpl};
@@ -10,18 +8,16 @@ pub fn get_method(_jvm_class: &JvmClass, class_method: &ClassMethod) -> Option<N
     match class_method.name.as_str() {
         "registerNatives" => Some(register_natives),
         "getClass" => Some(get_class), // ()Ljava/lang/Class;
+        "notifyAll" => Some(notify_all), // ()V
         _ => None,
     }
 }
 
 fn register_natives(_: &mut VmThread) {
-    trace!("Execute native java/lang/Object.registerNatives()V");
 }
 
 /// ()Ljava/lang/Class;
 fn get_class(vm_thread: &mut VmThread) {
-    trace!("Execute native java/lang/Object.getClass()Ljava/lang/Class;");
-
     let class_path = {
         let frame = vm_thread.frame_stack.last_mut().unwrap();
         match frame.stack_pop() {
@@ -38,4 +34,9 @@ fn get_class(vm_thread: &mut VmThread) {
 
     let frame: &mut VmFrame = vm_thread.frame_stack.last_mut().unwrap();
     frame.stack_push(VmPrimitive::Objectref(rc_class_instance));
+}
+
+/// ()V
+fn notify_all(_: &mut VmThread) {
+    warn!("notifyAll()V not implemented properly")
 }

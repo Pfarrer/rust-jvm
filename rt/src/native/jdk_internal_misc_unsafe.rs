@@ -18,20 +18,18 @@ pub fn get_method(_jvm_class: &JvmClass, class_method: &ClassMethod) -> Option<N
         "compareAndSetInt" => Some(compare_and_set_int), // (Ljava/lang/Object;JII)Z
         "compareAndSetLong" => Some(compare_and_set_long), // (Ljava/lang/Object;JJJ)Z
         "compareAndSetObject" => Some(compare_and_set_object), // (Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z
-        "getObjectVolatile" => Some(get_object_volatile), //(Ljava/lang/Object;J)Ljava/lang/Object;
+        "getObjectVolatile" => Some(get_object_volatile), // (Ljava/lang/Object;J)Ljava/lang/Object;
+        "getIntVolatile" => Some(get_int_volatile), // (Ljava/lang/Object;J)I
 
         _ => None,
     }
 }
 
 fn register_natives(_: &mut VmThread) {
-    trace!("Execute native jdk/internal/misc/Unsafe.registerNatives()V");
 }
 
 /// (Ljava/lang/Class;)I
 fn array_base_offset0(vm_thread: &mut VmThread) {
-    trace!("Execute native jdk/internal/misc/Unsafe.arrayBaseOffset0(Ljava/lang/Class;)I");
-
     // Remove parameter from stack
     let frame = vm_thread.frame_stack.last_mut().unwrap();
     let _ = frame.stack_pop_objectref();
@@ -42,8 +40,6 @@ fn array_base_offset0(vm_thread: &mut VmThread) {
 
 /// (Ljava/lang/Class;)I
 fn array_index_scale0(vm_thread: &mut VmThread) {
-    trace!("Execute native jdk/internal/misc/Unsafe.arrayBaseOffset0(Ljava/lang/Class;)I");
-
     // Remove parameter from stack
     let frame = vm_thread.frame_stack.last_mut().unwrap();
     let _ = frame.stack_pop_objectref();
@@ -54,8 +50,6 @@ fn array_index_scale0(vm_thread: &mut VmThread) {
 
 /// ()I
 fn address_size0(vm_thread: &mut VmThread) {
-    trace!("Execute native jdk/internal/misc/Unsafe.addressSize0()I");
-
     let frame = vm_thread.frame_stack.last_mut().unwrap();
 
     warn!("Not properly implemented -> will always return 8");
@@ -64,8 +58,6 @@ fn address_size0(vm_thread: &mut VmThread) {
 
 /// ()Z
 fn is_big_endian0(vm_thread: &mut VmThread) {
-    trace!("Execute native jdk/internal/misc/Unsafe.isBigEndian0()Z");
-
     // Remove parameter from stack
     let frame = vm_thread.frame_stack.last_mut().unwrap();
 
@@ -86,8 +78,6 @@ fn unaligned_access0(vm_thread: &mut VmThread) {
 
 /// (Ljava/lang/Class;Ljava/lang/String;)J
 fn object_field_offset1(vm_thread: &mut VmThread) {
-    trace!("Execute native jdk/internal/misc/Unsafe.objectFieldOffset1(Ljava/lang/Class;Ljava/lang/String;)J");
-
     // Remove parameters from stack
     let (field_name, class_path) = {
         let frame = vm_thread.frame_stack.last_mut().unwrap();
@@ -107,7 +97,6 @@ fn object_field_offset1(vm_thread: &mut VmThread) {
 
         (field_name, class_path)
     };
-    
 
     let jvm_class = vm_thread.load_and_clinit_class(&class_path);
     let (n, _) = jvm_class.fields.iter().enumerate().find(|(_, field)| field.name == field_name).unwrap();
@@ -118,24 +107,19 @@ fn object_field_offset1(vm_thread: &mut VmThread) {
 
 /// ()V
 fn load_fence(_: &mut VmThread) {
-    trace!("Execute native jdk/internal/misc/Unsafe.loadFence()V");
     warn!("Not properly implemented -> will do nothing");
 }
 /// ()V
 fn store_fence(_: &mut VmThread) {
-    trace!("Execute native jdk/internal/misc/Unsafe.storeFence()V");
     warn!("Not properly implemented -> will do nothing");
 }
 /// ()V
 fn full_fence(_: &mut VmThread) {
-    trace!("Execute native jdk/internal/misc/Unsafe.fullFence()V");
     warn!("Not properly implemented -> will do nothing");
 }
 
 /// (Ljava/lang/Object;JII)Z
 fn compare_and_set_int(vm_thread: &mut VmThread) {
-    trace!("Execute native jdk/internal/misc/Unsafe.compareAndSetInt(Ljava/lang/Object;JII)Z");
-
     // Remove parameters from stack
     let (rc_instance, field_index, expected, x) = {
         let frame = vm_thread.frame_stack.last_mut().unwrap();
@@ -168,8 +152,6 @@ fn compare_and_set_int(vm_thread: &mut VmThread) {
 
 /// (Ljava/lang/Object;JJJ)Z
 fn compare_and_set_long(vm_thread: &mut VmThread) {
-    trace!("Execute native jdk/internal/misc/Unsafe.compareAndSetLong(Ljava/lang/Object;JJJ)Z");
-
     // Remove parameters from stack
     let (rc_instance, field_index, expected, x) = {
         let frame = vm_thread.frame_stack.last_mut().unwrap();
@@ -202,8 +184,6 @@ fn compare_and_set_long(vm_thread: &mut VmThread) {
 
 /// (Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z
 fn compare_and_set_object(vm_thread: &mut VmThread) {
-    trace!("Execute native jdk/internal/misc/Unsafe.compareAndSetObject(Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z");
-
     // Remove parameters from stack
     let (rc_instance, offset, expected, x) = {
         let frame = vm_thread.frame_stack.last_mut().unwrap();
@@ -221,7 +201,7 @@ fn compare_and_set_object(vm_thread: &mut VmThread) {
             let actual = array.elements.get(offset).unwrap();
             
             if actual == &expected {
-                array.elements.insert(offset, x);
+                array.elements[offset] = x;
                 true
             } else {
                 false
@@ -236,8 +216,6 @@ fn compare_and_set_object(vm_thread: &mut VmThread) {
 
 /// (Ljava/lang/Object;J)Ljava/lang/Object;
 fn get_object_volatile(vm_thread: &mut VmThread) {
-    trace!("Execute native jdk/internal/misc/Unsafe.getObjectVolatile(Ljava/lang/Object;J)Ljava/lang/Object;");
-
     let frame = vm_thread.frame_stack.last_mut().unwrap();
     let offset = frame.stack_pop_long();
     let vm_object = frame.stack_pop();
@@ -250,4 +228,34 @@ fn get_object_volatile(vm_thread: &mut VmThread) {
     };
 
     frame.stack_push(rc_object);
+}
+
+// (Ljava/lang/Object;J)I
+fn get_int_volatile(vm_thread: &mut VmThread) {
+    let (vm_object, field_name) = {
+        let frame = vm_thread.frame_stack.last_mut().unwrap();
+        let offset = frame.stack_pop_long();
+        let vm_object = frame.stack_pop();
+
+        let class_path = match vm_object {
+            VmPrimitive::Objectref(ref rc_object) => {
+                rc_object.borrow_mut().class_path.clone()
+            },
+            a => panic!("Not implemented for {:?}", a),
+        };
+
+        let field_name = vm_thread.load_and_clinit_class(&class_path).fields.get(offset as usize).unwrap().name.clone();
+        (vm_object, field_name)
+    };
+
+    let value = match vm_object {
+        VmPrimitive::Objectref(ref rc_object) => {
+            let object = rc_object.borrow_mut();
+            object.fields.get(&field_name).unwrap().clone()
+        },
+        a => panic!("Not implemented for {:?}", a),
+    };
+
+    let frame = vm_thread.frame_stack.last_mut().unwrap();
+    frame.stack_push(value);
 }

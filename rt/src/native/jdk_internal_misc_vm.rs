@@ -1,4 +1,4 @@
-use log::{trace, warn};
+use log::warn;
 use model::prelude::*;
 
 use vm::frame::VmFrameImpl;
@@ -13,13 +13,10 @@ pub fn get_method(_jvm_class: &JvmClass, class_method: &ClassMethod) -> Option<N
 
 /// ()V
 fn initialize(_: &mut VmThread) {
-    trace!("Execute native jdk/internal/misc/VM.initialize()V");
 }
 
 /// ()V
 fn initialize_from_archive(vm_thread: &mut VmThread) {
-    trace!("Execute native jdk/internal/misc/VM.initializeFromArchive(Ljava/lang/Class;)V");
-
     // Remove parameter from stack
     let frame = vm_thread.frame_stack.last_mut().unwrap();
     let rc_instance = frame.stack_pop_objectref();

@@ -3,39 +3,40 @@
 
 use std::env;
 
-use log::{trace, warn};
+use log::warn;
 use model::prelude::*;
 
-use vm::{frame::VmFrameImpl, vm_mem::VmStringPoolImpl, vm_thread::VmTheadImpl};
+use vm::{frame::VmFrameImpl, utils::create_java_string, vm_mem::VmStaticPoolImpl, vm_thread::VmTheadImpl};
 
 pub fn get_method(_jvm_class: &JvmClass, class_method: &ClassMethod) -> Option<NativeMethod> {
     match class_method.name.as_str() {
         "registerNatives" => Some(register_natives),
         "initProperties" => Some(init_properties), // (Ljava/util/Properties;)Ljava/util/Properties;
-
+        "arraycopy" => Some(arraycopy), // (Ljava/lang/Object;ILjava/lang/Object;II)V
+        
         // "currentTimeMillis" => current_time_millis(vm, class_path, method_name, method_signature), // ()J
         // "nanoTime" => nano_time(vm, class_path, method_name, method_signature), // ()J
         
-        // "setIn0" => set_in0(vm, class_path, method_name, method_signature), // (Ljava/io/InputStream;)V
-        // "setOut0" => set_out0(vm, class_path, method_name, method_signature), // (Ljava/io/PrintStream;)V
-        // "setErr0" => set_err0(vm, class_path, method_name, method_signature), // (Ljava/io/PrintStream;)V
-        // "arraycopy" => arraycopy(vm, class_path, method_name, method_signature), // (Ljava/lang/Object;ILjava/lang/Object;II)V
+        "setIn0" => Some(set_in0), // (Ljava/io/InputStream;)V
+        "setOut0" => Some(set_out0), // (Ljava/io/PrintStream;)V
+        "setErr0" => Some(set_err0), // (Ljava/io/PrintStream;)V
+        
         // "mapLibraryName" => map_library_name(vm, class_path, method_name, method_signature), // (Ljava/lang/String;)Ljava/lang/String;
         _ => None,
     }
 }
 
 fn register_natives(_: &mut VmThread) {
-    trace!("Execute native java/lang/System.registerNatives()V");
 }
 
 /// (Ljava/util/Properties;)Ljava/util/Properties;
 fn init_properties(vm_thread: &mut VmThread) {
-    trace!("Execute native java/lang/System.initProperties(Ljava/util/Properties;)Ljava/util/Properties;");
     warn!("This method is only partially implemented!");
 
-//    set_property(vm, "sun.stdout.encoding", "UTF-8");
-//    set_property(vm, "sun.stderr.encoding", "UTF-8");
+    set_property(vm_thread, "sun.stdout.encoding", "UTF-8");
+    set_property(vm_thread, "stdout.encoding", "UTF-8");
+    set_property(vm_thread, "sun.stderr.encoding", "UTF-8");
+    set_property(vm_thread, "stderr.encoding", "UTF-8");
     set_property(vm_thread, "file.encoding", "UTF-8");
 
     set_property(vm_thread, "line.separator", "\n");
@@ -47,27 +48,23 @@ fn init_properties(vm_thread: &mut VmThread) {
 
     let user_dir_pathbuf = dirs::home_dir().unwrap();
     set_property(vm_thread, "user.dir",  user_dir_pathbuf.to_str().unwrap());
+    set_property(vm_thread, "user.home", user_dir_pathbuf.to_str().unwrap());
+    set_property(vm_thread, "user.name", &env::var("USER").unwrap());
 
     fn set_property(vm_thread: &mut VmThread, key: &str, value: &str) {
         // Intern key and value first
-        
-        let rc_interned_key = vm_thread.vm.mem.string_pool.intern(vm_thread, &key.to_string());
-        let rc_interned_value = vm_thread.vm.mem.string_pool.intern(vm_thread, &value.to_string());
+        let rc_interned_key = create_java_string(vm_thread, key.to_string());
+        let rc_interned_value = create_java_string(vm_thread, value.to_string());
 
-        {
-            let frame = vm_thread.frame_stack.last_mut().unwrap();
-
-            // Clone instance first
-            let value = frame.stack_pop();
-            frame.stack_push(value.clone());
-            frame.stack_push(value);
-
-            // Push the key to the stack
-            frame.stack_push(VmPrimitive::Objectref(rc_interned_key));
-
-            // Push the value to the stack
-            frame.stack_push(VmPrimitive::Objectref(rc_interned_value));
-        }
+        let frame = vm_thread.frame_stack.last_mut().unwrap();
+        // Clone instance first
+        let value = frame.stack_pop();
+        frame.stack_push(value.clone());
+        frame.stack_push(value);
+        // Push the key to the stack
+        frame.stack_push(VmPrimitive::Objectref(rc_interned_key));
+        // Push the value to the stack
+        frame.stack_push(VmPrimitive::Objectref(rc_interned_value));
 
         // Invoke the setProperty method
         vm_thread.invoke_method(&"java/util/Properties".to_string(), &"setProperty".to_string(),
@@ -80,8 +77,6 @@ fn init_properties(vm_thread: &mut VmThread) {
 }
 
 // fn current_time_millis(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
-//     trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
-
 //     let millis_int = if vm.initialized {
 //         let time_spec = time::get_time();
 
@@ -106,63 +101,53 @@ fn init_properties(vm_thread: &mut VmThread) {
 //     frame.stack_push(VmPrimitive::Long(nano_time as i64));
 // }
 
-// /// arraycopy(Ljava/lang/Object;ILjava/lang/Object;II)V
-// fn arraycopy(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
-//     trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
+/// arraycopy(Ljava/lang/Object;ILjava/lang/Object;II)V
+fn arraycopy(vm_thread: &mut VmThread) {
+    let frame = vm_thread.frame_stack.last_mut().unwrap();
 
-//     let frame = vm.frame_stack.last_mut().unwrap();
+    let length = frame.stack_pop_int() as usize;
+    let dest_pos = frame.stack_pop_int() as usize;
+    let rc_dest_array = frame.stack_pop_arrayref();
+    let src_pos = frame.stack_pop_int() as usize;
+    let rc_src_array = frame.stack_pop_arrayref();
 
-//     let length = frame.stack_pop_int() as usize;
-//     let dest_pos = frame.stack_pop_int() as usize;
-//     let rc_dest_array = frame.stack_pop_arrayref();
-//     let src_pos = frame.stack_pop_int() as usize;
-//     let rc_src_array = frame.stack_pop_arrayref();
+    let mut dest_array = rc_dest_array.borrow_mut();
+    let src_array = rc_src_array.borrow();
 
-//     let mut dest_array = rc_dest_array.borrow_mut();
-//     let src_array = rc_src_array.borrow();
+    for i in 0..length {
+        dest_array.elements[dest_pos + i] = src_array.elements[src_pos + i].clone();
+    }
+}
 
-//     for i in 0..length {
-//         dest_array.elements[dest_pos + i] = src_array.elements[src_pos + i].clone();
-//     }
-// }
+// (Ljava/io/InputStream;)V
+fn set_in0(vm_thread: &mut VmThread) {
+    let frame = vm_thread.frame_stack.last_mut().unwrap();
+    let rc_stream = frame.stack_pop_objectref();
 
-// // (Ljava/io/InputStream;)V
-// fn set_in0(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
-//     trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
+    vm_thread.vm.mem.static_pool
+        .set_class_field(&"java/lang/System".to_string(), "in".to_string(), VmPrimitive::Objectref(rc_stream));
+}
 
-//     let frame = vm.frame_stack.last_mut().unwrap();
-//     let rc_stream = frame.stack_pop_objectref();
+// (Ljava/io/PrintStream;)V
+fn set_out0(vm_thread: &mut VmThread) {
+    let frame = vm_thread.frame_stack.last_mut().unwrap();
+    let rc_stream = frame.stack_pop_objectref();
 
-//     vm.class_statics.get_mut(class_path).unwrap()
-//         .insert("in".to_string(), VmPrimitive::Objectref(rc_stream));
-// }
+    vm_thread.vm.mem.static_pool
+        .set_class_field(&"java/lang/System".to_string(), "out".to_string(), VmPrimitive::Objectref(rc_stream));
+}
 
-// // (Ljava/io/PrintStream;)V
-// fn set_out0(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
-//     trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
+// (Ljava/io/PrintStream;)V
+fn set_err0(vm_thread: &mut VmThread) {
+    let frame = vm_thread.frame_stack.last_mut().unwrap();
+    let rc_stream = frame.stack_pop_objectref();
 
-//     let frame = vm.frame_stack.last_mut().unwrap();
-//     let rc_stream = frame.stack_pop_objectref();
-
-//     vm.class_statics.get_mut(class_path).unwrap()
-//         .insert("out".to_string(), VmPrimitive::Objectref(rc_stream));
-// }
-
-// // (Ljava/io/PrintStream;)V
-// fn set_err0(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
-//     trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
-
-//     let frame = vm.frame_stack.last_mut().unwrap();
-//     let rc_stream = frame.stack_pop_objectref();
-
-//     vm.class_statics.get_mut(class_path).unwrap()
-//         .insert("err".to_string(), VmPrimitive::Objectref(rc_stream));
-// }
+    vm_thread.vm.mem.static_pool
+        .set_class_field(&"java/lang/System".to_string(), "err".to_string(), VmPrimitive::Objectref(rc_stream));
+}
 
 // /// (Ljava/lang/String;)Ljava/lang/String;
 // fn map_library_name(vm: &mut Vm, class_path: &String, method_name: &String, method_signature: &String) {
-//     trace!("Execute native {}.{}{}", class_path, method_name, method_signature);
-
 //     let libname =  {
 //         let frame = vm.frame_stack.last_mut().unwrap();
 //         let rc_string = frame.stack_pop_objectref();

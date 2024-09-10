@@ -4,9 +4,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::RwLock;
 
-use crate::array::VmArrayImpl;
-use crate::instance::VmInstanceImpl;
-use crate::vm_thread::VmTheadImpl;
+use crate::utils::create_java_string;
 
 pub trait VmMemImpl {
     fn new() -> VmMem;
@@ -79,30 +77,13 @@ impl VmStringPoolImpl for VmStringPool {
         }
     }
 
-    fn intern(&self, thread: &mut VmThread, string: &String) -> Rc<RefCell<VmInstance>> {
-        let jvm_class = thread.load_and_clinit_class(&"java/lang/String".to_string());
-        let mut instance = VmInstance::new(thread, &jvm_class);
-
+    fn intern(&self, vm_thread: &mut VmThread, string: &String) -> Rc<RefCell<VmInstance>> {
         // Get pooled String instance or create new instance
         self.pool
             .write()
             .unwrap()
             .entry(string.clone())
-            .or_insert_with(|| {
-                // ... and set fields
-                let count = string.encode_utf16().count();
-                let mut array = VmArray::new_primitive(count*2, 8);
-                for (i, c) in string.encode_utf16().enumerate() {
-                    array.elements[i*2] = VmPrimitive::Byte((c >> 8) as u8);
-                    array.elements[i*2+1] = VmPrimitive::Byte(c as u8);
-                }
-                let rc_array = Rc::new(RefCell::new(array));
-                instance
-                    .fields
-                    .insert("value".to_string(), VmPrimitive::Arrayref(rc_array));
-
-                Rc::new(RefCell::new(instance))
-            })
+            .or_insert_with(|| create_java_string(vm_thread, string.clone()))
             .clone()
     }
 }
