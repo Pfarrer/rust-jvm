@@ -21,13 +21,8 @@ pub fn eval(
 
     match jvm_class.constants.get(index).unwrap() {
         &ClassConstant::String(ref value) => {
-            error!("{}: Pushing String \"{}\" to stack", instr_name, value);
+            trace!("{}: Pushing String \"{}\" to stack", instr_name, value);
             let rc_instance = create_java_string(vm_thread, value.clone());
-
-            if value == "Hello world from HelloWorld.jar!" {
-                error!("{:?}", rc_instance.borrow().fields["value"]);
-            }
-
             vm_thread
                 .frame_stack
                 .last_mut()

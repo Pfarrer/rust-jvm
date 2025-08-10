@@ -1,3 +1,4 @@
+use log::error;
 use model::prelude::*;
 use vm::frame::VmFrameImpl;
 
@@ -39,30 +40,24 @@ fn write_bytes(vm_thread: &mut VmThread) {
         }
     };
 
-    print!("write: ");
-    byte_array.elements[offset..offset+length].iter().map(|a| match a {
-        VmPrimitive::Byte(b) => *b,
-        _ => todo!()
-    }).for_each(|b| {
-        print!("{} ", b);
-    });
-    println!();
+    // Write raw bytes to the file descriptor without attempting string decoding
+    use std::io::{self, Write};
 
-    // let v = &byte_array.elements[offset..offset+length].iter().map(|a| match a {
-    //     VmPrimitive::Byte(b) => *b,
-    //     _ => todo!()
-    // }).collect::<Vec<_>>();
-    // let t = String::from_utf8_lossy(v.as_ref());
-    // print!("t: {:x}", t);
-    
-    // for c in &byte_array.elements[offset..offset+length].iter().map(|a| match a {
-    //     VmPrimitive::Byte(b) => *b as char,
-    //     _ => todo!()
-    // }).collect::<Vec<_>>() {
-    //     match fd {
-    //         1 => print!("{}", c),
-    //         2 => eprint!("{}", c),
-    //         _ => panic!("Unexpected fd = {}", fd),
-    //     };
-    // }
+    let slice = &byte_array.elements[offset..offset + length];
+    let mut buf: Vec<u8> = Vec::with_capacity(slice.len());
+    for prim in slice {
+        match prim {
+            VmPrimitive::Byte(b) => buf.push(*b),
+            _ => panic!("Unexpected primitive in byte array: {:?}", prim),
+        }
+    }
+
+    // Write raw bytes to stdout or stderr
+    let mut handle: Box<dyn Write> = match fd {
+        1 => Box::new(io::stdout()),
+        2 => Box::new(io::stderr()),
+        _ => panic!("Unexpected fd = {}", fd),
+    };
+    handle.write_all(&buf).expect("Failed to write to output");
+    handle.flush().expect("Failed to flush output");
 }

@@ -99,49 +99,54 @@ pub fn get_java_string_value(string_instance: &VmInstance) -> String {
 }
 
 pub fn create_java_string(vm_thread: &mut VmThread, string: String) -> Rc<RefCell<VmInstance>> {
-    trace!("Creating Java String: {}", string);
-    let count: usize = string.encode_utf16().count();
-    let mut array = VmArray::new_primitive(count*2, 8);
+    // Java 9+ uses compact strings: a byte[] `value` field and a `coder` field.
+    // `coder == 0` → UTF‑8, `coder == 1` → UTF‑16 (big‑endian).
+    // This implementation stores the string as UTF‑16 bytes (big‑endian) and sets coder = 1.
+    // This matches the expectations of `get_java_string_value`, which decodes UTF‑16.
 
-    for (i, c) in string.encode_utf16().enumerate() {
-        array.elements[i*2] = VmPrimitive::Byte((c >> 8) as u8);
-        array.elements[i*2+1] = VmPrimitive::Byte(c as u8);
+    trace!("Creating Java String: {}", string);
+
+    // Encode as UTF‑16BE bytes (big‑endian)
+    let utf16_iter = string.encode_utf16();
+    let mut bytes: Vec<u8> = Vec::with_capacity(utf16_iter.clone().count() * 2);
+    for code_unit in utf16_iter {
+        bytes.push((code_unit >> 8) as u8); // high byte
+        bytes.push((code_unit & 0xFF) as u8); // low byte
+    }
+    let count = bytes.len();
+
+    // Allocate a byte[] array (atype 8 = byte) with the exact length
+    let mut array = VmArray::new_primitive(count, 8);
+    for (i, b) in bytes.iter().enumerate() {
+        array.elements[i] = VmPrimitive::Byte(*b);
     }
     let rc_array = Rc::new(RefCell::new(array));
-    
-    // array.elements.iter().map(|a| match a {
-    //     VmPrimitive::Byte(b) => *b,
-    //     _ => todo!()
-    // }).for_each(|b| {
-    //     print!("{} ", b);
-    // });
-    // println!();
 
+    // Load java/lang/String class (triggers <clinit> if not already done)
     let jvm_class = vm_thread.load_and_clinit_class(&"java/lang/String".to_string());
+
+    // Create a new instance of java/lang/String
     let mut instance = VmInstance::new(vm_thread, &jvm_class);
+
+    // Set the `value` field to the byte[] we just created
     instance
         .fields
         .insert("value".to_string(), VmPrimitive::Arrayref(rc_array));
+
+    // Set the `coder` field to 1 (UTF‑16). Use 0 for UTF‑8.
     instance
         .fields
-        .insert("coder".to_string(), VmPrimitive::Byte(1)); // coder = 1 which means UTF16 encoded string
+        .insert("coder".to_string(), VmPrimitive::Byte(1));
+
+    // Some JVM implementations also have a cached `hash` field; initialise it to 0.
+    // This is optional but mirrors the reference implementation.
+    if instance.fields.contains_key("hash") {
+        instance
+            .fields
+            .insert("hash".to_string(), VmPrimitive::Int(0));
+    }
 
     Rc::new(RefCell::new(instance))
-
-    // let rc_charset = find_static_field_value(vm_thread, &"java/nio/charset/StandardCharsets".to_string(), &"UTF_16".to_string());
-
-    // let jvm_class = vm_thread.load_and_clinit_class(&"java/lang/String".to_string());
-    // let instance = VmInstance::new(vm_thread, &jvm_class);
-    // let rc_instance = Rc::new(RefCell::new(instance));
-
-    // let frame = vm_thread.frame_stack.last_mut().unwrap();
-    // frame.stack_push(rc_charset);
-    // frame.stack_push(VmPrimitive::Arrayref(rc_array));
-    // frame.stack_push(VmPrimitive::Objectref(rc_instance.clone()));
-
-    // vm_thread.invoke_method(&"java/lang/String".to_string(), &"<init>".to_string(), &"([BLjava/nio/charset/Charset;)V".to_string(), true);
-
-    // rc_instance
 }
 
 pub fn find_static_field_value(
