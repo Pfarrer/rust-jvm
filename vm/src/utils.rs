@@ -1,6 +1,6 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::{array::VmArrayImpl, class_hierarchy::HierarchyIterator, instance::VmInstanceImpl, vm_thread::VmTheadImpl};
+use crate::{array::VmArrayImpl, class_hierarchy::HierarchyIterator, instance::VmInstanceImpl, vm_mem::VmStaticPoolImpl, vm_thread::VmTheadImpl};
 use itertools::Itertools;
 use model::prelude::*;
 
@@ -99,22 +99,24 @@ pub fn get_java_string_value(string_instance: &VmInstance) -> String {
 }
 
 pub fn create_java_string(vm_thread: &mut VmThread, string: String) -> Rc<RefCell<VmInstance>> {
-    let count = string.encode_utf16().count();
+    trace!("Creating Java String: {}", string);
+    let count: usize = string.encode_utf16().count();
     let mut array = VmArray::new_primitive(count*2, 8);
+
     for (i, c) in string.encode_utf16().enumerate() {
         array.elements[i*2] = VmPrimitive::Byte((c >> 8) as u8);
         array.elements[i*2+1] = VmPrimitive::Byte(c as u8);
     }
-    
-    array.elements.iter().map(|a| match a {
-        VmPrimitive::Byte(b) => *b,
-        _ => todo!()
-    }).for_each(|b| {
-        print!("{} ", b);
-    });
-    println!();
-
     let rc_array = Rc::new(RefCell::new(array));
+    
+    // array.elements.iter().map(|a| match a {
+    //     VmPrimitive::Byte(b) => *b,
+    //     _ => todo!()
+    // }).for_each(|b| {
+    //     print!("{} ", b);
+    // });
+    // println!();
+
     let jvm_class = vm_thread.load_and_clinit_class(&"java/lang/String".to_string());
     let mut instance = VmInstance::new(vm_thread, &jvm_class);
     instance
@@ -125,4 +127,45 @@ pub fn create_java_string(vm_thread: &mut VmThread, string: String) -> Rc<RefCel
         .insert("coder".to_string(), VmPrimitive::Byte(1)); // coder = 1 which means UTF16 encoded string
 
     Rc::new(RefCell::new(instance))
+
+    // let rc_charset = find_static_field_value(vm_thread, &"java/nio/charset/StandardCharsets".to_string(), &"UTF_16".to_string());
+
+    // let jvm_class = vm_thread.load_and_clinit_class(&"java/lang/String".to_string());
+    // let instance = VmInstance::new(vm_thread, &jvm_class);
+    // let rc_instance = Rc::new(RefCell::new(instance));
+
+    // let frame = vm_thread.frame_stack.last_mut().unwrap();
+    // frame.stack_push(rc_charset);
+    // frame.stack_push(VmPrimitive::Arrayref(rc_array));
+    // frame.stack_push(VmPrimitive::Objectref(rc_instance.clone()));
+
+    // vm_thread.invoke_method(&"java/lang/String".to_string(), &"<init>".to_string(), &"([BLjava/nio/charset/Charset;)V".to_string(), true);
+
+    // rc_instance
+}
+
+pub fn find_static_field_value(
+    vm_thread: &mut VmThread,
+    root_class_path: &String,
+    field_name: &String,
+) -> VmPrimitive {
+    let class_paths: Vec<String> = {
+        let hierarchy_iter = HierarchyIterator::hierarchy_iter(vm_thread, root_class_path);
+        hierarchy_iter
+            .map(|(jvm_class, _, _)| jvm_class.this_class)
+            .collect()
+    };
+
+    for class_path in class_paths {
+        let value_option = vm_thread
+            .vm
+            .mem
+            .static_pool
+            .get_class_field(&class_path, &field_name);
+        if value_option.is_some() {
+            return value_option.unwrap();
+        }
+    }
+
+    panic!("Static field not found: {}.{}", root_class_path, field_name);
 }
