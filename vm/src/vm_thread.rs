@@ -9,6 +9,7 @@ use crate::vm_mem::VmStringPoolImpl;
 use log::{debug, trace};
 use model::prelude::*;
 use parser::method_signature::parse_method_signature;
+use tracing::instrument;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -140,6 +141,7 @@ impl<'a> VmTheadImpl<'a> for VmThread<'a> {
     }
 }
 
+#[instrument(skip_all, fields(class_path=frame.class_path, method_name=frame.method_name, method_signature=frame.method_signature))]
 fn execute_method(
     vm_thread: &mut VmThread,
     jvm_class: &JvmClass,

@@ -5,6 +5,8 @@ use model::class::ClassVersion;
 
 use crate::util;
 
+const SUPPORTED_MAJOR_VERSION: u16 = 55; // Corresponds to Java 11
+
 pub fn parse<T: Read>(reader: &mut T) -> Result<ClassVersion> {
     let mut magic = [0u8; 4];
     reader.read_exact(&mut magic)?;
@@ -16,8 +18,8 @@ pub fn parse<T: Read>(reader: &mut T) -> Result<ClassVersion> {
     let minor = util::read_u16(reader)?;
     let major = util::read_u16(reader)?;
 
-    if major > 55 {
-        panic!("Unsupported Classfile version: {}.{} > 51.0.", major, minor);
+    if major > SUPPORTED_MAJOR_VERSION {
+        panic!("Unsupported Classfile version: {}.{} > {}.0.", major, minor, SUPPORTED_MAJOR_VERSION);
     }
 
     Ok(ClassVersion { major, minor })

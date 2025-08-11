@@ -113,7 +113,7 @@ pub fn eval(
 
     {
         let frame = vm_thread.frame_stack.last().unwrap();
-        trace!(
+        debug!(
             "{}.{}{}#{} = {}",
             frame.class_path,
             frame.method_name,

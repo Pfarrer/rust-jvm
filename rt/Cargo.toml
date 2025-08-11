@@ -11,6 +11,7 @@ vm = { path = "../vm" }
 log = "0.4.17"
 anyhow = "1.0"
 dirs = "5.0"
+tracing = "0.1.41"
 
 [dev-dependencies]
 parser = { path = "../parser" }
