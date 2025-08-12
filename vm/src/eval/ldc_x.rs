@@ -1,6 +1,8 @@
 use crate::{
-    frame::VmFrameImpl, utils::{self, create_java_string}, vm_thread::VmTheadImpl, VmPrimitive,
-    VmThread,
+    frame::VmFrameImpl,
+    utils::{self, create_java_string},
+    vm_thread::VmTheadImpl,
+    VmPrimitive, VmThread,
 };
 use model::prelude::*;
 

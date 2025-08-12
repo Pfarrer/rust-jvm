@@ -2,8 +2,8 @@ use std::{cell::RefCell, rc::Rc};
 
 use ctor::ctor;
 use model::prelude::*;
-use rstest::rstest;
 use pretty_assertions::assert_eq;
+use rstest::rstest;
 use rt::NativeClassloader;
 use vm::{frame::VmFrameImpl, instance::VmInstanceImpl, new_vm, vm_thread::VmTheadImpl};
 
@@ -17,7 +17,7 @@ fn increment_and_get() {
     let vm = new_test_vm();
     let mut vm_thread: VmThread = VmThread::new(&vm, "test".to_string());
     new_instance(&mut vm_thread, "java/util/concurrent/atomic/AtomicInteger");
-    
+
     vm_thread.invoke_method(
         &"java/util/concurrent/atomic/AtomicInteger".to_string(),
         &"incrementAndGet".to_string(),
@@ -25,7 +25,10 @@ fn increment_and_get() {
         true,
     );
 
-    assert_eq!(vm_thread.frame_stack.last().unwrap().stack.last().unwrap(), &VmPrimitive::Int(1));
+    assert_eq!(
+        vm_thread.frame_stack.last().unwrap().stack.last().unwrap(),
+        &VmPrimitive::Int(1)
+    );
 }
 
 fn new_test_vm() -> Vm {

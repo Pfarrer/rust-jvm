@@ -3,13 +3,13 @@ extern crate log;
 
 pub mod array;
 pub mod class_hierarchy;
+mod eval;
 pub mod frame;
 pub mod instance;
 pub mod primitive;
 pub mod utils;
 pub mod vm_mem;
 pub mod vm_thread;
-mod eval;
 
 use model::prelude::*;
 use vm_mem::VmMemImpl;

@@ -15,7 +15,6 @@ pub fn make_classloader(parser: &impl Parser) -> impl Classloader {
     ClassfileLoader::open(rt_path, parser).unwrap()
 }
 
-
 pub fn bootstrap_vm(classloader: impl Classloader + 'static) -> Vm {
     let vm = new_vm(native::NativeClassloader {
         classloader: Box::new(classloader),

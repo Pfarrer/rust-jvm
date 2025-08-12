@@ -7,5 +7,4 @@ pub fn get_method(_jvm_class: &JvmClass, class_method: &ClassMethod) -> Option<N
     }
 }
 
-fn init_ids(_: &mut VmThread) {
-}
+fn init_ids(_: &mut VmThread) {}

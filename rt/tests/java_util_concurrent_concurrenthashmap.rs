@@ -2,10 +2,16 @@ use std::{cell::RefCell, rc::Rc};
 
 use ctor::ctor;
 use model::prelude::*;
-use rstest::rstest;
 use pretty_assertions::assert_eq;
+use rstest::rstest;
 use rt::NativeClassloader;
-use vm::{frame::VmFrameImpl, instance::VmInstanceImpl, new_vm, utils::{create_java_string, get_java_string_value}, vm_thread::VmTheadImpl};
+use vm::{
+    frame::VmFrameImpl,
+    instance::VmInstanceImpl,
+    new_vm,
+    utils::{create_java_string, get_java_string_value},
+    vm_thread::VmTheadImpl,
+};
 
 #[ctor]
 fn foo() {
@@ -17,7 +23,7 @@ fn set_and_get_float() {
     let vm = new_test_vm();
     let mut vm_thread: VmThread = VmThread::new(&vm, "test".to_string());
     let rc_map_instance = new_instance(&mut vm_thread, "java/util/concurrent/ConcurrentHashMap");
-    
+
     {
         let frame = vm_thread.frame_stack.last_mut().unwrap();
         frame.stack_push(VmPrimitive::Objectref(rc_map_instance.clone()));
@@ -78,7 +84,7 @@ fn get_missing_float() {
     let vm = new_test_vm();
     let mut vm_thread: VmThread = VmThread::new(&vm, "test".to_string());
     let rc_map_instance = new_instance(&mut vm_thread, "java/util/concurrent/ConcurrentHashMap");
-    
+
     {
         let frame = vm_thread.frame_stack.last_mut().unwrap();
         frame.stack_push(VmPrimitive::Objectref(rc_map_instance.clone()));
@@ -141,7 +147,10 @@ fn set_and_get_string() {
         let frame = vm_thread.frame_stack.last_mut().unwrap();
         let rc_instance = frame.stack_pop_objectref();
         let string_instance = &*rc_instance.borrow_mut();
-        assert_eq!(get_java_string_value(string_instance).as_bytes(), "v1".as_bytes());
+        assert_eq!(
+            get_java_string_value(string_instance).as_bytes(),
+            "v1".as_bytes()
+        );
     }
 
     {

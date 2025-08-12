@@ -32,7 +32,7 @@ impl VmPrimitiveImpl for VmPrimitive {
             &ClassConstant::String(ref value) => {
                 let mut vm_thread = VmThread::new(vm, "string_pool.intern".to_string());
                 VmPrimitive::Objectref(vm.mem.string_pool.intern(&mut vm_thread, value))
-            },
+            }
             c => panic!("Unexpected constant found: {:?}", c),
         }
     }

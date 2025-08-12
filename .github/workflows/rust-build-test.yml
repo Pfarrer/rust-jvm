@@ -19,6 +19,9 @@ jobs:
     - name: Build
       run: cargo build
 
+    - name: Fetch Java Runtime
+      run: ./fetch_runtime.sh
+
     - name: Run tests
       run: cargo test
 

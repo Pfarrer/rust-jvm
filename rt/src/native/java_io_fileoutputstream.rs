@@ -3,15 +3,14 @@ use vm::frame::VmFrameImpl;
 
 pub fn get_method(_jvm_class: &JvmClass, class_method: &ClassMethod) -> Option<NativeMethod> {
     match class_method.name.as_str() {
-        "initIDs" => Some(init_ids), // ()V
+        "initIDs" => Some(init_ids),       // ()V
         "writeBytes" => Some(write_bytes), // ([BIIZ)V
         _ => None,
     }
 }
 
 /// ()V
-fn init_ids(_: &mut VmThread) {
-}
+fn init_ids(_: &mut VmThread) {}
 
 /// ([BIIZ)V
 fn write_bytes(vm_thread: &mut VmThread) {
@@ -30,12 +29,12 @@ fn write_bytes(vm_thread: &mut VmThread) {
 
         let fd_instance = match fos_instance.fields.get("fd").unwrap() {
             &VmPrimitive::Objectref(ref rc_fd_instance) => rc_fd_instance.borrow(),
-            a => panic!("Not implemented for {:?}", a)
+            a => panic!("Not implemented for {:?}", a),
         };
 
         match fd_instance.fields.get("fd").unwrap() {
             &VmPrimitive::Int(ref val) => val.clone(),
-            a => panic!("Not implemented for {:?}", a)
+            a => panic!("Not implemented for {:?}", a),
         }
     };
 

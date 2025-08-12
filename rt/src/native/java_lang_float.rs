@@ -5,7 +5,7 @@ use vm::frame::VmFrameImpl;
 pub fn get_method(_jvm_class: &JvmClass, class_method: &ClassMethod) -> Option<NativeMethod> {
     match class_method.name.as_str() {
         "floatToRawIntBits" => Some(float_to_raw_int_bits), // (F)I
-        "intBitsToFloat" => Some(int_bits_to_float), // (I)F
+        "intBitsToFloat" => Some(int_bits_to_float),        // (I)F
         _ => None,
     }
 }

@@ -11,7 +11,7 @@ pub fn eval(vm_thread: &mut VmThread, code: &Vec<u8>, pc: u16) -> Option<u16> {
         }
         (&VmPrimitive::Objectref(_), &VmPrimitive::Null) => false,
         (&VmPrimitive::Null, &VmPrimitive::Objectref(_)) => false,
-        
+
         (&VmPrimitive::Arrayref(ref rc_array1), &VmPrimitive::Arrayref(ref rc_array2)) => {
             rc_array1.eq(rc_array2)
         }

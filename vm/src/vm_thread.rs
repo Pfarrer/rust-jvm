@@ -9,9 +9,9 @@ use crate::vm_mem::VmStringPoolImpl;
 use log::{debug, trace};
 use model::prelude::*;
 use parser::method_signature::parse_method_signature;
-use tracing::instrument;
 use std::cell::RefCell;
 use std::rc::Rc;
+use tracing::instrument;
 
 pub trait VmTheadImpl<'a> {
     fn new(vm: &'a Vm, thread_name: String) -> VmThread<'a>;
@@ -115,10 +115,9 @@ impl<'a> VmTheadImpl<'a> for VmThread<'a> {
                     "name".to_string(),
                     VmPrimitive::Objectref(rc_interned_class_path),
                 );
-                instance                .fields.insert(
-                    "componentType".to_string(),
-                     component_type_primitive
-                    );
+                instance
+                    .fields
+                    .insert("componentType".to_string(), component_type_primitive);
 
                 Rc::new(RefCell::new(instance))
             })

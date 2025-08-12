@@ -1,4 +1,3 @@
-
 use log::warn;
 use model::prelude::*;
 
@@ -7,14 +6,13 @@ use vm::{frame::VmFrameImpl, vm_thread::VmTheadImpl};
 pub fn get_method(_jvm_class: &JvmClass, class_method: &ClassMethod) -> Option<NativeMethod> {
     match class_method.name.as_str() {
         "registerNatives" => Some(register_natives),
-        "getClass" => Some(get_class), // ()Ljava/lang/Class;
+        "getClass" => Some(get_class),   // ()Ljava/lang/Class;
         "notifyAll" => Some(notify_all), // ()V
         _ => None,
     }
 }
 
-fn register_natives(_: &mut VmThread) {
-}
+fn register_natives(_: &mut VmThread) {}
 
 /// ()Ljava/lang/Class;
 fn get_class(vm_thread: &mut VmThread) {
@@ -25,8 +23,11 @@ fn get_class(vm_thread: &mut VmThread) {
             VmPrimitive::Arrayref(rc_array) => {
                 let name = &*rc_array.borrow_mut().class_path.clone().unwrap();
                 format!("[{}", name)
-            },
-            p => panic!("Expected to pop Objectref or Arrayref from stack but found: {:?}", p),
+            }
+            p => panic!(
+                "Expected to pop Objectref or Arrayref from stack but found: {:?}",
+                p
+            ),
         }
     };
 

@@ -2,9 +2,9 @@
 extern crate prettytable;
 
 use clap::{Parser, Subcommand};
+use std::path::PathBuf;
 use tracing::{level_filters::LevelFilter, Level};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-use std::path::PathBuf;
 
 mod execute;
 mod list_classes;
@@ -51,7 +51,13 @@ fn main() {
             class_paths,
             vm_init_log_level,
             vm_exec_log_level,
-        } => execute::run(main_class, class_paths, vm_init_log_level, vm_exec_log_level, set_log_level_fn),
+        } => execute::run(
+            main_class,
+            class_paths,
+            vm_init_log_level,
+            vm_exec_log_level,
+            set_log_level_fn,
+        ),
     };
 }
 
@@ -64,7 +70,11 @@ fn tracing_init() -> impl Fn(Level) {
         .with(filter)
         .init();
 
-    move |level: Level| reload_handle.modify(|layer| {
-        *layer = LevelFilter::from_level(level);
-    }).unwrap()
+    move |level: Level| {
+        reload_handle
+            .modify(|layer| {
+                *layer = LevelFilter::from_level(level);
+            })
+            .unwrap()
+    }
 }

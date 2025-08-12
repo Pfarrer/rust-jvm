@@ -5,7 +5,7 @@ use vm::frame::VmFrameImpl;
 pub fn get_method(_jvm_class: &JvmClass, class_method: &ClassMethod) -> Option<NativeMethod> {
     match class_method.name.as_str() {
         "doubleToRawLongBits" => Some(double_to_raw_long_bits), // (D)J
-        "longBitsToDouble" => Some(long_bits_to_double), // (J)D
+        "longBitsToDouble" => Some(long_bits_to_double),        // (J)D
         _ => None,
     }
 }

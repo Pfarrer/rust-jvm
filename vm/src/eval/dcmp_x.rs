@@ -29,7 +29,11 @@ pub fn eval(vm_thread: &mut VmThread, code: &Vec<u8>, pc: u16) -> Option<u16> {
 
     trace!(
         "dcmp{}: Comparing {} and {} -> pushing {} to stack",
-if *code.get(pc as usize).unwrap() == 151 {"dcmpl"} else {"dcmpg"},
+        if *code.get(pc as usize).unwrap() == 151 {
+            "dcmpl"
+        } else {
+            "dcmpg"
+        },
         value1,
         value2,
         result

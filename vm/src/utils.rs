@@ -1,6 +1,9 @@
 use std::{cell::RefCell, rc::Rc};
 
-use crate::{array::VmArrayImpl, class_hierarchy::HierarchyIterator, instance::VmInstanceImpl, vm_mem::VmStaticPoolImpl, vm_thread::VmTheadImpl};
+use crate::{
+    array::VmArrayImpl, class_hierarchy::HierarchyIterator, instance::VmInstanceImpl,
+    vm_mem::VmStaticPoolImpl, vm_thread::VmTheadImpl,
+};
 use itertools::Itertools;
 use model::prelude::*;
 
@@ -78,10 +81,13 @@ pub fn read_i32_code(code: &Vec<u8>, pc: u16, offset: u16) -> i32 {
 }
 
 fn get_java_bytes_utf16_string_value(bytes: &[VmPrimitive]) -> String {
-    let element_values: Vec<u16> = bytes.iter()
+    let element_values: Vec<u16> = bytes
+        .iter()
         .tuples()
         .map(|(h, l)| match (h, l) {
-            (VmPrimitive::Byte(ref hb), VmPrimitive::Byte(ref lb)) => (*hb as u16) << 8 | *lb as u16,
+            (VmPrimitive::Byte(ref hb), VmPrimitive::Byte(ref lb)) => {
+                (*hb as u16) << 8 | *lb as u16
+            }
             p => panic!("Unexpected primitives: {:?}", p),
         })
         .collect();
@@ -89,23 +95,27 @@ fn get_java_bytes_utf16_string_value(bytes: &[VmPrimitive]) -> String {
     String::from_utf16_lossy(element_values.as_slice())
 }
 fn get_java_bytes_latin1_string_value(bytes: &[VmPrimitive]) -> String {
-    let element_values: Vec<u8> = bytes.iter()
+    let element_values: Vec<u8> = bytes
+        .iter()
         .map(|h| match h {
             VmPrimitive::Byte(ref b) => *b,
             p => panic!("Unexpected primitives: {:?}", p),
         })
         .collect();
 
-    String::from_utf8(element_values)
-        .expect("Failed to convert Latin-1 bytes to String")
+    String::from_utf8(element_values).expect("Failed to convert Latin-1 bytes to String")
 }
 
 pub fn get_java_string_value(string_instance: &VmInstance) -> String {
-    let is_latin1 = if let &VmPrimitive::Byte(ref coder_value) = string_instance.fields.get("coder").unwrap() {
-        *coder_value == 0
-    } else {
-        panic!("Unexpected coder field type in string instance: {:?}", string_instance.fields.get("coder"));
-    };
+    let is_latin1 =
+        if let &VmPrimitive::Byte(ref coder_value) = string_instance.fields.get("coder").unwrap() {
+            *coder_value == 0
+        } else {
+            panic!(
+                "Unexpected coder field type in string instance: {:?}",
+                string_instance.fields.get("coder")
+            );
+        };
 
     match string_instance.fields.get("value").unwrap() {
         &VmPrimitive::Arrayref(ref rc_value_array) => {
@@ -142,7 +152,7 @@ pub fn create_java_string(vm_thread: &mut VmThread, string: String) -> Rc<RefCel
         array.elements[i] = VmPrimitive::Byte(*b);
     }
     let rc_array = Rc::new(RefCell::new(array));
-    
+
     // Create a new instance of java/lang/String
     let jvm_class = vm_thread.load_and_clinit_class(&"java/lang/String".to_string());
     let mut instance = VmInstance::new(vm_thread, &jvm_class);
@@ -157,7 +167,7 @@ pub fn create_java_string(vm_thread: &mut VmThread, string: String) -> Rc<RefCel
     instance
         .fields
         .insert("coder".to_string(), VmPrimitive::Byte(coder_value));
-    
+
     Rc::new(RefCell::new(instance))
 }
 

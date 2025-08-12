@@ -22,7 +22,9 @@ fn new_array(vm_thread: &mut VmThread) {
         assert_eq!(class_instance.class_path, "java/lang/Class");
 
         match &class_instance.fields["name"] {
-            VmPrimitive::Objectref(ref rc_object) => get_java_string_value(&*rc_object.borrow_mut()),
+            VmPrimitive::Objectref(ref rc_object) => {
+                get_java_string_value(&*rc_object.borrow_mut())
+            }
             a => panic!("Expected Arrayref but found: {:?}", a),
         }
     };
