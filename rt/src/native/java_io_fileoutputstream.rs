@@ -1,4 +1,3 @@
-use log::error;
 use model::prelude::*;
 use vm::frame::VmFrameImpl;
 

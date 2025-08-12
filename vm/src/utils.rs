@@ -77,7 +77,7 @@ pub fn read_i32_code(code: &Vec<u8>, pc: u16, offset: u16) -> i32 {
     ((byte1 << 24) | (byte2 << 16) | (byte3 << 8) | byte4) as i32
 }
 
-pub fn get_java_bytes_as_string_value(bytes: &[VmPrimitive]) -> String {
+fn get_java_bytes_utf16_string_value(bytes: &[VmPrimitive]) -> String {
     let element_values: Vec<u16> = bytes.iter()
         .tuples()
         .map(|(h, l)| match (h, l) {
@@ -88,64 +88,76 @@ pub fn get_java_bytes_as_string_value(bytes: &[VmPrimitive]) -> String {
 
     String::from_utf16_lossy(element_values.as_slice())
 }
+fn get_java_bytes_latin1_string_value(bytes: &[VmPrimitive]) -> String {
+    let element_values: Vec<u8> = bytes.iter()
+        .map(|h| match h {
+            VmPrimitive::Byte(ref b) => *b,
+            p => panic!("Unexpected primitives: {:?}", p),
+        })
+        .collect();
+
+    String::from_utf8(element_values)
+        .expect("Failed to convert Latin-1 bytes to String")
+}
 
 pub fn get_java_string_value(string_instance: &VmInstance) -> String {
+    let is_latin1 = if let &VmPrimitive::Byte(ref coder_value) = string_instance.fields.get("coder").unwrap() {
+        *coder_value == 0
+    } else {
+        panic!("Unexpected coder field type in string instance: {:?}", string_instance.fields.get("coder"));
+    };
+
     match string_instance.fields.get("value").unwrap() {
         &VmPrimitive::Arrayref(ref rc_value_array) => {
-            get_java_bytes_as_string_value(&*rc_value_array.borrow().elements)
+            if is_latin1 {
+                get_java_bytes_latin1_string_value(&*rc_value_array.borrow().elements)
+            } else {
+                // Handle UTF-16 case
+                get_java_bytes_utf16_string_value(&*rc_value_array.borrow().elements)
+            }
         }
         p => panic!("Unexpected primitive: {:?}", p),
     }
 }
 
 pub fn create_java_string(vm_thread: &mut VmThread, string: String) -> Rc<RefCell<VmInstance>> {
-    // Java 9+ uses compact strings: a byte[] `value` field and a `coder` field.
-    // `coder == 0` → UTF‑8, `coder == 1` → UTF‑16 (big‑endian).
-    // This implementation stores the string as UTF‑16 bytes (big‑endian) and sets coder = 1.
-    // This matches the expectations of `get_java_string_value`, which decodes UTF‑16.
+    let (bytes, is_latin1) = if string.is_ascii() {
+        // Encoding as individual bytes is sufficient for ASCII strings
+        (string.into_bytes(), true)
+    } else {
+        // Non-ASCII strings need to be encoded as UTF-16
+        let utf16_iter = string.encode_utf16();
+        let mut bytes: Vec<u8> = Vec::with_capacity(utf16_iter.clone().count() * 2);
+        for code_unit in utf16_iter {
+            bytes.push((code_unit & 0xFF) as u8); // low byte
+            bytes.push((code_unit >> 8) as u8); // high byte
+        }
 
-    trace!("Creating Java String: {}", string);
-
-    // Encode as UTF‑16BE bytes (big‑endian)
-    let utf16_iter = string.encode_utf16();
-    let mut bytes: Vec<u8> = Vec::with_capacity(utf16_iter.clone().count() * 2);
-    for code_unit in utf16_iter {
-        bytes.push((code_unit >> 8) as u8); // high byte
-        bytes.push((code_unit & 0xFF) as u8); // low byte
-    }
-    let count = bytes.len();
+        (bytes, false)
+    };
 
     // Allocate a byte[] array (atype 8 = byte) with the exact length
-    let mut array = VmArray::new_primitive(count, 8);
+    let mut array = VmArray::new_primitive(bytes.len(), 8);
     for (i, b) in bytes.iter().enumerate() {
         array.elements[i] = VmPrimitive::Byte(*b);
     }
     let rc_array = Rc::new(RefCell::new(array));
-
-    // Load java/lang/String class (triggers <clinit> if not already done)
-    let jvm_class = vm_thread.load_and_clinit_class(&"java/lang/String".to_string());
-
+    
     // Create a new instance of java/lang/String
+    let jvm_class = vm_thread.load_and_clinit_class(&"java/lang/String".to_string());
     let mut instance = VmInstance::new(vm_thread, &jvm_class);
 
     // Set the `value` field to the byte[] we just created
     instance
         .fields
-        .insert("value".to_string(), VmPrimitive::Arrayref(rc_array));
+        .insert("value".to_string(), VmPrimitive::Arrayref(rc_array.clone()));
 
-    // Set the `coder` field to 1 (UTF‑16). Use 0 for UTF‑8.
+    // Set the `coder` field to 1 for UTF‑16 or 0 for ASCII/Latin-1
+    let coder_value = if is_latin1 { 0 } else { 1 };
     instance
         .fields
-        .insert("coder".to_string(), VmPrimitive::Byte(1));
-
-    // Some JVM implementations also have a cached `hash` field; initialise it to 0.
-    // This is optional but mirrors the reference implementation.
-    if instance.fields.contains_key("hash") {
-        instance
-            .fields
-            .insert("hash".to_string(), VmPrimitive::Int(0));
-    }
-
+        .insert("coder".to_string(), VmPrimitive::Byte(coder_value));
+    
     Rc::new(RefCell::new(instance))
 }
 

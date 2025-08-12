@@ -17,15 +17,15 @@ fn set_and_get() {
     let vm = new_test_vm();
     let mut vm_thread: VmThread = VmThread::new(&vm, "test".to_string());
     let rc_properties_instance = new_instance(&mut vm_thread, "java/util/Properties");
-    
+
+    let expected = create_java_string(&mut vm_thread, "val".to_string());
+
     {
         let key = create_java_string(&mut vm_thread, "k".to_string());
-        let val = create_java_string(&mut vm_thread, "val".to_string());
-
         let frame = vm_thread.frame_stack.last_mut().unwrap();
         frame.stack_push(VmPrimitive::Objectref(rc_properties_instance.clone()));
         frame.stack_push(VmPrimitive::Objectref(key));
-        frame.stack_push(VmPrimitive::Objectref(val));
+        frame.stack_push(VmPrimitive::Objectref(expected.clone()));
         
     }
     vm_thread.invoke_method(
@@ -49,7 +49,7 @@ fn set_and_get() {
         true,
     );
 
-    assert_eq!(vm_thread.frame_stack.last().unwrap().stack.last().unwrap(), &VmPrimitive::Int(1));
+    assert_eq!(vm_thread.frame_stack.last().unwrap().stack.last().unwrap(), &VmPrimitive::Objectref(expected));
 }
 
 fn new_test_vm() -> Vm {

@@ -9,14 +9,12 @@ loader = { path = "../loader" }
 vm = { path = "../vm" }
 
 log = "0.4.17"
-anyhow = "1.0"
 dirs = "5.0"
-tracing = "0.1.41"
 
 [dev-dependencies]
 parser = { path = "../parser" }
 
-rstest = "0.22.0"
-pretty_assertions = "1.4.0"
+rstest = "0.26"
+pretty_assertions = "1.4"
 env_logger = "0.11"
-ctor = "0.2.8"
+ctor = "0.5.0"
