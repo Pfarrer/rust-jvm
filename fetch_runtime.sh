@@ -4,7 +4,7 @@ shopt -s inherit_errexit
 
 mkdir -p ./rt/jmods/java.base
 
-docker run --rm -it \
+docker run --rm \
     -u $(id -u "${USER}"):$(id -g "${USER}") \
     -v "./rt/jmods/java.base:/tmp/out" \
     eclipse-temurin:11 \
