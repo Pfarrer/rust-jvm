@@ -13,10 +13,9 @@ pub fn eval(vm_thread: &mut VmThread, pc: u16) -> Option<u16> {
         result
     );
     if overflow {
-        warn!("Overflow occurred in addition: {} + {} = {}",
-            value1,
-            value2,
-            result
+        warn!(
+            "Overflow occurred in addition: {} + {} = {}",
+            value1, value2, result
         );
     }
 

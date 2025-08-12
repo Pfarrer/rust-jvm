@@ -5,28 +5,27 @@ use vm::{frame::VmFrameImpl, utils::get_java_string_value, vm_thread::VmTheadImp
 
 pub fn get_method(_jvm_class: &JvmClass, class_method: &ClassMethod) -> Option<NativeMethod> {
     match class_method.name.as_str() {
-        "registerNatives" => Some(register_natives), // ()V
+        "registerNatives" => Some(register_natives),    // ()V
         "arrayBaseOffset0" => Some(array_base_offset0), // (Ljava/lang/Class;)I
         "arrayIndexScale0" => Some(array_index_scale0), // (Ljava/lang/Class;)I
-        "addressSize0" => Some(address_size0), // ()I
-        "isBigEndian0" => Some(is_big_endian0), // ()Z
-        "unalignedAccess0" => Some(unaligned_access0), // ()Z
+        "addressSize0" => Some(address_size0),          // ()I
+        "isBigEndian0" => Some(is_big_endian0),         // ()Z
+        "unalignedAccess0" => Some(unaligned_access0),  // ()Z
         "objectFieldOffset1" => Some(object_field_offset1), // (Ljava/lang/Class;Ljava/lang/String;)J
-        "loadFence" => Some(load_fence), // ()V
-        "storeFence" => Some(store_fence), // ()V
-        "fullFence" => Some(full_fence), // ()V
-        "compareAndSetInt" => Some(compare_and_set_int), // (Ljava/lang/Object;JII)Z
-        "compareAndSetLong" => Some(compare_and_set_long), // (Ljava/lang/Object;JJJ)Z
+        "loadFence" => Some(load_fence),                    // ()V
+        "storeFence" => Some(store_fence),                  // ()V
+        "fullFence" => Some(full_fence),                    // ()V
+        "compareAndSetInt" => Some(compare_and_set_int),    // (Ljava/lang/Object;JII)Z
+        "compareAndSetLong" => Some(compare_and_set_long),  // (Ljava/lang/Object;JJJ)Z
         "compareAndSetObject" => Some(compare_and_set_object), // (Ljava/lang/Object;JLjava/lang/Object;Ljava/lang/Object;)Z
         "getObjectVolatile" => Some(get_object_volatile), // (Ljava/lang/Object;J)Ljava/lang/Object;
-        "getIntVolatile" => Some(get_int_volatile), // (Ljava/lang/Object;J)I
+        "getIntVolatile" => Some(get_int_volatile),       // (Ljava/lang/Object;J)I
 
         _ => None,
     }
 }
 
-fn register_natives(_: &mut VmThread) {
-}
+fn register_natives(_: &mut VmThread) {}
 
 /// (Ljava/lang/Class;)I
 fn array_base_offset0(vm_thread: &mut VmThread) {
@@ -88,9 +87,11 @@ fn object_field_offset1(vm_thread: &mut VmThread) {
         let class_path = {
             let class_instance = &*rc_instance_class.borrow_mut();
             assert_eq!(class_instance.class_path, "java/lang/Class");
-    
+
             match &class_instance.fields["name"] {
-                VmPrimitive::Objectref(ref rc_object) => get_java_string_value(&*rc_object.borrow_mut()),
+                VmPrimitive::Objectref(ref rc_object) => {
+                    get_java_string_value(&*rc_object.borrow_mut())
+                }
                 a => panic!("Expected Arrayref but found: {:?}", a),
             }
         };
@@ -99,7 +100,12 @@ fn object_field_offset1(vm_thread: &mut VmThread) {
     };
 
     let jvm_class = vm_thread.load_and_clinit_class(&class_path);
-    let (n, _) = jvm_class.fields.iter().enumerate().find(|(_, field)| field.name == field_name).unwrap();
+    let (n, _) = jvm_class
+        .fields
+        .iter()
+        .enumerate()
+        .find(|(_, field)| field.name == field_name)
+        .unwrap();
 
     let frame = vm_thread.frame_stack.last_mut().unwrap();
     frame.stack_push(VmPrimitive::Long(n as i64));
@@ -134,15 +140,24 @@ fn compare_and_set_int(vm_thread: &mut VmThread) {
     let instance = &mut *rc_instance.borrow_mut();
     let jvm_class = vm_thread.load_and_clinit_class(&instance.class_path);
 
-    let (_, field) = jvm_class.fields.iter().enumerate().find(|(n, _)| *n == field_index as usize).unwrap();
+    let (_, field) = jvm_class
+        .fields
+        .iter()
+        .enumerate()
+        .find(|(n, _)| *n == field_index as usize)
+        .unwrap();
 
     let success = match instance.fields.get(&field.name).unwrap() {
-        VmPrimitive::Int(ref actual) => if *actual == expected {
-            instance.fields.insert(field.name.clone(), VmPrimitive::Int(x));
-            true
-        } else {
-            false
-        },
+        VmPrimitive::Int(ref actual) => {
+            if *actual == expected {
+                instance
+                    .fields
+                    .insert(field.name.clone(), VmPrimitive::Int(x));
+                true
+            } else {
+                false
+            }
+        }
         a => panic!("Expected Int field in '{}' but found {:?}", field.name, a),
     };
 
@@ -166,15 +181,24 @@ fn compare_and_set_long(vm_thread: &mut VmThread) {
     let instance = &mut *rc_instance.borrow_mut();
     let jvm_class = vm_thread.load_and_clinit_class(&instance.class_path);
 
-    let (_, field) = jvm_class.fields.iter().enumerate().find(|(n, _)| *n == field_index).unwrap();
+    let (_, field) = jvm_class
+        .fields
+        .iter()
+        .enumerate()
+        .find(|(n, _)| *n == field_index)
+        .unwrap();
 
     let success = match instance.fields.get(&field.name).unwrap() {
-        VmPrimitive::Long(ref actual) => if *actual == expected {
-            instance.fields.insert(field.name.clone(), VmPrimitive::Long(x));
-            true
-        } else {
-            false
-        },
+        VmPrimitive::Long(ref actual) => {
+            if *actual == expected {
+                instance
+                    .fields
+                    .insert(field.name.clone(), VmPrimitive::Long(x));
+                true
+            } else {
+                false
+            }
+        }
         a => panic!("Expected Int field in '{}' but found {:?}", field.name, a),
     };
 
@@ -199,14 +223,14 @@ fn compare_and_set_object(vm_thread: &mut VmThread) {
         VmPrimitive::Arrayref(ref rc_array) => {
             let mut array = rc_array.borrow_mut();
             let actual = array.elements.get(offset).unwrap();
-            
+
             if actual == &expected {
                 array.elements[offset] = x;
                 true
             } else {
                 false
             }
-        },
+        }
         a => panic!("Not implemented for {:?}", a),
     };
 
@@ -221,9 +245,12 @@ fn get_object_volatile(vm_thread: &mut VmThread) {
     let vm_object = frame.stack_pop();
 
     let rc_object = match vm_object {
-        VmPrimitive::Arrayref(ref rc_array) => {
-            rc_array.borrow_mut().elements.get(offset as usize).unwrap().clone()
-        },
+        VmPrimitive::Arrayref(ref rc_array) => rc_array
+            .borrow_mut()
+            .elements
+            .get(offset as usize)
+            .unwrap()
+            .clone(),
         a => panic!("Not implemented for {:?}", a),
     };
 
@@ -238,13 +265,17 @@ fn get_int_volatile(vm_thread: &mut VmThread) {
         let vm_object = frame.stack_pop();
 
         let class_path = match vm_object {
-            VmPrimitive::Objectref(ref rc_object) => {
-                rc_object.borrow_mut().class_path.clone()
-            },
+            VmPrimitive::Objectref(ref rc_object) => rc_object.borrow_mut().class_path.clone(),
             a => panic!("Not implemented for {:?}", a),
         };
 
-        let field_name = vm_thread.load_and_clinit_class(&class_path).fields.get(offset as usize).unwrap().name.clone();
+        let field_name = vm_thread
+            .load_and_clinit_class(&class_path)
+            .fields
+            .get(offset as usize)
+            .unwrap()
+            .name
+            .clone();
         (vm_object, field_name)
     };
 
@@ -252,7 +283,7 @@ fn get_int_volatile(vm_thread: &mut VmThread) {
         VmPrimitive::Objectref(ref rc_object) => {
             let object = rc_object.borrow_mut();
             object.fields.get(&field_name).unwrap().clone()
-        },
+        }
         a => panic!("Not implemented for {:?}", a),
     };
 

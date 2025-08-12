@@ -7,5 +7,4 @@ pub fn get_method(_jvm_class: &JvmClass, class_method: &ClassMethod) -> Option<N
     }
 }
 
-fn register_natives(_: &mut VmThread) {
-}
+fn register_natives(_: &mut VmThread) {}

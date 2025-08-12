@@ -1,7 +1,7 @@
 use ctor::ctor;
 use model::prelude::*;
-use rstest::rstest;
 use pretty_assertions::assert_eq;
+use rstest::rstest;
 use rt::NativeClassloader;
 use vm::{new_vm, vm_thread::VmTheadImpl};
 
@@ -25,8 +25,18 @@ fn floor_div_calculates_correctly(#[case] n1: i32, #[case] n2: i32, #[case] expe
     let vm = new_test_vm();
     let mut vm_thread = VmThread::new(&vm, "test".to_string());
 
-    vm_thread.frame_stack.last_mut().unwrap().stack.push(VmPrimitive::Int(n1));
-    vm_thread.frame_stack.last_mut().unwrap().stack.push(VmPrimitive::Int(n2));
+    vm_thread
+        .frame_stack
+        .last_mut()
+        .unwrap()
+        .stack
+        .push(VmPrimitive::Int(n1));
+    vm_thread
+        .frame_stack
+        .last_mut()
+        .unwrap()
+        .stack
+        .push(VmPrimitive::Int(n2));
     vm_thread.invoke_method(
         &"java/lang/Math".to_string(),
         &"floorDiv".to_string(),
@@ -34,7 +44,10 @@ fn floor_div_calculates_correctly(#[case] n1: i32, #[case] n2: i32, #[case] expe
         false,
     );
 
-    assert_eq!(vm_thread.frame_stack.last().unwrap().stack.last().unwrap(), &VmPrimitive::Int(expected));
+    assert_eq!(
+        vm_thread.frame_stack.last().unwrap().stack.last().unwrap(),
+        &VmPrimitive::Int(expected)
+    );
 }
 
 #[rstest]
@@ -47,7 +60,12 @@ fn power_of_two_d_calculates_correctly(#[case] n: i32, #[case] expected: f64) {
     let vm = new_test_vm();
     let mut vm_thread = VmThread::new(&vm, "test".to_string());
 
-    vm_thread.frame_stack.last_mut().unwrap().stack.push(VmPrimitive::Int(n));
+    vm_thread
+        .frame_stack
+        .last_mut()
+        .unwrap()
+        .stack
+        .push(VmPrimitive::Int(n));
     vm_thread.invoke_method(
         &"java/lang/Math".to_string(),
         &"powerOfTwoD".to_string(),
@@ -55,7 +73,10 @@ fn power_of_two_d_calculates_correctly(#[case] n: i32, #[case] expected: f64) {
         false,
     );
 
-    assert_eq!(vm_thread.frame_stack.last().unwrap().stack.last().unwrap(), &VmPrimitive::Double(expected));
+    assert_eq!(
+        vm_thread.frame_stack.last().unwrap().stack.last().unwrap(),
+        &VmPrimitive::Double(expected)
+    );
 }
 
 #[rstest]
@@ -68,7 +89,12 @@ fn power_of_two_f_calculates_correctly(#[case] n: i32, #[case] expected: f32) {
     let vm = new_test_vm();
     let mut vm_thread = VmThread::new(&vm, "test".to_string());
 
-    vm_thread.frame_stack.last_mut().unwrap().stack.push(VmPrimitive::Int(n));
+    vm_thread
+        .frame_stack
+        .last_mut()
+        .unwrap()
+        .stack
+        .push(VmPrimitive::Int(n));
     vm_thread.invoke_method(
         &"java/lang/Math".to_string(),
         &"powerOfTwoF".to_string(),
@@ -76,7 +102,10 @@ fn power_of_two_f_calculates_correctly(#[case] n: i32, #[case] expected: f32) {
         false,
     );
 
-    assert_eq!(vm_thread.frame_stack.last().unwrap().stack.last().unwrap(), &VmPrimitive::Float(expected));
+    assert_eq!(
+        vm_thread.frame_stack.last().unwrap().stack.last().unwrap(),
+        &VmPrimitive::Float(expected)
+    );
 }
 
 fn new_test_vm() -> Vm {

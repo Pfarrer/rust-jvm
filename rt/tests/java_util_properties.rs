@@ -2,10 +2,13 @@ use std::{cell::RefCell, rc::Rc};
 
 use ctor::ctor;
 use model::prelude::*;
-use rstest::rstest;
 use pretty_assertions::assert_eq;
+use rstest::rstest;
 use rt::NativeClassloader;
-use vm::{frame::VmFrameImpl, instance::VmInstanceImpl, new_vm, utils::create_java_string, vm_thread::VmTheadImpl};
+use vm::{
+    frame::VmFrameImpl, instance::VmInstanceImpl, new_vm, utils::create_java_string,
+    vm_thread::VmTheadImpl,
+};
 
 #[ctor]
 fn foo() {
@@ -26,7 +29,6 @@ fn set_and_get() {
         frame.stack_push(VmPrimitive::Objectref(rc_properties_instance.clone()));
         frame.stack_push(VmPrimitive::Objectref(key));
         frame.stack_push(VmPrimitive::Objectref(expected.clone()));
-        
     }
     vm_thread.invoke_method(
         &"java/util/Properties".to_string(),
@@ -49,7 +51,10 @@ fn set_and_get() {
         true,
     );
 
-    assert_eq!(vm_thread.frame_stack.last().unwrap().stack.last().unwrap(), &VmPrimitive::Objectref(expected));
+    assert_eq!(
+        vm_thread.frame_stack.last().unwrap().stack.last().unwrap(),
+        &VmPrimitive::Objectref(expected)
+    );
 }
 
 fn new_test_vm() -> Vm {

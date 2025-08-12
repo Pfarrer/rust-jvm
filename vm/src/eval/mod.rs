@@ -16,11 +16,12 @@ mod d2l;
 mod dadd;
 mod daload;
 mod dastore;
-mod dconst_x;
 mod dcmp_x;
+mod dconst_x;
 mod ddiv;
 mod dload_x;
 mod dmul;
+mod dreturn;
 mod dstore_x;
 mod dsub;
 mod dup;
@@ -32,7 +33,6 @@ mod f2i;
 mod fcmp_x;
 mod fconst_x;
 mod fdiv;
-mod idiv;
 mod fload_x;
 mod fmul;
 mod freturn;
@@ -48,6 +48,7 @@ mod iadd;
 mod iand;
 mod iastore;
 mod iconst_x;
+mod idiv;
 mod if_acmp_x;
 mod if_icmp_x;
 mod if_x;
@@ -80,13 +81,12 @@ mod lcmp;
 mod lconst_x;
 mod ldc2_w;
 mod ldc_x;
-mod lor;
-mod lshl;
-mod lshr;
 mod lload_x;
 mod lookupswitch;
-mod dreturn;
+mod lor;
 mod lreturn;
+mod lshl;
+mod lshr;
 mod lstore_x;
 mod lxor;
 mod monitorenter;
@@ -115,11 +115,7 @@ pub fn eval(
         let frame = vm_thread.frame_stack.last().unwrap();
         debug!(
             "{}.{}{}#{} = {}",
-            frame.class_path,
-            frame.method_name,
-            frame.method_signature,
-            pc,
-            instr
+            frame.class_path, frame.method_name, frame.method_signature, pc, instr
         );
     }
 

@@ -1,7 +1,7 @@
 use ctor::ctor;
 use model::prelude::*;
-use rstest::rstest;
 use pretty_assertions::assert_eq;
+use rstest::rstest;
 use rt::NativeClassloader;
 use vm::{frame::VmFrameImpl, new_vm, utils::create_java_string, vm_thread::VmTheadImpl};
 
@@ -20,7 +20,7 @@ fn hash_code(#[case] val: &str, #[case] expected: i32) {
     let vm = new_test_vm();
     let mut vm_thread: VmThread = VmThread::new(&vm, "test".to_string());
     let java_string = create_java_string(&mut vm_thread, val.to_string());
-    
+
     let frame = vm_thread.frame_stack.last_mut().unwrap();
     frame.stack_push(VmPrimitive::Objectref(java_string));
 
@@ -57,7 +57,10 @@ fn equals(#[case] val1: &str, #[case] val2: &str, #[case] expected: bool) {
         true,
     );
 
-    assert_eq!(vm_thread.frame_stack.last().unwrap().stack.last().unwrap(), &VmPrimitive::Int(if expected { 1 } else { 0 }));
+    assert_eq!(
+        vm_thread.frame_stack.last().unwrap().stack.last().unwrap(),
+        &VmPrimitive::Int(if expected { 1 } else { 0 })
+    );
 }
 
 fn new_test_vm() -> Vm {

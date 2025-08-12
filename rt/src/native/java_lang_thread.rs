@@ -11,8 +11,7 @@ pub fn get_method(_jvm_class: &JvmClass, class_method: &ClassMethod) -> Option<N
     }
 }
 
-fn register_natives(_: &mut VmThread) {
-}
+fn register_natives(_: &mut VmThread) {}
 
 /// Ljava/lang/Thread;
 fn current_thread(vm_thread: &mut VmThread) {
@@ -41,8 +40,13 @@ fn current_thread(vm_thread: &mut VmThread) {
         let mut instance = VmInstance::new(vm_thread, &classfile);
 
         // Manually initialize some fields
-        instance.fields.insert("group".to_string(), VmPrimitive::Objectref(rc_thread_group_instance));
-        instance.fields.insert("priority".to_string(), VmPrimitive::Int(1));
+        instance.fields.insert(
+            "group".to_string(),
+            VmPrimitive::Objectref(rc_thread_group_instance),
+        );
+        instance
+            .fields
+            .insert("priority".to_string(), VmPrimitive::Int(1));
 
         Rc::new(RefCell::new(instance))
     };

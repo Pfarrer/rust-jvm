@@ -2,9 +2,9 @@ use std::path::PathBuf;
 
 use loader::CompositeLoader;
 use model::vm::VmThread;
+use rt::bootstrap_vm;
 use tracing::Level;
 use vm::vm_thread::VmTheadImpl;
-use rt::bootstrap_vm;
 
 const MAIN_METHOD_NAME: &str = "main";
 const MAIN_METHOD_SIGNATURE: &str = "([Ljava/lang/String;)V";
