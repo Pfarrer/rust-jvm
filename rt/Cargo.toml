@@ -9,7 +9,7 @@ loader = { path = "../loader" }
 vm = { path = "../vm" }
 
 log = "0.4.17"
-dirs = "5.0"
+dirs = "6.0"
 
 [dev-dependencies]
 parser = { path = "../parser" }
