@@ -1,25 +1,28 @@
-use classfile::constants::Constant;
-use model::class::*;
+use model::class_constant_impl::ClassConstantAccessor;
+use model::prelude::*;
 use std::cell::RefCell;
 use std::rc::Rc;
-use vm::instance::Instance;
-use vm::utils;
-use crate::{Primitive, VmThread};
 
-pub fn eval(vm_thread: &mut VmThread, jvm_class: &JvmClass, code: &Vec<u8>, pc: u16) -> Option<u16> {
-    let index = utils::read_u16_code(code, pc);
+use crate::frame::VmFrameImpl;
+use crate::instance::VmInstanceImpl;
+use crate::utils;
+use crate::vm_thread::VmTheadImpl;
 
-    match class.constants.get(index as usize).unwrap() {
-        &Constant::Class(ref class_path) => {
-            let class = vm.load_and_clinit_class(class_path);
-            let instance = Instance::new(vm, class);
+pub fn eval(
+    vm_thread: &mut VmThread,
+    jvm_class: &JvmClass,
+    code: &Vec<u8>,
+    pc: u16,
+) -> Option<u16> {
+    let index = utils::read_u16_code(code, pc) as usize;
 
-            trace!("new: {} -> Pushing reference to stack", class_path);
-            let frame = vm_thread.frame_stack.last_mut().unwrap();
-            frame.stack_push(Primitive::Objectref(Rc::new(RefCell::new(instance))));
-        }
-        it => panic!("Unexpected constant ref: {:?}", it),
-    };
+    let class_path = jvm_class.constants.get_class_or(index).unwrap();
+    let class = vm_thread.load_and_clinit_class(class_path);
+    let instance = VmInstance::new(vm_thread, &class);
+
+    trace!("new: {} -> Pushing reference to stack", class_path);
+    let frame = vm_thread.frame_stack.last_mut().unwrap();
+    frame.stack_push(VmPrimitive::Objectref(Rc::new(RefCell::new(instance))));
 
     Some(pc + 3)
 }

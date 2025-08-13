@@ -6,3 +6,5 @@ edition = "2021"
 [dependencies]
 enumset = "1.1"
 anyhow = "1.0"
+itertools = "0.13"
+tracing = "0.1.41"

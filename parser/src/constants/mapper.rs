@@ -73,6 +73,38 @@ pub fn map(raw_constants: Vec<RawConstant>) -> Result<ClassConstants> {
                 }
             }
             &RawConstant::Utf8(ref val) => Ok(ClassConstant::Utf8(val.to_string())),
+            &RawConstant::MethodHandle(ref _reference_kind, ref _reference_index) => {
+                Ok(ClassConstant::NotImplemented)
+            }
+            &RawConstant::MethodType(ref descriptor_index) => {
+                let type_name = unwrap_string(&raw_constants, *descriptor_index)?;
+                let method_signature = parse_method_signature(&type_name)?;
+
+                Ok(ClassConstant::MethodType(method_signature))
+            }
+            &RawConstant::Dynamic(ref bootstrap_method_attr_index, ref name_and_type_index) => {
+                let (name, type_name) = unwrap_name_and_type(&raw_constants, *name_and_type_index)?;
+                let method_signature = parse_method_signature(&type_name)?;
+
+                Ok(ClassConstant::Dynamic(
+                    *bootstrap_method_attr_index,
+                    name,
+                    method_signature,
+                ))
+            }
+            &RawConstant::InvokeDynamic(
+                ref bootstrap_method_attr_index,
+                ref name_and_type_index,
+            ) => {
+                let (name, type_name) = unwrap_name_and_type(&raw_constants, *name_and_type_index)?;
+                let method_signature = parse_method_signature(&type_name)?;
+
+                Ok(ClassConstant::InvokeDynamic(
+                    *bootstrap_method_attr_index,
+                    name,
+                    method_signature,
+                ))
+            }
         })
         .collect::<Result<_>>()?;
 

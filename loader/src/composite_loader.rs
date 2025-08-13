@@ -1,5 +1,4 @@
-use model::api::{Classloader, NativeMethod};
-use model::class::{ClassMethod, JvmClass};
+use model::prelude::*;
 
 pub struct CompositeLoader {
     composites: Vec<Box<dyn Classloader>>,

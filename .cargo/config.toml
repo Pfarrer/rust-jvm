@@ -1,0 +1,2 @@
+[env]
+JAVA_RT_CLASSES = { value = "rt/jmods/java.base/classes", relative = true }

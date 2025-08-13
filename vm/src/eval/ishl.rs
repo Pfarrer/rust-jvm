@@ -1,4 +1,4 @@
-use crate::{Primitive, VmThread};
+use crate::{frame::VmFrameImpl, VmPrimitive, VmThread};
 
 pub fn eval(vm_thread: &mut VmThread, pc: u16) -> Option<u16> {
     let frame = vm_thread.frame_stack.last_mut().unwrap();
@@ -8,12 +8,13 @@ pub fn eval(vm_thread: &mut VmThread, pc: u16) -> Option<u16> {
     let result = value1 << (value2 & 0x1f);
 
     trace!(
-        "ishl: Shifting {} left by {} -> pushing {} to stack",
+        "ishl: Shifting Int {} left by {} (originally {}) -> pushing Int {} to stack",
         value1,
         value2 & 0x1f,
+        value2,
         result
     );
-    frame.stack_push(Primitive::Int(result));
+    frame.stack_push(VmPrimitive::Int(result));
 
     Some(pc + 1)
 }

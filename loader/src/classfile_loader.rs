@@ -1,41 +1,32 @@
 use anyhow::{anyhow, Result};
 use glob::glob;
-use log::debug;
-use model::api::Parser;
-use model::class::JvmClass;
+use log::{debug, trace};
+use model::prelude::*;
+use parser::ClassfileParser;
+use std::cell::OnceCell;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::{Path, PathBuf};
 
-use model::api::Classloader;
-
 pub struct ClassfileLoader {
-    class_cache: HashMap<String, JvmClass>,
+    class_cache: HashMap<String, (PathBuf, OnceCell<JvmClass>)>,
 }
 
 impl ClassfileLoader {
-    pub fn open(path: impl AsRef<Path>, parser: &impl Parser) -> Result<ClassfileLoader> {
+    pub fn open(path: impl AsRef<Path>, _parser: &impl Parser) -> Result<ClassfileLoader> {
         let class_cache = find_all_classfile_paths(path.as_ref())?
             .iter()
             .filter(|file_path| !file_path.ends_with("module-info.class"))
             .map(|file_path| {
-                let file = File::open(file_path)?;
-                let mut reader = BufReader::new(file);
+                trace!("Found classfile {}", file_path.display());
 
                 let file_path_no_ext = file_path.with_extension("");
                 let classpath = abs_to_rel_path(path.as_ref(), &file_path_no_ext);
 
-                debug!("Parsing classfile {}", file_path.display());
-
-                parser
-                    .parse(&mut reader)
-                    .map(|class| (classpath, class))
-                    .map_err(|err| {
-                        anyhow!("Failed to parse classfile {}: {}", file_path.display(), err)
-                    })
+                (classpath, (file_path.clone(), OnceCell::new()))
             })
-            .collect::<Result<_>>()?;
+            .collect();
 
         Ok(ClassfileLoader { class_cache })
     }
@@ -47,7 +38,16 @@ impl Classloader for ClassfileLoader {
     }
 
     fn get_class(&self, classpath: &str) -> Option<&JvmClass> {
-        self.class_cache.get(classpath)
+        self.class_cache.get(classpath).map(|(file_path, cell)| {
+            let file = File::open(file_path).unwrap();
+            let mut reader = BufReader::new(file);
+
+            cell.get_or_init(|| {
+                debug!("Parsing classfile {}...", file_path.display());
+
+                ClassfileParser {}.parse(&mut reader).unwrap()
+            })
+        })
     }
 }
 
@@ -60,9 +60,7 @@ fn find_all_classfile_paths(path: &Path) -> Result<Vec<PathBuf>> {
     ]
     .join(&format!("{}", std::path::MAIN_SEPARATOR));
 
-    let paths: Vec<PathBuf> = glob(&fullpath)?.filter_map(Result::ok).collect();
-
-    Ok(paths)
+    Ok(glob(&fullpath)?.filter_map(Result::ok).collect())
 }
 
 fn abs_to_rel_path(base_path: &Path, file_path: &Path) -> String {
@@ -95,7 +93,7 @@ mod tests {
 
         let loader = ClassfileLoader::open(self::testdata_path(), &mock_parser).unwrap();
         assert_eq!(1, loader.class_cache.len());
-        loader.get_class("fundamentals/Empty").unwrap();
+        loader.get_class("fundamentals/EmptyClass").unwrap();
 
         let result = loader.get_class("no/valid/Cp");
         assert!(result.is_none());

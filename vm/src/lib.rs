@@ -1,35 +1,22 @@
 #[macro_use]
 extern crate log;
 
-mod array;
-mod class_hierarchy;
+pub mod array;
+pub mod class_hierarchy;
 mod eval;
-mod frame;
-mod instance;
-mod primitive;
-mod utils;
-mod vm_mem;
-mod vm_thread;
+pub mod frame;
+pub mod instance;
+pub mod primitive;
+pub mod utils;
+pub mod vm_mem;
+pub mod vm_thread;
 
-use crate::primitive::Primitive;
-use crate::vm_thread::VmThread;
-use model::api::Classloader;
-use vm_mem::VmMem;
+use model::prelude::*;
+use vm_mem::VmMemImpl;
 
-pub struct Vm {
-    classloader: Box<dyn Classloader>,
-    mem: VmMem,
-}
-
-impl Vm {
-    pub fn new(classloader: impl Classloader + 'static) -> Vm {
-        Vm {
-            classloader: Box::new(classloader),
-            mem: VmMem::new(),
-        }
-    }
-
-    pub fn spawn_thread(&self, thread_name: String) -> VmThread {
-        VmThread::new(self, thread_name)
+pub fn new_vm(classloader: impl Classloader + 'static) -> Vm {
+    Vm {
+        classloader: Box::new(classloader),
+        mem: VmMem::new(),
     }
 }

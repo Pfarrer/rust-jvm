@@ -13,7 +13,7 @@ See it in action:
   - [x] Initialize VM & Runtime
   - [x] Run simple HelloWorld
 
-- [ ] Java 11
+- [x] Java 11
   - [x] Parse Classfiles
-  - [ ] Initialize VM & Runtime
-  - [ ] Run simple HelloWorld
+  - [x] Initialize VM & Runtime
+  - [x] Run simple HelloWorld

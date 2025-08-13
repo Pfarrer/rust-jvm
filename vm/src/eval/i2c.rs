@@ -1,4 +1,4 @@
-use crate::{Primitive, VmThread};
+use crate::{frame::VmFrameImpl, VmPrimitive, VmThread};
 
 pub fn eval(vm_thread: &mut VmThread, pc: u16) -> Option<u16> {
     let frame = vm_thread.frame_stack.last_mut().unwrap();
@@ -8,7 +8,7 @@ pub fn eval(vm_thread: &mut VmThread, pc: u16) -> Option<u16> {
         "i2c: Popped Int {} from stack and push it back as Char",
         value
     );
-    frame.stack_push(Primitive::Char(value as u16));
+    frame.stack_push(VmPrimitive::Char(value as u16));
 
     Some(pc + 1)
 }

@@ -1,5 +1,10 @@
-use crate::{utils, Primitive, VmThread};
-use model::class::*;
+use crate::{
+    frame::VmFrameImpl,
+    utils::{self, create_java_string},
+    vm_thread::VmTheadImpl,
+    VmPrimitive, VmThread,
+};
+use model::prelude::*;
 
 /// Can handle instructions ldc (decimal 18) and ldc_2 (decimal 19).
 pub fn eval(
@@ -11,21 +16,20 @@ pub fn eval(
     // Check which instruction triggered this call, if it was ldc, then only one byte should be read,
     // when it was ldc_w, two bytes must be read
     let (index, pc_inc, instr_name) = match *code.get(pc as usize).unwrap() {
-        18 => (*code.get((pc + 1) as usize).unwrap() as u16, 2, "ldc"),
-        19 => (utils::read_u16_code(code, pc), 3, "ldc_w"),
+        18 => (*code.get((pc + 1) as usize).unwrap() as usize, 2, "ldc"),
+        19 => (utils::read_u16_code(code, pc) as usize, 3, "ldc_w"),
         i => panic!("Unexpected invocation of this instruction, found: {}", i),
     };
 
-    match jvm_class.constants.get(index as usize).unwrap() {
+    match jvm_class.constants.get(index).unwrap() {
         &ClassConstant::String(ref value) => {
             trace!("{}: Pushing String \"{}\" to stack", instr_name, value);
-
-            let rc_instance = vm_thread.vm.mem.string_pool.intern(vm_thread, value);
+            let rc_instance = create_java_string(vm_thread, value.clone());
             vm_thread
                 .frame_stack
                 .last_mut()
                 .unwrap()
-                .stack_push(Primitive::Objectref(rc_instance));
+                .stack_push(VmPrimitive::Objectref(rc_instance));
         }
         &ClassConstant::Float(ref value) => {
             trace!("{}: Pushing Float {} to stack", instr_name, value);
@@ -33,7 +37,7 @@ pub fn eval(
                 .frame_stack
                 .last_mut()
                 .unwrap()
-                .stack_push(Primitive::Float(value.clone()));
+                .stack_push(VmPrimitive::Float(value.clone()));
         }
         &ClassConstant::Integer(ref value) => {
             trace!("{}: Pushing Int {} to stack", instr_name, value);
@@ -41,7 +45,7 @@ pub fn eval(
                 .frame_stack
                 .last_mut()
                 .unwrap()
-                .stack_push(Primitive::Int(value.clone()));
+                .stack_push(VmPrimitive::Int(value.clone()));
         }
         &ClassConstant::Class(ref class_path) => {
             trace!("{}: Found Class {}", instr_name, class_path);
@@ -50,7 +54,7 @@ pub fn eval(
                 .frame_stack
                 .last_mut()
                 .unwrap()
-                .stack_push(Primitive::Objectref(rc_instance));
+                .stack_push(VmPrimitive::Objectref(rc_instance));
         }
         it => panic!("Unexpected constant ref: {:?}", it),
     };

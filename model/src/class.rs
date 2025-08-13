@@ -65,13 +65,18 @@ pub enum ClassConstant {
 
     // reference_kind, reference_index
     // See https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-5.html#jvms-5.4.3.5
-    MethodHandle(u8, u16),
+    // MethodHandle(u8, u16),
 
     // descriptor_index
     MethodType(MethodSignature),
 
     // bootstrap_method_attr_index, name_and_type_index
+    Dynamic(u16, String, MethodSignature),
+
+    // bootstrap_method_attr_index, name_and_type_index
     InvokeDynamic(u16, String, MethodSignature),
+
+    NotImplemented,
 }
 
 #[derive(EnumSetType, Debug)]

@@ -1,4 +1,4 @@
-use vm::utils;
+use crate::utils;
 
 pub fn eval(code: &Vec<u8>, pc: u16) -> Option<u16> {
     let offset = utils::read_u16_code(code, pc) as i16;

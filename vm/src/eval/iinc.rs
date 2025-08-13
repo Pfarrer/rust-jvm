@@ -1,4 +1,4 @@
-use crate::{Primitive, VmThread};
+use crate::{frame::VmFrameImpl, VmPrimitive, VmThread};
 
 pub fn eval(vm_thread: &mut VmThread, code: &Vec<u8>, pc: u16) -> Option<u16> {
     let index = *code.get(pc as usize + 1).unwrap();
@@ -15,7 +15,7 @@ pub fn eval(vm_thread: &mut VmThread, code: &Vec<u8>, pc: u16) -> Option<u16> {
         new_value
     );
 
-    frame.locals_write(index as usize, Primitive::Int(new_value));
+    frame.locals_write(index as usize, VmPrimitive::Int(new_value));
 
     Some(pc + 3)
 }

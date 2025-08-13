@@ -44,7 +44,13 @@ pub fn parse_attribute<T: Read>(
         | "Signature"
         | "StackMapTable"
         | "Exceptions"
-        | "Deprecated" => {
+        | "Deprecated"
+        | "BootstrapMethods"
+        | "NestHost"
+        | "NestMembers"
+        | "Synthetic"
+        | "LocalVariableTypeTable"
+        | "AnnotationDefault" => {
             let attribute_length = util::read_u32(reader)? as usize;
             if attribute_length > 0 {
                 util::read_raw(reader, attribute_length)?;

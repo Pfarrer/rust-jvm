@@ -1,5 +1,5 @@
-use crate::{utils, Primitive, VmThread};
-use model::class::*;
+use crate::{frame::VmFrameImpl, utils, vm_thread::VmTheadImpl, VmPrimitive, VmThread};
+use model::prelude::*;
 
 pub fn eval(
     vm_thread: &mut VmThread,
@@ -28,8 +28,8 @@ pub fn eval(
     let root_class_path = {
         let frame = vm_thread.frame_stack.last_mut().unwrap();
         let class_path = match frame.stack_peek_reverse(args_count) {
-            &Primitive::Objectref(ref rc_object) => rc_object.borrow().class_path.clone(),
-            &Primitive::Arrayref(_) => "java/lang/Object".to_string(),
+            &VmPrimitive::Objectref(ref rc_object) => rc_object.borrow().class_path.clone(),
+            &VmPrimitive::Arrayref(_) => "java/lang/Object".to_string(),
             p => panic!(
                 "Expected to pop Objectref or Arrayref from stack but found: {:?}",
                 p

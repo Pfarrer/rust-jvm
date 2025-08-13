@@ -1,7 +1,8 @@
 use std::iter::Iterator;
 
-use crate::VmThread;
-use model::class::JvmClass;
+use model::prelude::*;
+
+use crate::vm_thread::VmTheadImpl;
 
 pub type HierarchyClassInfo = (JvmClass, String, Vec<String>);
 

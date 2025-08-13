@@ -1,13 +1,14 @@
 use anyhow::Result;
 
-use crate::class::{ClassMethod, JvmClass};
+use crate::{
+    class::{ClassMethod, JvmClass},
+    vm::NativeMethod,
+};
 use std::io::Read;
 
 pub trait Parser {
     fn parse<T: Read>(&self, reader: &mut T) -> Result<JvmClass>;
 }
-
-pub type NativeMethod = fn() -> ();
 
 pub trait Classloader {
     fn list_classes(&self) -> Vec<&str>;

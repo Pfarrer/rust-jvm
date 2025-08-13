@@ -8,3 +8,5 @@ model = { path = "../model" }
 
 enumset = "1.1"
 anyhow = "1.0"
+cesu8 = "1.1.0"
+tracing = "0.1.41"

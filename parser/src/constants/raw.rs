@@ -1,7 +1,7 @@
 use std::io::Read;
 
 use crate::util;
-use anyhow::{anyhow, bail, Result};
+use anyhow::{bail, Result};
 
 #[derive(Clone, Debug)]
 pub(crate) enum RawConstant {
@@ -41,14 +41,18 @@ pub(crate) enum RawConstant {
 
     // Value
     Utf8(String),
+
     // reference_kind, reference_index
-    //    MethodHandle(u8, u16),
+    MethodHandle(u8, u16),
 
     // descriptor_index
-    //    MethodType(u16),
+    MethodType(u16),
 
     // bootstrap_method_attr_index, name_and_type_index
-    //    InvokeDynamic(u16, u16),
+    Dynamic(u16, u16),
+
+    // bootstrap_method_attr_index, name_and_type_index
+    InvokeDynamic(u16, u16),
 }
 
 pub fn parse<T: Read>(reader: &mut T) -> Result<Vec<RawConstant>> {
@@ -56,27 +60,30 @@ pub fn parse<T: Read>(reader: &mut T) -> Result<Vec<RawConstant>> {
     let mut constants = Vec::with_capacity(constant_pool_count as usize);
     constants.push(RawConstant::None());
 
-    let mut tag_bin = [0u8; 1];
     while constants.len() < constant_pool_count as usize {
-        reader.read(&mut tag_bin).unwrap();
+        let tag = util::read_u8(reader)?;
 
-        constants.push(match tag_bin[0] {
-            1 => read_utf8(reader)?,
-            3 => read_integer(reader)?,
-            4 => read_float(reader)?,
-            5 => read_long(reader)?,
-            6 => read_double(reader)?,
-            7 => read_class(reader)?,
-            8 => read_string(reader)?,
-            9 => read_fieldref(reader)?,
-            10 => read_methodref(reader)?,
-            11 => read_interface_methodref(reader)?,
-            12 => read_name_and_type(reader)?,
-            _ => bail!("Unexpected Constant Pool Tag: {}", tag_bin[0]),
+        constants.push(match tag {
+            1 => parse_utf8(reader)?,
+            3 => parse_integer(reader)?,
+            4 => parse_float(reader)?,
+            5 => parse_long(reader)?,
+            6 => parse_double(reader)?,
+            7 => parse_class(reader)?,
+            8 => parse_string(reader)?,
+            9 => parse_fieldref(reader)?,
+            10 => parse_methodref(reader)?,
+            11 => parse_interface_methodref(reader)?,
+            12 => parse_name_and_type(reader)?,
+            15 => parse_method_handle(reader)?,
+            16 => parse_method_type(reader)?,
+            17 => parse_dynamic(reader)?,
+            18 => parse_invoke_dynamic(reader)?,
+            _ => bail!("Unexpected Constant Pool Tag: {}", tag),
         });
 
         // In case of long and double, the next element of the constant pool must be empty
-        if tag_bin[0] == 5 || tag_bin[0] == 6 {
+        if tag == 5 || tag == 6 {
             constants.push(RawConstant::None());
         }
     }
@@ -84,27 +91,27 @@ pub fn parse<T: Read>(reader: &mut T) -> Result<Vec<RawConstant>> {
     Ok(constants)
 }
 
-fn read_class<T: Read>(reader: &mut T) -> Result<RawConstant> {
+fn parse_class<T: Read>(reader: &mut T) -> Result<RawConstant> {
     let name_index = util::read_u16(reader)?;
 
     Ok(RawConstant::Class(name_index))
 }
 
-fn read_fieldref<T: Read>(reader: &mut T) -> Result<RawConstant> {
+fn parse_fieldref<T: Read>(reader: &mut T) -> Result<RawConstant> {
     let class_index = util::read_u16(reader)?;
     let name_and_type_index = util::read_u16(reader)?;
 
     Ok(RawConstant::Fieldref(class_index, name_and_type_index))
 }
 
-fn read_methodref<T: Read>(reader: &mut T) -> Result<RawConstant> {
+fn parse_methodref<T: Read>(reader: &mut T) -> Result<RawConstant> {
     let class_index = util::read_u16(reader)?;
     let name_and_type_index = util::read_u16(reader)?;
 
     Ok(RawConstant::Methodref(class_index, name_and_type_index))
 }
 
-fn read_interface_methodref<T: Read>(reader: &mut T) -> Result<RawConstant> {
+fn parse_interface_methodref<T: Read>(reader: &mut T) -> Result<RawConstant> {
     let class_index = util::read_u16(reader)?;
     let name_and_type_index = util::read_u16(reader)?;
 
@@ -114,55 +121,90 @@ fn read_interface_methodref<T: Read>(reader: &mut T) -> Result<RawConstant> {
     ))
 }
 
-fn read_string<T: Read>(reader: &mut T) -> Result<RawConstant> {
+fn parse_string<T: Read>(reader: &mut T) -> Result<RawConstant> {
     let string_index = util::read_u16(reader)?;
 
     Ok(RawConstant::String(string_index))
 }
 
-fn read_integer<T: Read>(reader: &mut T) -> Result<RawConstant> {
+fn parse_integer<T: Read>(reader: &mut T) -> Result<RawConstant> {
     let mut bin = [0u8; 4];
     reader.read(&mut bin).unwrap();
-    let val: i32 = util::conv::to_i32(bin);
+    let val = util::conv::to_i32(bin);
 
     Ok(RawConstant::Integer(val))
 }
 
-fn read_long<T: Read>(reader: &mut T) -> Result<RawConstant> {
+fn parse_long<T: Read>(reader: &mut T) -> Result<RawConstant> {
     let mut bin = [0u8; 8];
     reader.read(&mut bin).unwrap();
-    let val: i64 = util::conv::to_i64(bin);
+    let val = util::conv::to_i64(bin);
 
     Ok(RawConstant::Long(val))
 }
 
-fn read_float<T: Read>(reader: &mut T) -> Result<RawConstant> {
+fn parse_float<T: Read>(reader: &mut T) -> Result<RawConstant> {
     let mut bin = [0u8; 4];
     reader.read(&mut bin).unwrap();
-    let val: f32 = util::conv::to_f32(bin);
+    let val = util::conv::to_f32(bin);
 
     Ok(RawConstant::Float(val))
 }
 
-fn read_double<T: Read>(reader: &mut T) -> Result<RawConstant> {
+fn parse_double<T: Read>(reader: &mut T) -> Result<RawConstant> {
     let mut bin = [0u8; 8];
     reader.read(&mut bin).unwrap();
-    let val: f64 = util::conv::to_f64(bin);
+    let val = util::conv::to_f64(bin);
 
     Ok(RawConstant::Double(val))
 }
 
-fn read_utf8<T: Read>(reader: &mut T) -> Result<RawConstant> {
+fn parse_utf8<T: Read>(reader: &mut T) -> Result<RawConstant> {
     let length = util::read_u16(reader)?;
     let bytes = util::read_raw(reader, length as usize)?;
-    let val = String::from_utf8(bytes).map_err(|err| anyhow!(err))?;
+    let str = cesu8::from_java_cesu8(&bytes)
+        .unwrap_or_else(|_| String::from_utf8_lossy(&bytes))
+        .into_owned();
 
-    Ok(RawConstant::Utf8(val))
+    Ok(RawConstant::Utf8(str))
 }
 
-fn read_name_and_type<T: Read>(reader: &mut T) -> Result<RawConstant> {
+fn parse_name_and_type<T: Read>(reader: &mut T) -> Result<RawConstant> {
     let name_index = util::read_u16(reader)?;
     let descriptor_index = util::read_u16(reader)?;
 
     Ok(RawConstant::NameAndType(name_index, descriptor_index))
+}
+
+fn parse_method_handle<T: Read>(reader: &mut T) -> Result<RawConstant> {
+    let reference_kind = util::read_u8(reader)?;
+    let reference_index = util::read_u16(reader)?;
+
+    Ok(RawConstant::MethodHandle(reference_kind, reference_index))
+}
+
+fn parse_method_type<T: Read>(reader: &mut T) -> Result<RawConstant> {
+    let descriptor_index = util::read_u16(reader)?;
+
+    Ok(RawConstant::MethodType(descriptor_index))
+}
+
+fn parse_dynamic<T: Read>(reader: &mut T) -> Result<RawConstant> {
+    let bootstrap_method_attr_index = util::read_u16(reader)?;
+    let name_and_type_index = util::read_u16(reader)?;
+
+    Ok(RawConstant::Dynamic(
+        bootstrap_method_attr_index,
+        name_and_type_index,
+    ))
+}
+
+fn parse_invoke_dynamic<T: Read>(reader: &mut T) -> Result<RawConstant> {
+    let bootstrap_method_attr_index = util::read_u16(reader)?;
+    let name_and_type_index = util::read_u16(reader)?;
+
+    Ok(RawConstant::InvokeDynamic(
+        bootstrap_method_attr_index,
+        name_and_type_index,
+    ))
 }

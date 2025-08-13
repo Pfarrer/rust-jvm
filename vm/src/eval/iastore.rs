@@ -1,4 +1,4 @@
-use crate::{Primitive, VmThread};
+use crate::{frame::VmFrameImpl, VmPrimitive, VmThread};
 
 pub fn eval(vm_thread: &mut VmThread, pc: u16) -> Option<u16> {
     let frame = vm_thread.frame_stack.last_mut().unwrap();
@@ -14,7 +14,7 @@ pub fn eval(vm_thread: &mut VmThread, pc: u16) -> Option<u16> {
         value,
         index
     );
-    array.elements[index] = Primitive::Int(value);
+    array.elements[index] = VmPrimitive::Int(value);
 
     Some(pc + 1)
 }

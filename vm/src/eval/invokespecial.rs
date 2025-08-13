@@ -1,20 +1,26 @@
-use classfile::constants::Constant;
-use model::class::*;
-use vm::utils;
-use crate::{Primitive, VmThread};
+use crate::utils;
+use crate::vm_thread::VmTheadImpl;
+use crate::VmThread;
+use class_constant_impl::ClassConstantAccessor;
+use model::prelude::*;
 
-pub fn eval(vm_thread: &mut VmThread, jvm_class: &JvmClass, code: &Vec<u8>, pc: u16) -> Option<u16> {
+pub fn eval(
+    vm_thread: &mut VmThread,
+    jvm_class: &JvmClass,
+    code: &Vec<u8>,
+    pc: u16,
+) -> Option<u16> {
     let index = utils::read_u16_code(code, pc);
-    match class.constants.get(index as usize).unwrap() {
-        &Constant::Methodref(ref class_path, ref method_name, ref method_signature) => {
-            debug!(
-                "invokespecial: {}.{}{}",
-                class_path, method_name, method_signature
-            );
-            utils::invoke_method(vm, class_path, method_name, method_signature, true);
-        }
-        it => panic!("Unexpected constant ref: {:?}", it),
-    };
+    let (class_path, method_name, method_signature) = jvm_class
+        .constants
+        .get_methodref_or(index as usize)
+        .unwrap();
+
+    debug!(
+        "invokespecial: {}.{}{}",
+        class_path, method_name, method_signature
+    );
+    vm_thread.invoke_method(class_path, method_name, &method_signature.to_string(), true);
 
     Some(pc + 3)
 }

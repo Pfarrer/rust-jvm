@@ -1,53 +1,52 @@
-use crate::array::Array;
-use crate::instance::Instance;
-use crate::{Primitive, VmThread};
+use model::prelude::*;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
-use std::sync::{RwLock, RwLockWriteGuard};
+use std::sync::RwLock;
 
-pub struct VmMem {
-    pub static_pool: StaticPool,
-    pub string_pool: StringPool,
+use crate::utils::create_java_string;
 
-    // Object pool for java/lang/Class instances
-    pub class_object_pool: ClassObjectPool,
-    // pub memory_pool: MemoryPool,
+pub trait VmMemImpl {
+    fn new() -> VmMem;
 }
 
-unsafe impl Send for VmMem {}
-unsafe impl Sync for VmMem {}
-
-impl VmMem {
-    pub fn new() -> VmMem {
+impl VmMemImpl for VmMem {
+    fn new() -> VmMem {
         VmMem {
-            static_pool: StaticPool::new(),
-            string_pool: StringPool::new(),
-            class_object_pool: ClassObjectPool::new(),
+            static_pool: VmStaticPool::new(),
+            string_pool: VmStringPool::new(),
+            class_object_pool: VmClassObjectPool::new(),
         }
     }
 }
 
-pub struct StaticPool {
-    pool: RwLock<HashMap<String, HashMap<String, Primitive>>>,
+pub trait VmStaticPoolImpl {
+    fn new() -> VmStaticPool;
+    fn has_class(&self, class_path: &String) -> bool;
+    fn insert_class(&self, class_path: String);
+    fn set_class_field(&self, class_path: &String, field_name: String, value: VmPrimitive);
+    fn get_class_field(&self, class_path: &String, field_name: &String) -> Option<VmPrimitive>;
 }
-impl StaticPool {
-    fn new() -> StaticPool {
-        StaticPool {
+
+impl VmStaticPoolImpl for VmStaticPool {
+    fn new() -> VmStaticPool {
+        VmStaticPool {
             pool: RwLock::new(HashMap::new()),
         }
     }
 
-    pub fn has_class(&self, class_path: &String) -> bool {
+    fn has_class(&self, class_path: &String) -> bool {
         self.pool.read().unwrap().contains_key(class_path)
     }
-    pub fn insert_class(&self, class_path: String) {
+
+    fn insert_class(&self, class_path: String) {
         self.pool
             .write()
             .unwrap()
             .insert(class_path, HashMap::new());
     }
-    pub fn set_class_field(&self, class_path: &String, field_name: String, value: Primitive) {
+
+    fn set_class_field(&self, class_path: &String, field_name: String, value: VmPrimitive) {
         self.pool
             .write()
             .unwrap()
@@ -55,7 +54,8 @@ impl StaticPool {
             .unwrap()
             .insert(field_name, value);
     }
-    pub fn get_class_field(&self, class_path: &String, field_name: &String) -> Option<Primitive> {
+
+    fn get_class_field(&self, class_path: &String, field_name: &String) -> Option<VmPrimitive> {
         self.pool
             .read()
             .unwrap()
@@ -65,58 +65,37 @@ impl StaticPool {
     }
 }
 
-pub struct StringPool {
-    pool: RwLock<HashMap<String, Rc<RefCell<Instance>>>>,
+pub trait VmStringPoolImpl {
+    fn new() -> VmStringPool;
+    fn intern(&self, thread: &mut VmThread, string: &String) -> Rc<RefCell<VmInstance>>;
 }
-impl StringPool {
-    fn new() -> StringPool {
-        StringPool {
+
+impl VmStringPoolImpl for VmStringPool {
+    fn new() -> VmStringPool {
+        VmStringPool {
             pool: RwLock::new(HashMap::new()),
         }
     }
 
-    pub fn intern(&self, vm_thread: &mut VmThread, string: &String) -> Rc<RefCell<Instance>> {
-        let jvm_class = vm_thread.load_and_clinit_class(&"java/lang/String".to_string());
-        let mut instance = Instance::new(vm_thread, &jvm_class);
-
+    fn intern(&self, vm_thread: &mut VmThread, string: &String) -> Rc<RefCell<VmInstance>> {
         // Get pooled String instance or create new instance
         self.pool
             .write()
             .unwrap()
             .entry(string.clone())
-            .or_insert_with(|| {
-                // ... and set fields
-                let count = string.encode_utf16().count();
-                instance
-                    .fields
-                    .insert("count".to_string(), Primitive::Int(count as i32));
-
-                let mut array = Array::new_primitive(count, 5);
-                for (i, c) in string.encode_utf16().enumerate() {
-                    array.elements[i] = Primitive::Char(c);
-                }
-                let rc_array = Rc::new(RefCell::new(array));
-                instance
-                    .fields
-                    .insert("value".to_string(), Primitive::Arrayref(rc_array));
-
-                Rc::new(RefCell::new(instance))
-            })
+            .or_insert_with(|| create_java_string(vm_thread, string.clone()))
             .clone()
     }
 }
 
-pub struct ClassObjectPool {
-    pool: RwLock<HashMap<String, Rc<RefCell<Instance>>>>,
+trait VmClassObjectPoolImpl {
+    fn new() -> VmClassObjectPool;
 }
-impl ClassObjectPool {
-    fn new() -> ClassObjectPool {
-        ClassObjectPool {
+
+impl VmClassObjectPoolImpl for VmClassObjectPool {
+    fn new() -> VmClassObjectPool {
+        VmClassObjectPool {
             pool: RwLock::new(HashMap::new()),
         }
-    }
-
-    pub fn pool(&self) -> RwLockWriteGuard<HashMap<String, Rc<RefCell<Instance>>>> {
-        self.pool.write().unwrap()
     }
 }
