@@ -60,6 +60,7 @@ mod imul;
 mod ineg;
 mod instanceof;
 mod invokeinterface;
+mod invokedynamic;
 mod invokespecial;
 mod invokestatic;
 mod invokevirtual;
@@ -223,6 +224,7 @@ pub fn eval(
         183 => invokespecial::eval(vm_thread, jvm_class, code, pc),
         184 => invokestatic::eval(vm_thread, jvm_class, code, pc),
         185 => invokeinterface::eval(vm_thread, jvm_class, code, pc),
+        186 => invokedynamic::eval(vm_thread, jvm_class, code, pc),
         187 => new::eval(vm_thread, jvm_class, code, pc),
         188 => newarray::eval(vm_thread, code, pc),
         189 => anewarray::eval(vm_thread, jvm_class, code, pc),

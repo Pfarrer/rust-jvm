@@ -1,5 +1,5 @@
 use std::{cell::RefCell, rc::Rc};
-
+use log::trace;
 use model::prelude::*;
 use vm::{frame::VmFrameImpl, instance::VmInstanceImpl, vm_thread::VmTheadImpl};
 
@@ -7,6 +7,7 @@ pub fn get_method(_jvm_class: &JvmClass, class_method: &ClassMethod) -> Option<N
     match class_method.name.as_str() {
         "registerNatives" => Some(register_natives),
         "currentThread" => Some(current_thread), // ()Ljava/lang/Thread;
+        "setPriority0" => Some(set_priority0), // (I)V
         _ => None,
     }
 }
@@ -55,3 +56,12 @@ fn current_thread(vm_thread: &mut VmThread) {
     let frame = vm_thread.frame_stack.last_mut().unwrap();
     frame.stack_push(VmPrimitive::Objectref(rc_thread_instance));
 }
+
+/// (I)V
+fn set_priority0(vm_thread: &mut VmThread) {
+    let frame = vm_thread.frame_stack.last_mut().unwrap();
+    let value = frame.stack_pop_int();
+
+    trace!("Popped {} from stack, doing noting else", value);
+}
+

@@ -4,6 +4,7 @@ mod java_io_filedescriptor;
 mod java_io_fileinputstream;
 mod java_io_fileoutputstream;
 mod java_io_unixfilesystem;
+mod java_lang_accesscontroller;
 mod java_lang_class;
 mod java_lang_classloader;
 mod java_lang_double;
@@ -48,7 +49,7 @@ impl Classloader for NativeClassloader {
             "jdk/internal/misc/VM" => jdk_internal_misc_vm::get_method(jvm_class, class_method),
             "java/lang/ClassLoader" => java_lang_classloader::get_method(jvm_class, class_method),
             // "java/lang/ClassLoader$NativeLibrary" => java_lang_class_loader_native_library::invoke(jvm_class, class_method),
-            // "java/security/AccessController" => java_lang_accesscontroller::invoke(jvm_class, class_method),
+            "java/security/AccessController" => java_lang_accesscontroller::get_method(jvm_class, class_method),
             // "java/lang/String" => java_lang_string::invoke(jvm_class, class_method),
             // "java/lang/VmThread" => java_lang_thread::invoke(jvm_class, class_method),
             // "java/lang/Throwable" => java_lang_throwable::invoke(jvm_class, class_method),
