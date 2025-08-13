@@ -1,2 +1,3 @@
 [env]
 JAVA_RT_CLASSES = { value = "rt/jmods/java.base/classes", relative = true }
+JAVA_TEST_CLASSES = { value = "rt/tests/classes", relative = true }
